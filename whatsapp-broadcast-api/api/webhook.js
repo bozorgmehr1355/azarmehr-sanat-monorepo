@@ -45,7 +45,7 @@ console.log(`[Webhook] USE_SIMPLIFIED_FLOW=${USE_SIMPLIFIED_FLOW}`);
 const USE_PHASE1_ROUTER = process.env.USE_PHASE1_ROUTER === 'true' || false;
 
 // ─── Neutral Path for Unknown Customers ───────────────────────────────────
-const NEUTRAL_REPLY = 'برای اطلاعات بیشتر به وب‌سایت مراجعه کنید:\nwww.scorpiongroup.ir';
+const NEUTRAL_REPLY = 'برای اطلاعات بیشتر به فروشگاه محصولات غذایی عقرب مراجعه کنید:\nwww.scorpiongroup.ir';
 
 // ─── PRICE_QUERY Fallback (No QA match) ────────────────────────────────────
 const PRICE_QUERY_FALLBACK_REPLY = `برای اطلاع از قیمت‌ها، لطفاً در سامانه فروش عمده ثبت‌نام کنید:\n${PORTAL_URL}`;
