@@ -1770,7 +1770,7 @@ module.exports = async function handler(req, res) {
         const isEscalationType = needsHuman || ['ESCALATION', 'DISSATISFACTION', 'REFUND_REQUEST'].includes(intent);
         if (effectiveStatus === 'unknown' && !isEscalationType && ![
           'GREETING', 'HELP', 'GENERAL', 'PRODUCT_QUERY', 'BRAND_QUESTION', 'CONTACT',
-          'ORDER', 'PRICE_QUERY', 'FALLBACK',
+          'ORDER', 'PRICE_QUERY', 'FALLBACK', 'WARRANTY_QUERY', 'EDUCATION',
           'WELCOME_FIRST', 'MENU_ROOT', 'MENU_WHOLESALE', 'MENU_RETAIL', 'MENU_CATALOG',
           'MENU_TRACKING', 'MENU_WARRANTY', 'MENU_PRODUCT_GUIDE', 'MENU_PURCHASE_GUIDE',
         ].includes(intent)) {
