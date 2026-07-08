@@ -23,7 +23,7 @@
  */
 const { supabase, cors, formatPhone, formatPhoneInternational, sendWhatsAppMessage } = require('./_lib');
 const { detectIntent, getAutoReply, normalizeText, SUPPORT_PHONE, SALES_PHONE, WEBSITE, PORTAL_URL, RETAIL_URL, detectSimpleIntent, WELCOME_SIMPLE, RETAIL_REPLY, WHOLESALE_REPLY, FALLBACK_SIMPLE } = require('./_intent');
-const { askAI, searchBrandKnowledge, logSearchMiss } = require('./_ai-fallback');
+const { askAI, searchBrandKnowledge, logSearchMiss, saveWarrantyReturn, saveOrderRequest } = require('./_ai-fallback');
 const { detectAndSearchProducts } = require('./_product-detection');
 const menuEngine = require('./_menu-engine');
 
@@ -1547,6 +1547,12 @@ module.exports = async function handler(req, res) {
         replyText = ai.reply || getAutoReply('DISSATISFACTION');
         replyType = ai.replyType || 'dissatisfaction';
         needsHuman = true;
+        // ثبت درخواست در گارانتی برای پیگیری
+        saveWarrantyReturn({
+          customer_phone: cleanPhone,
+          customer_name: '',
+          reason: 'نارضایتی مشتری — نیاز به پیگیری',
+        }).catch(err => console.error('[Webhook] خطا در ثبت گارانتی:', err?.message));
       }
 
       // ── ۳ab. REFUND_REQUEST — AI با empathy + ارجاع به پشتیبانی
@@ -1555,6 +1561,12 @@ module.exports = async function handler(req, res) {
         replyText = ai.reply || getAutoReply('REFUND_REQUEST');
         replyType = ai.replyType || 'refund_request';
         needsHuman = true;
+        // ثبت درخواست مرجوعی در دیتابیس
+        saveWarrantyReturn({
+          customer_phone: cleanPhone,
+          customer_name: '',
+          reason: 'درخواست مرجوعی وجه',
+        }).catch(err => console.error('[Webhook] خطا در ثبت مرجوعی:', err?.message));
       }
 
       // ── ۳ac. ESCALATION_FOLLOWUP — AI دنباله escalation رو ادامه بده
@@ -1660,6 +1672,13 @@ module.exports = async function handler(req, res) {
         const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
         replyText = ai.reply || getAutoReply('ORDER');
         replyType = ai.replyType || 'order';
+        // ثبت درخواست خرید در دیتابیس
+        saveOrderRequest({
+          customer_phone: cleanPhone,
+          customer_type: effectiveStatus || 'unknown',
+          product_interest: messageBody.slice(0, 200),
+          message_text: messageBody.slice(0, 500),
+        }).catch(err => console.error('[Webhook] خطا در ثبت درخواست خرید:', err?.message));
       }
       // GENERAL → AI (قبلاً هم AI بود)
       else if (intent === 'GENERAL') {
@@ -1672,6 +1691,15 @@ module.exports = async function handler(req, res) {
         const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
         replyText = ai.reply || getAutoReply('FALLBACK');
         replyType = ai.replyType || 'price_fallback';
+        // ثبت لید (مخصوصاً برای مشتری عمده)
+        if (effectiveStatus === 'known_wholesale') {
+          saveOrderRequest({
+            customer_phone: cleanPhone,
+            customer_type: 'wholesale',
+            product_interest: 'استعلام قیمت — ' + messageBody.slice(0, 200),
+            message_text: messageBody.slice(0, 500),
+          }).catch(err => console.error('[Webhook] خطا در ثبت لید قیمت:', err?.message));
+        }
       }
       // EDUCATION → AI
       else if (intent === 'EDUCATION') {
