@@ -1646,7 +1646,7 @@ module.exports = async function handler(req, res) {
       // GREETING / HELP → AI با لحن گرم و طبیعی
       else if (intent === 'GREETING' || intent === 'HELP') {
         const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply(intent);
+        replyText = ai.reply || 'سلام! به فروشگاه محصولات غذایی عقرب خوش آمدید.\nخرید شما عمده است یا خرده؟';
         replyType = ai.replyType || intent.toLowerCase();
       }
       // BRAND_QUESTION → AI
