@@ -1759,12 +1759,18 @@ module.exports = async function handler(req, res) {
         }
       }
 
+      // ── ۳y. GREETING Guarantee: AI جواب سلام را با «سلام» شروع کن ──
+      if (intent === 'GREETING' && replyText && !/^سلام/ui.test(replyText.trim())) {
+        replyText = 'سلام!\n' + replyText;
+        console.log(`[Greeting] Prepended Salam for ${cleanPhone}`);
+      }
+
       // ── ۳z. Customer-Type Adjustments (Phase 1 only) ─────────────
       if (replyText && replyType && USE_PHASE1_ROUTER) {
         const isEscalationType = needsHuman || ['ESCALATION', 'DISSATISFACTION', 'REFUND_REQUEST'].includes(intent);
         if (effectiveStatus === 'unknown' && !isEscalationType && ![
           'GREETING', 'HELP', 'GENERAL', 'PRODUCT_QUERY', 'BRAND_QUESTION', 'CONTACT',
-          'ORDER', 'PRICE_QUERY',
+          'ORDER', 'PRICE_QUERY', 'FALLBACK',
           'WELCOME_FIRST', 'MENU_ROOT', 'MENU_WHOLESALE', 'MENU_RETAIL', 'MENU_CATALOG',
           'MENU_TRACKING', 'MENU_WARRANTY', 'MENU_PRODUCT_GUIDE', 'MENU_PURCHASE_GUIDE',
         ].includes(intent)) {
