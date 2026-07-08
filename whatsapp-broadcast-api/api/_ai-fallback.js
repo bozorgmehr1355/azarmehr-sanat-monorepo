@@ -16,7 +16,7 @@ const { supabase } = require('./_lib');
 
 // ─── تنظیمات ─────────────────────────────────────────────────────────────
 const AI_API_URL = 'https://api.gapgpt.app/v1/chat/completions';
-const AI_MODEL = 'gpt-4o-mini';
+const AI_MODEL = 'gapgpt-qwen-3.5';
 const DAILY_TOKEN_LIMIT = 50000;    // سقف روزانه توکن (قابل تنظیم)
 const MONTHLY_TOKEN_LIMIT = 500000; // سقف ماهانه توکن
 
@@ -199,7 +199,7 @@ async function askAI(userMessage, context = {}) {
   }
 
   // ساخت سیستم‌پرامپت (نسخه static فروش مشاوره‌ای)
-  const systemPrompt = buildSystemPrompt();
+  const systemPrompt = await buildSystemPrompt();
 
   // ساخت messages
   const messages = [
@@ -219,6 +219,16 @@ async function askAI(userMessage, context = {}) {
     messages.push({
       role: 'system',
       content: `اطلاعات محصولات مرتبط با سوال کاربر:\n${productInfo}`
+    });
+  }
+
+  // اضافه کردن نوع مشتری به context
+  if (context.customer_type && context.customer_type !== 'unknown') {
+    const customerLabel = context.customer_type === 'known_wholesale' ? 'مشتری عمده' :
+                          context.customer_type === 'known_retail' ? 'مشتری خرده' : 'کاربر';
+    messages.push({
+      role: 'system',
+      content: `نوع کاربر: ${customerLabel} — بر اساس نوع کاربر پاسخ مناسب بده.`
     });
   }
 
@@ -242,8 +252,8 @@ async function askAI(userMessage, context = {}) {
       body: JSON.stringify({
         model: AI_MODEL,
         messages,
-        max_tokens: 400,
-        temperature: 0.7,
+        max_tokens: 600,
+        temperature: 0.8,
       }),
     });
 
