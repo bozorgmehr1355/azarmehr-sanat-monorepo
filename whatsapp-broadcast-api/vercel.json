@@ -1,0 +1,18 @@
+﻿{
+  "version": 2,
+  "routes": [
+    { "src": "/api/webhook", "dest": "/api/webhook.js" },
+    { "src": "/api/whatsapp-inbox(.*)", "dest": "/api/whatsapp-inbox.js" },
+    { "src": "/api/send-message", "dest": "/api/send-message.js" },
+    { "src": "/api/run-migration", "dest": "/api/run-migration.js" },
+    { "src": "/api/create-products", "dest": "/api/create-products.js" },
+    { "src": "/api/ultramsg-status", "dest": "/api/ultramsg-status.js" },
+    { "src": "/api/health", "dest": "/api/health.js" },
+    { "src": "/api/send-customer-welcome", "dest": "/api/send-customer-welcome.js" },
+    { "src": "/api/ai-learning", "dest": "/api/ai-learning-queue.js" },
+    { "src": "/api/ai-learning/(.*)", "dest": "/api/ai-learning-queue.js" },
+    { "src": "/api/admin/ai-learning-queue/(.*)", "dest": "/api/ai-learning-queue.js" },
+    { "src": "/api/(.*)", "dest": "/api/whatsapp-broadcast.js" },
+    { "src": "/(.*)", "dest": "/api/whatsapp-broadcast.js" }
+  ]
+}

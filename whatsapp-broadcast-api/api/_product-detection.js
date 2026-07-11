@@ -22,13 +22,13 @@ const { supabase } = require('./_lib');
 function normalizeText(text) {
   if (!text) return '';
   let s = String(text);
-  // ┘ü╪º╪▒╪│█î (█░-█╣) ΓåÆ ╪º┘å┌»┘ä█î╪│█î (0-9)
-  s = s.replace(/[█░-█╣]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 1776 + 48));
-  // ╪╣╪▒╪¿█î (┘á-┘⌐) ΓåÆ ╪º┘å┌»┘ä█î╪│█î (0-9)
-  s = s.replace(/[┘á-┘⌐]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 1632 + 48));
-  // █î┌⌐╪│╪º┘åΓÇî╪│╪º╪▓█î ╪¡╪▒┘ê┘ü
-  s = s.replace(/┘è/g, '█î').replace(/┘â/g, '┌⌐');
-  s = s.replace(/╪ó/g, '╪º').replace(/█Ç/g, '┘ç').replace(/╪⌐/g, '┘ç');
+  // فارسی (۰-۹) → انگلیسی (0-9)
+  s = s.replace(/[۰-۹]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 1776 + 48));
+  // عربی (٠-٩) → انگلیسی (0-9)
+  s = s.replace(/[٠-٩]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 1632 + 48));
+  // یکسان‌سازی حروف
+  s = s.replace(/ي/g, 'ی').replace(/ك/g, 'ک');
+  s = s.replace(/آ/g, 'ا').replace(/ۀ/g, 'ه').replace(/ة/g, 'ه');
   // ╪¡╪░┘ü ZWNJ
   s = s.replace(/\u200C/g, ' ');
   s = s.replace(/\s+/g, ' ').trim();

@@ -1,0 +1,11 @@
+﻿{
+  "name": "azarmehr-whatsapp-broadcast-api",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.22.0"
+  }
+}
