@@ -21,8 +21,7 @@ const DAILY_TOKEN_LIMIT = 50000;    // سقف روزانه توکن (قابل ت
 const MONTHLY_TOKEN_LIMIT = 500000; // سقف ماهانه توکن
 
 async function buildSystemPrompt(supabaseClient) {
-  return {
-    content: `شما دستیار فروش فروشگاه محصولات غذایی عقرب هستید.
+  return `شما دستیار فروش فروشگاه محصولات غذایی عقرب هستید.
 
 ## هویت برند
 - برند: عقرب
@@ -276,9 +275,7 @@ async function buildSystemPrompt(supabaseClient) {
 - اکثر پاسخ‌ها باید ۱ تا ۵ خط باشند
 - هر اطلاعات در یک خط جداگانه باشد
 - از Bullet point (•) برای لیست‌ها استفاده کن
-`,
-    meta,
-  };
+`;
 }
 
 /**
@@ -350,7 +347,7 @@ async function askAI(userMessage, context = {}) {
   }
 
   // ساخت سیستم‌پرامپت (نسخه static فروش مشاوره‌ای)
-  const { content: systemPrompt } = await buildSystemPrompt();
+  const systemPrompt = await buildSystemPrompt();
 
   // ساخت messages
   const messages = [
