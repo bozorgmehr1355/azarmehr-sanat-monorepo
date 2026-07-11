@@ -42,7 +42,8 @@ const USE_SIMPLIFIED_FLOW = process.env.USE_SIMPLIFIED_FLOW === 'true' || false;
 console.log(`[Webhook] USE_SIMPLIFIED_FLOW=${USE_SIMPLIFIED_FLOW}`);
 
 // ─── Feature Flag (Phase 1 Router) ────────────────────────────────────────
-const USE_PHASE1_ROUTER = process.env.USE_PHASE1_ROUTER === 'true' || false;
+// فعال‌سازی: customer resolution + customer-type adjustments + warranty/refund intents
+const USE_PHASE1_ROUTER = process.env.USE_PHASE1_ROUTER !== 'false'; // پیش‌فرض: فعال
 
 // ─── Neutral Path for Unknown Customers ───────────────────────────────────
 const NEUTRAL_REPLY = 'برای اطلاعات بیشتر به فروشگاه محصولات غذایی عقرب مراجعه کنید:\nwww.scorpiongroup.ir';
@@ -188,7 +189,7 @@ async function askQAMatch(question) {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // VERSION for deployment tracking
-const VERSION = "2026-07-06-1";
+const VERSION = "2026-07-11-1";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ۱. توابع کمکی
@@ -1423,7 +1424,7 @@ module.exports = async function handler(req, res) {
         // ── Direct digit routing — بدون نیاز به menu context ──
         intent = MENU_DIGIT_MAP[normalizedDigits];
         console.log(`[Menu] Direct digit "${normalizedDigits}" → ${intent} (no menu context)`);
-      } else if (/^سلام$/iu.test(text)) {
+      } else if (/^سلام$/iu.test(text) || /^سلام\s*[.؟!،]?\s*$/iu.test(text)) {
         intent = 'GREETING';
         console.log('[Intent Override] Forced GREETING for سلام');
         console.log('[IntentOverride] GREETING confirmed');
