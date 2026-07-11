@@ -1,0 +1,12 @@
+{
+  "name": "azarmehr-sanat-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Azarmehr Sanat — unified sales management & CRM monorepo",
+  "scripts": {
+    "check:db-source": "node scripts/check-db-source-of-truth.js",
+    "check:regression-safety": "node scripts/check-regression-safety.js",
+    "check:preflight": "npm run check:db-source && npm run check:regression-safety",
+    "validate:products": "node scripts/validate-products.js"
+  }
+}

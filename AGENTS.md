@@ -101,10 +101,36 @@
 | خاص / باکیفیت | چای شکسته فوق ممتاز زرین | ۶۶۶ | ۱۰ کیلویی کارتن وارداتی |
 
 ## پیش از commit/deploy
+
+### مرحله ۱ — اجرای گیت‌های امنیتی
 - همیشه اجرا شود: `node scripts/validate-products.js`
-- همیشه اجرا شود: `node scripts/check-db-source-of-truth.js`
-  - این gate از hardcoded connection stringها، استفاده از env vars ممنوع در runtime، و ردیابی فایل‌های `.env` جلوگیری می‌کند
-  - مستندات کامل در `docs/DATABASE_SOURCE_OF_TRUTH.md` و `docs/DEVELOPMENT_RULES.md`
+- همیشه اجرا شود: `npm run check:preflight` (اجرای همزمان دو gate):
+  - `npm run check:db-source` — بررسی hardcoded connection string و env vars ممنوعه
+  - `npm run check:regression-safety` — بررسی رگرسیون بین‌سرویسی
+- در این فایل باید عبارت‌های `check-db-source-of-truth` و `check-regression-safety` وجود داشته باشند (برای gate validation)
+
+### مرحله ۲ — بررسی تغییرات سرویس‌ها
+- اگر `backend/` تغییر کرده → اجرای smoke: `node -c backend/server.js backend/api/index.js` و بررسی downstream (wholesale-portal, admin-panel, messenger-app, whatsapp-broadcast-api)
+- اگر `whatsapp-broadcast-api/` تغییر کرده → اجرای webhook GET smoke و بررسی intent pipeline
+- اگر `wholesale-portal/` یا `admin-panel/` یا `messenger-app/` تغییر کرده → بررسی backend dependency
+- اگر `docs/` یا `AGENTS.md` یا `package.json` تغییر کرده → بررسی consistency همه مستندات
+
+### مرحله ۳ — تأیید سلامت
+- هرگز ادعا نکن "system is healthy" مگر اینکه `docs/SERVICE_HEALTH_MATRIX.md` جاری تأیید کند
+- اگر سرویسی قابل تست نیست → وضعیت UNKNOWN ثبت شود، نه OK
+- اگر سرویسی BROKEN است → ابتدا رفع شود، سپس commit/deploy
+
+### مرحله ۴ — مستندات الزامی (قبل از commit)
+- `docs/DATABASE_SOURCE_OF_TRUTH.md` — منبع داده
+- `docs/SERVICE_CONTRACTS.md` — قرارداد سرویس‌ها
+- `docs/SERVICE_HEALTH_MATRIX.md` — ماتریس سلامت جاری
+- `docs/DEVELOPMENT_RULES.md` — قواعد توسعه
+
+### مرحله ۵ — ممنوعیت‌ها
+- هرگز `.env` یا `.env.local` یا `.env.production` را commit نکن
+- هرگز hardcoded connection string یا secret را در فایل‌های tracked قرار نده
+- هرگز runtime logic را بدون عبور از preflight gate تغییر نده
+- هرگز سرویسی را deploy نکن مگر health matrix OK یا UNKNOWN با دلیل مستند باشد
 
 ## استانداردهای کد
 - **Type**: commonjs (require/module.exports)
