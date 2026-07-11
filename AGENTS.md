@@ -102,6 +102,9 @@
 
 ## پیش از commit/deploy
 - همیشه اجرا شود: `node scripts/validate-products.js`
+- همیشه اجرا شود: `node scripts/check-db-source-of-truth.js`
+  - این gate از hardcoded connection stringها، استفاده از env vars ممنوع در runtime، و ردیابی فایل‌های `.env` جلوگیری می‌کند
+  - مستندات کامل در `docs/DATABASE_SOURCE_OF_TRUTH.md` و `docs/DEVELOPMENT_RULES.md`
 
 ## استانداردهای کد
 - **Type**: commonjs (require/module.exports)
