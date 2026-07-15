@@ -65,6 +65,8 @@ npm run check:regression-safety
 npm run check:preflight
 
 # 4. سرویس‌های تغییرکرده را smoke تست کن
+
+# 5. (همیشه) npm run validate:products  # در P1.1.2-A بازیابی شد (structural no-op اگر catalog محلی نباشد)
 ```
 
 ### ممنوعیت‌ها
@@ -73,3 +75,41 @@ npm run check:preflight
 - هرگز hardcoded connection string یا secret را در فایل‌های tracked قرار نده
 - هرگز runtime logic را بدون بررسی downstream services تغییر نده
 - هرگز وضعیت OK را برای سرویسی ثبت نکن مگر اینکه واقعاً تست شده باشد
+
+---
+
+## بخش ۳ — Messenger App Build Pipeline
+
+### منبع واقعی UI
+
+تنها فایل source معتبر برای UI پیام‌رسان داخلی:
+
+```
+messenger-app/components/index.jsx
+```
+
+### pipeline ساخت
+
+```
+components/index.jsx
+        ↓ (Browserify + Babelify)
+  npm run build:min
+        ↓
+  messenger-app/bundle.min.js
+        ↓
+  index.html لود می‌کند ← <script src="bundle.min.js">
+```
+
+### قوانین
+
+1. **build الزامی است** — `index.html` مستقیماً `bundle.min.js` را لود می‌کند، نه فایل JSX را. پس از هر تغییر در `components/index.jsx`:
+   ```bash
+   cd messenger-app
+   npm run build:min
+   ```
+2. **cache مرورگر** — `bundle.min.js` بدون query string لود می‌شود. برای دیدن تغییرات بعد از build:
+   - `Ctrl + F5` (Hard Refresh) یا
+   - DevTools → Network → تیک `Disable cache`
+3. **دایرکتوری `modules/` کد مُرده است** — فایل‌های `modules/Admin.jsx`، `modules/Chat.jsx`، `modules/CRM.jsx` و بقیه در زنجیره build استفاده نمی‌شوند. ویرایش در این فایل‌ها **هیچ اثری در خروجی ندارد**.
+4. **production فقط با deploy صریح** — تغییرات local تا زمانی که `vercel --prod` اجرا نشود در production دیده نمی‌شود.
+5. **تغییر در messenger-app** ← بررسی backend dependency (طبق بخش ۲، بند ۳).

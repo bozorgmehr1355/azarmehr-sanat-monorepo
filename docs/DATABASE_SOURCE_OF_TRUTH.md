@@ -51,6 +51,15 @@ Runtime فقط از **Supabase JS Client** استفاده می‌کند. هیچ 
 
 ---
 
+## جداول اختصاصی (custom schemas)
+
+- **`performance_scores`** (خروجی `POST /api/reports/performance/calculate`):
+  - کلید upsert یکتا: (`user_id`, `start_date`, `end_date`).
+  - `user_id` **عمداً FK مستقیم به `users` ندارد** — در این پروژه `users` یک view (حول `auth.users`) است و FK به view در PostgreSQL خطای `42809` می‌دهد. اعتبار/وجود کاربر در لایهٔ application/auth چک می‌شود، نه با FK در دیتابیس.
+  - ستون‌ها: `id`, `user_id`, `start_date`, `end_date`, `total_tasks`, `completed_tasks`, `avg_completion_time_hours`, `quality_score`, `raw_data`, `computed_at`.
+
+---
+
 ## فایل‌های قرنطینه
 
 | فایل | وضعیت |

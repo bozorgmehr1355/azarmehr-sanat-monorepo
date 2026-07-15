@@ -1,0 +1,40 @@
+# Debug/query scripts with credential risk
+backend/query-portal.js
+**/*query-portal*.js
+*.local.js
+
+# Sensitive local config
+.env*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Local and sensitive environment files
+.env*
+*.env
+!.env.example
+
+# Build outputs
+dist/
+build/
+.vercel/
+
+# Generated bundles
+bundle.js
+bundle.dev.js
+bundle.tmp.js
+
+# Temporary, backup, and scratch files
+tmp/
+*.bak
+*.backup
+*.tmp
+fix-pin*.js
+new-pin-ui.txt
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
