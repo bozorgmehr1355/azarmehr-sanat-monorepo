@@ -2237,23 +2237,11 @@ function CRMModule({ me, showToast }) {
   };
   useEffect(() => {
     load();
-    // Supabase Realtime for instant order updates
-    const channel = new WebSocket(
-      `wss://apscmdspkitpwzhizgkq.supabase.co/realtime/v1/websocket?apikey=${SUPA_KEY}&vsn=1.0.0`
-    );
-    channel.onopen = () => {
-      channel.send(JSON.stringify({topic:"realtime:public:crm_orders",event:"phx_join",payload:{},ref:"1"}));
-    };
-    channel.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.event === "INSERT" || msg.event === "UPDATE" || msg.event === "DELETE") {
-        api("GET","crm_orders?order=created_at.desc").then(o => { if(o) setOrders(o); }).catch(()=>{});
-      }
-    };
+    // Poll crm_orders every 10s for freshness.
     const iv = setInterval(() => {
       api("GET","crm_orders?order=created_at.desc").then(o => { if(o) setOrders(o); }).catch(()=>{});
     }, 10000);
-    return () => { clearInterval(iv); channel.close(); };
+    return () => { clearInterval(iv); };
   },[]);
 
   const del = async (id) => {
