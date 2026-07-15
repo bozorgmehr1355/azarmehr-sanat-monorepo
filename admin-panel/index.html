@@ -1778,7 +1778,7 @@ async function convertToProject(ord) {
   const proj = await pr.json();
   // 2. Create 8 tasks
   for (const t of B2B_TASKS) {
-    await fetch(`${BASE}/project-tasks`, {
+      await fetch(`${API_BASE}/project-tasks`, {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
       body:JSON.stringify({
@@ -3736,7 +3736,7 @@ function AccessModule({ me, showToast }) {
 
   /* ── بارگذاری کاربران از سرور ── */
   useEffect(() => {
-    api("GET","crm-admin-users").then(d => { if (d) setAdmins(d); }).catch(() => {});
+    api("GET","users").then(d => { setAdmins((d?.users || d || []).map(u => ({ ...u, name: u.full_name || u.name }))); }).catch(() => {});
   }, []);
 
   /* ── ذخیره / آپدیت ── */
@@ -3745,14 +3745,25 @@ function AccessModule({ me, showToast }) {
     if (!editId && !form.password)    { showToast("رمز عبور الزامی است","error"); return; }
     setSaving(true);
     try {
-      /* تلاش برای ذخیره در Supabase */
+      const base = {
+        full_name: form.name,
+        username: form.username,
+        role: form.role,
+        active: form.active,
+      };
       if (editId) {
-        await api("PATCH",`crm_admin_users?id=eq.${editId}`, form);
+        // PUT رمز عبور را نمی‌پذیرد؛ تغییر رمز از مسیر مجاز reset-password انجام می‌شود
+        await api("PUT", "users", { id: editId, ...base });
+        if (form.password) {
+          await api("POST", `users/${editId}/reset-password`, { newPassword: form.password });
+        }
       } else {
-        await api("POST","crm_admin_users", { ...form, created_at: new Date().toISOString() });
+        const payload = { ...base };
+        if (form.password) payload.password = form.password;
+        await api("POST", "users", payload);
       }
     showToast(editId ? "بروز شد" : "کاربر اضافه شد");
-    api("GET","crm-admin-users").then(d => { if (d) setAdmins(d); }).catch(() => {});
+    api("GET","users").then(d => { setAdmins((d?.users || d || []).map(u => ({ ...u, name: u.full_name || u.name }))); }).catch(() => {});
   } catch(e) {
     /* fallback: فقط local state */
       if (editId) {
@@ -3768,7 +3779,7 @@ function AccessModule({ me, showToast }) {
   const remove = async (id) => {
     if (!confirm("این کاربر حذف شود؟")) return;
     try {
-      await api("DELETE", `crm-admin-users?id=eq.${id}`);
+      await api("DELETE","users", { id });
       setAdmins(a => a.filter(u => u.id !== id));
       showToast("حذف شد");
     } catch(e) {
@@ -3780,11 +3791,9 @@ function AccessModule({ me, showToast }) {
     const user = admins.find(u => u.id === id);
     const newActive = user?.active === false;
     try {
-      const r = await api("PATCH", `crm-admin-users?id=eq.${id}`, { active: newActive });
-      if (r) {
-        setAdmins(a => a.map(u => u.id===id ? { ...u, active: r.active } : u));
-        showToast(newActive ? "فعال شد" : "غیرفعال شد");
-      }
+      await api("PUT","users", { id, active: newActive });
+      setAdmins(a => a.map(u => u.id===id ? { ...u, active: newActive } : u));
+      showToast(newActive ? "فعال شد" : "غیرفعال شد");
     } catch(e) {
       showToast("خطا در تغییر وضعیت", "error");
     }
@@ -3795,12 +3804,12 @@ function AccessModule({ me, showToast }) {
     // به‌روزرسانی آنی UI
     setAdmins(arr => arr.map(u => u.id === userId ? { ...u, role: newRole } : u));
     try {
-      await api("PATCH", `crm-admin-users?id=eq.${userId}`, { role: newRole });
+      await api("PUT","users", { id: userId, role: newRole });
       showToast("نقش کاربر بروز شد");
     } catch(e) {
       showToast("خطا در تغییر نقش", "error");
       // برگشت به وضعیت سرور
-      api("GET","crm-admin-users").then(d => { if (d) setAdmins(d); }).catch(() => {});
+      api("GET","users").then(d => { setAdmins((d?.users || d || []).map(u => ({ ...u, name: u.full_name || u.name }))); }).catch(() => {});
     }
   };
 
@@ -5838,7 +5847,7 @@ function LeadsInbox({ me, showToast }) {
       if (search) params.push("search="+encodeURIComponent(search));
       if (statusFilter) params.push("status="+statusFilter);
       if (params.length) path += "?" + params.join("&");
-      const res = await api("GET", path, undefined, LEADS_BACKEND);
+      const res = await api("GET", path, undefined);
       const data = res?.data || res || [];
       setLeads(data);
       setStats(computeStats(data));
@@ -5855,7 +5864,7 @@ function LeadsInbox({ me, showToast }) {
     try {
       const body = { id, status: newStatus };
       if (newStatus === "converted") body.converted_at = new Date().toISOString();
-      await api("PATCH", "leads", body, LEADS_BACKEND);
+      await api("PATCH", "leads", body);
       setLeads(prev => prev.map(l => l.id===id ? {...l, status:newStatus, ...(newStatus==="converted"?{converted_at:new Date().toISOString()}:{})} : l));
       setStats(prev => ({...prev, [newStatus]: (prev[newStatus]||0)+1 }));
     } catch(e) {
@@ -5868,7 +5877,7 @@ function LeadsInbox({ me, showToast }) {
     setMsgsLoading(true);
     setLeadMessages([]);
     try {
-      const res = await api("GET", "leads?id="+lead.id+"&messages=true", undefined, LEADS_BACKEND);
+      const res = await api("GET", "leads?id="+lead.id+"&messages=true");
       setLeadMessages(res?.messages || []);
     } catch(e) {
       console.error("[Leads] Messages error:", e.message);
@@ -6052,7 +6061,7 @@ function LeadsInbox({ me, showToast }) {
                 <button onClick={async () => {
                   setProformaLoading(true);
                   try {
-                    const res = await api("POST", "lead-to-proforma", { lead_id: proformaLead.id }, LEADS_BACKEND);
+                    const res = await api("POST", "lead-to-proforma", { lead_id: proformaLead.id });
                     if (res?.ok) {
                       setProformaResult(res);
                       // Refresh leads list to show updated status
