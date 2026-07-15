@@ -27,9 +27,13 @@ const { askAI, searchBrandKnowledge, logSearchMiss, saveWarrantyReturn, saveOrde
 const { detectAndSearchProducts } = require('./_product-detection');
 const menuEngine = require('./_menu-engine');
 
+// ── P0 Inbound webhook security (shared-secret gate + idempotency) ────
+const { requireWebhookAuth, isDuplicate, isHealthCheck } = require('./_webhook-security');
+
 // ── Response Model + Renderer (Channel-Agnostic, D02/D03) ────
 const { ensureResponseModel } = require('../shared/response-adapter');
 const { renderWhatsAppText } = require('../shared/whatsapp-text-renderer');
+const { redactPhone, redactBody } = require('../shared/redact');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // تنظیمات
@@ -275,7 +279,7 @@ async function autoLinkCustomerToConversation(conversationId, cleanPhone) {
     if (error) {
       console.warn('[CustomerLink] Upsert error:', error.message);
     } else {
-      console.log(`[CustomerLink] Linked conv ${conversationId} → crm_customer ${crmCustomerId} (phone: ${cleanPhone})`);
+      console.log(`[CustomerLink] Linked conv ${conversationId} → crm_customer ${crmCustomerId} (phone: ${redactPhone(cleanPhone)})`);
     }
   } catch (err) {
     console.warn('[CustomerLink] Non-critical error:', err.message);
@@ -1105,15 +1109,19 @@ function readBody(req) {
 
 module.exports = async function handler(req, res) {
   if (cors(req, res)) return;
-  if (req.method === 'GET') {
-    // VERSION endpoint for deployment verification
+  if (isHealthCheck(req)) {
+    // VERSION endpoint for deployment verification (no secret leakage)
     return res.status(200).json({
       version: VERSION,
       status: 'ok',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      webhookAuthConfigured: !!process.env.ULTRAMSG_WEBHOOK_SECRET
     });
   }
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // P0: inbound webhook authentication — fail-closed before any processing
+  if (!requireWebhookAuth(req, res)) return;
 
   try {
     // ── Body Parsing ─────────────────────────────────────────────
@@ -1123,6 +1131,13 @@ module.exports = async function handler(req, res) {
     catch (_) { try { payload = req.body || {}; } catch { payload = {}; } }
 
     const data = payload?.data || payload;
+
+    // P0: best-effort idempotency (serverless: not guaranteed across instances)
+    if (isDuplicate(data?.id)) {
+      console.warn('[Webhook] Duplicate event id detected — safe no-op');
+      return res.status(200).json({ ok: true, duplicate: true, message_id: null });
+    }
+
     const senderPhone = data?.from;
     const messageBody = data?.body;
 
@@ -1136,10 +1151,10 @@ module.exports = async function handler(req, res) {
     let interactiveNodeKey = null;
     if (data?.button?.id) {
       interactiveNodeKey = data.button.id;
-      console.log(`[Interactive] Button reply: id="${data.button.id}" text="${data.button.text}" from ${senderPhone}`);
+      console.log(`[Interactive] Button reply: id="${data.button.id}" text="${data.button.text}" from ${redactPhone(senderPhone)}`);
     } else if (data?.listReply?.id) {
       interactiveNodeKey = data.listReply.id;
-      console.log(`[Interactive] List reply: id="${data.listReply.id}" title="${data.listReply.title}" from ${senderPhone}`);
+      console.log(`[Interactive] List reply: id="${data.listReply.id}" title="${data.listReply.title}" from ${redactPhone(senderPhone)}`);
     }
 
     // ── Phone Formatting ─────────────────────────────────────────
@@ -1218,13 +1233,13 @@ module.exports = async function handler(req, res) {
     const customerInfo = USE_PHASE1_ROUTER
       ? await resolveCustomer(normalizedKey)
       : { status: 'unknown', sales_segment: null };
-    if (USE_PHASE1_ROUTER) console.log(`[Customer] ${customerInfo.status} for ${cleanPhone}`);
+    if (USE_PHASE1_ROUTER) console.log(`[Customer] ${customerInfo.status} for ${redactPhone(cleanPhone)}`);
 
     // ── ۲ab. Segment Hint Detection (Phase 1 — text-based) ──────
     let segmentHint = null;
     if (USE_PHASE1_ROUTER && customerInfo.status === 'unknown') {
       segmentHint = detectSegmentHint(messageBody);
-      if (segmentHint) console.log(`[Segment] Hint: ${segmentHint} for ${cleanPhone}`);
+      if (segmentHint) console.log(`[Segment] Hint: ${segmentHint} for ${redactPhone(cleanPhone)}`);
     }
     const effectiveStatus = customerInfo.status === 'unknown' && segmentHint
       ? `known_${segmentHint}`
@@ -1237,7 +1252,7 @@ module.exports = async function handler(req, res) {
       activeEscalation = await findActiveEscalation(cleanPhone);
       if (activeEscalation) {
         escalationContext = extractEscalationContext(messageBody);
-        console.log(`[Escalation] Active for ${cleanPhone}, intent=${activeEscalation.auto_reply_type}, msg_id=${activeEscalation.id}`);
+        console.log(`[Escalation] Active for ${redactPhone(cleanPhone)}, intent=${activeEscalation.auto_reply_type}, msg_id=${activeEscalation.id}`);
       }
     }
 
@@ -1249,11 +1264,12 @@ module.exports = async function handler(req, res) {
     const dynamicMenuSession = await menuEngine.getSessionState(cleanPhone);
     const hasDynamicMenuContext = !!dynamicMenuSession?.current_node_id;
     if (hasDynamicMenuContext) {
-      console.log(`[Menu] Dynamic session active for ${cleanPhone}, node=${dynamicMenuSession.current_node_id}`);
+      console.log(`[Menu] Dynamic session active for ${redactPhone(cleanPhone)}, node=${dynamicMenuSession.current_node_id}`);
     }
 
     // ── ۳. از سیستم نباشه ───────────────────────────────────────
     let replySent = false;
+    let replyText = null;
     let replyType = null;
     let needsHuman = false;
 
@@ -1264,7 +1280,7 @@ module.exports = async function handler(req, res) {
       // Simplified Portal Flow — WhatsApp as Acquisition Channel Only
       // ═══════════════════════════════════════════════════════════════
       const simpleResult = detectSimpleIntent(messageBody || '');
-      let replyText = '';
+      replyText = '';
 
       if (simpleResult.intent === 'GREETING') {
         replyText = WELCOME_SIMPLE;
@@ -1280,7 +1296,7 @@ module.exports = async function handler(req, res) {
         replyType = 'fallback_simple';
       }
 
-      console.log(`[SimpleFlow] ${simpleResult.intent} → ${replyType} for ${cleanPhone}`);
+      console.log(`[SimpleFlow] ${simpleResult.intent} → ${replyType} for ${redactPhone(cleanPhone)}`);
 
       // ── Send via UltraMsg ─────────────────────────────────────────
       const cooldownActive = COOLDOWN_MINUTES > 0 ? await isCooldownActive(cleanPhone) : false;
@@ -1289,7 +1305,7 @@ module.exports = async function handler(req, res) {
           const result = await sendWhatsAppMessage(internationalPhone, replyText);
           replySent = result.sent;
           if (result.sent) {
-            console.log(`[SimpleFlow] Sent ✓ for ${cleanPhone}`);
+            console.log(`[SimpleFlow] Sent ✓ for ${redactPhone(cleanPhone)}`);
           } else {
             console.warn(`[SimpleFlow] Send failed: ${result.error}`);
           }
@@ -1348,7 +1364,7 @@ module.exports = async function handler(req, res) {
       const isMenuDigitPattern = /^[0-9]{1,2}$/.test(normalizedDigits);
 
       let dynamicSelectedNode = null;
-      let replyText = null;
+      replyText = null;
 
       // ── اولویت اول: Interactive Button / List Reply → Direct Menu ──
       if (interactiveNodeKey) {
@@ -1368,17 +1384,17 @@ module.exports = async function handler(req, res) {
             needsHuman = (nodeResp.action_type === 'HUMAN_SUPPORT');
             intent = '__DYNAMIC_MENU_HANDLED';
           }
-          console.log(`[Interactive] Node "${node.node_key}" (${node.title}) activated for ${cleanPhone}`);
+          console.log(`[Interactive] Node "${node.node_key}" (${node.title}) activated for ${redactPhone(cleanPhone)}`);
         } else {
           intent = 'FALLBACK';
-          console.log(`[Interactive] Node key "${interactiveNodeKey}" not found for ${cleanPhone}`);
+          console.log(`[Interactive] Node key "${interactiveNodeKey}" not found for ${redactPhone(cleanPhone)}`);
         }
       } else if (isFirstTimeCustomer) {
         intent = 'WELCOME_FIRST';
-        console.log(`[Menu] First-time customer ${cleanPhone} — sending WELCOME_FIRST`);
+        console.log(`[Menu] First-time customer ${redactPhone(cleanPhone)} — sending WELCOME_FIRST`);
       } else if (isMenuTrigger) {
         intent = 'MENU_ROOT';
-        console.log(`[Menu] Trigger word matched for ${cleanPhone}`);
+        console.log(`[Menu] Trigger word matched for ${redactPhone(cleanPhone)}`);
       } else if (isMenuDigitPattern && hasDynamicMenuContext) {
         // ── Catalog Override: digit 3 → MENU_CATALOG ──────────────
         if (MENU_DIGIT_MAP[normalizedDigits] === 'MENU_CATALOG') {
@@ -1415,7 +1431,7 @@ module.exports = async function handler(req, res) {
               needsHuman = (nodeResp.action_type === 'HUMAN_SUPPORT');
               intent = '__DYNAMIC_MENU_HANDLED';
             }
-            console.log(`[Menu] Dynamic digit "${normalizedDigits}" → ${sel.title} (${sel.action_type}) for ${cleanPhone}`);
+            console.log(`[Menu] Dynamic digit "${normalizedDigits}" → ${sel.title} (${sel.action_type}) for ${redactPhone(cleanPhone)}`);
           } else {
             intent = 'FALLBACK';
           }
@@ -1429,7 +1445,7 @@ module.exports = async function handler(req, res) {
         console.log('[Intent Override] Forced GREETING for سلام');
         console.log('[IntentOverride] GREETING confirmed');
       } else {
-        console.log('[Intent-Debug] detectIntent input:', JSON.stringify(messageBody));
+        console.log('[Intent-Debug] detectIntent input:', redactBody(messageBody));
         const intentResult = detectIntent(messageBody);
         console.log('[Intent-Debug] detectIntent result:', JSON.stringify(intentResult));
         intent = intentResult.intent;
@@ -1494,10 +1510,10 @@ module.exports = async function handler(req, res) {
           intent !== 'FALLBACK' &&
           !intent.startsWith('MENU_')) {
         await menuEngine.setSessionState(cleanPhone, null);
-        console.log(`[Menu] Cleared dynamic session for ${cleanPhone} — non-menu intent "${intent}"`);
+        console.log(`[Menu] Cleared dynamic session for ${redactPhone(cleanPhone)} — non-menu intent "${intent}"`);
       }
 
-      console.log(`[Intent] ${intent} from ${cleanPhone}`);
+      console.log(`[Intent] ${intent} from ${redactPhone(cleanPhone)}`);
 
       // ── Wholesale Price Protection Guard ──────────────────────────
       // قبل از هرگونه پردازش AI، اگر کاربر درباره قیمت عمده سوال کرده باشد،
@@ -1509,7 +1525,7 @@ module.exports = async function handler(req, res) {
         replyText = WHOLESALE_PORTAL_REPLY;
         replyType = 'wholesale_redirect';
         intent = '__WHOLESALE_GUARD';
-        console.log(`[WholesaleGuard] Intercepted wholesale query from ${cleanPhone}: "${messageBody}"`);
+        console.log(`[WholesaleGuard] Intercepted wholesale query from ${redactPhone(cleanPhone)}: "${redactBody(messageBody)}"`);
       }
 
       // ── ۳a. CATALOG — پاسخ کاتالوگ (getAutoReply + fallback) ────
@@ -1585,11 +1601,11 @@ module.exports = async function handler(req, res) {
       }
       else if (intent === '__DYNAMIC_MENU_HANDLED') {
         // Already handled in intent detection — no-op
-        console.log(`[Menu] Dynamic menu handled for ${cleanPhone}`);
+        console.log(`[Menu] Dynamic menu handled for ${redactPhone(cleanPhone)}`);
       }
       else if (intent === '__WHOLESALE_GUARD') {
         // Already handled by guard — no-op
-        console.log(`[WholesaleGuard] Portal redirect sent to ${cleanPhone}`);
+        console.log(`[WholesaleGuard] Portal redirect sent to ${redactPhone(cleanPhone)}`);
       }
       else if (intent === 'MENU_ROOT') {
         // Load root menu from dynamic tree
@@ -1640,7 +1656,7 @@ module.exports = async function handler(req, res) {
           replyText = getAutoReply('FALLBACK');
           replyType = 'fallback';
         }
-        console.log(`[Menu] Static intent ${intent} resolved via dynamic tree for ${cleanPhone}`);
+        console.log(`[Menu] Static intent ${intent} resolved via dynamic tree for ${redactPhone(cleanPhone)}`);
       }
 
       // ── ۳b. AI-FIRST — همه پاسخ‌های غیرمنو از AI عبور می‌کنند ──
@@ -1723,7 +1739,7 @@ module.exports = async function handler(req, res) {
 
       // ── ۳h. PRODUCT_QUERY — AI-FIRST: موتور جستجوی محصول + AI ──
       else {
-        console.log(`[ProductAI] START | msg="${messageBody}" | customer=${effectiveStatus} | phone=${cleanPhone}`);
+        console.log(`[ProductAI] START | msg="${redactBody(messageBody)}" | customer=${effectiveStatus} | phone=${redactPhone(cleanPhone)}`);
 
         // ── جستجوی محصولات ─────────────────────────────────────────
         const normalizedMsg = messageBody.trim().replace(/\s+/g, ' ');
@@ -1734,7 +1750,7 @@ module.exports = async function handler(req, res) {
         const allProducts = products.length > 0 ? products :
                           signalResult.products || [];
 
-        console.log(`[ProductAI] Found ${allProducts.length} product(s) for ${cleanPhone}`);
+        console.log(`[ProductAI] Found ${allProducts.length} product(s) for ${redactPhone(cleanPhone)}`);
 
         // ── AI با context محصولات ──────────────────────────────────
         const ai = await aiReply(messageBody, cleanPhone, effectiveStatus, {
@@ -1744,7 +1760,7 @@ module.exports = async function handler(req, res) {
         if (ai.reply) {
           replyText = ai.reply;
           replyType = ai.replyType;
-          console.log(`[ProductAI] AI response for ${cleanPhone}`);
+          console.log(`[ProductAI] AI response for ${redactPhone(cleanPhone)}`);
         } else if (ai.limitReached) {
           replyText = 'در حال حاضر به سقف پاسخگویی هوشمند رسیده‌ایم. لطفاً بعداً تلاش کنید یا با پشتیبانی تماس بگیرید.';
           replyType = 'ai_limit';
@@ -1752,7 +1768,7 @@ module.exports = async function handler(req, res) {
           // Fallback نهایی: لیست محصولات
           replyText = buildProductReply(allProducts, effectiveStatus);
           replyType = 'product_search';
-          console.log(`[ProductAI] Fallback to product list for ${cleanPhone}`);
+          console.log(`[ProductAI] Fallback to product list for ${redactPhone(cleanPhone)}`);
         } else {
           replyText = getAutoReply('FALLBACK');
           replyType = 'fallback';
@@ -1763,7 +1779,7 @@ module.exports = async function handler(req, res) {
       // ── ۳y. GREETING Guarantee: AI جواب سلام را با «سلام» شروع کن ──
       if (intent === 'GREETING' && replyText && !/^سلام/ui.test(replyText.trim())) {
         replyText = 'سلام!\n' + replyText;
-        console.log(`[Greeting] Prepended Salam for ${cleanPhone}`);
+        console.log(`[Greeting] Prepended Salam for ${redactPhone(cleanPhone)}`);
       }
 
       // ── ۳z. Customer-Type Adjustments (Phase 1 only) ─────────────
@@ -1778,13 +1794,13 @@ module.exports = async function handler(req, res) {
           // مسیر خنثی برای مشتریان ناشناس (به‌جز سلام)
           replyText = NEUTRAL_REPLY;
           replyType = 'neutral';
-          console.log(`[Customer] Neutral path for unknown ${cleanPhone}`);
+          console.log(`[Customer] Neutral path for unknown ${redactPhone(cleanPhone)}`);
         } else if (effectiveStatus === 'known_retail') {
           // حذف لینک پورتال و شماره فروش برای مشتری خرد
           const before = replyText;
           replyText = suppressWholesaleFromReply(replyText);
           if (before !== replyText) {
-            console.log(`[Customer] Retail suppression applied for ${cleanPhone}`);
+            console.log(`[Customer] Retail suppression applied for ${redactPhone(cleanPhone)}`);
           }
         }
       }
@@ -1801,18 +1817,18 @@ module.exports = async function handler(req, res) {
         const cooldownActive = COOLDOWN_MINUTES > 0 ? await isCooldownActive(cleanPhone) : false;
 
         if (cooldownActive) {
-          console.log(`[Auto-Reply] Cooldown active for ${cleanPhone} — skipping`);
+          console.log(`[Auto-Reply] Cooldown active for ${redactPhone(cleanPhone)} — skipping`);
         } else {
           try {
             const result = await sendWhatsAppMessage(internationalPhone, replyText);
             if (result.sent) {
               replySent = true;
-              console.log(`[Auto-Reply] Sent ${replyType} to ${cleanPhone}`);
+              console.log(`[Auto-Reply] Sent ${replyType} to ${redactPhone(cleanPhone)}`);
             } else {
-              console.warn(`[Auto-Reply] FAILED for ${cleanPhone}: ${result.error}`);
+              console.warn(`[Auto-Reply] FAILED for ${redactPhone(cleanPhone)}: ${result.error}`);
             }
           } catch (sendErr) {
-            console.error(`[Auto-Reply] Error sending to ${cleanPhone}:`, sendErr.message);
+            console.error(`[Auto-Reply] Error sending to ${redactPhone(cleanPhone)}:`, sendErr.message);
           }
         }
       }

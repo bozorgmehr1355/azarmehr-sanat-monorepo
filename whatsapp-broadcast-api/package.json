@@ -2,6 +2,10 @@
   "name": "azarmehr-whatsapp-broadcast-api",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "test": "node tests/webhook-security.test.js",
+    "test:webhook-security": "node tests/webhook-security.test.js"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "jsonwebtoken": "^9.0.0",
