@@ -103,8 +103,29 @@ function useWindowWidth() {
 }
 
 /* ═══════════════════════════════════════ CONFIG ══════════════════════════════════════ */
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwc2NtZHNwa2l0cHd6aGl6Z2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MDc3NDgsImV4cCI6MjA5Njk4Mzc0OH0.LC_e1vafGe2KtTrWsb0mjIVIrQoqyvA46THD83HkhMo";
-const API_BASE = "https://azarmehr-backend-main.vercel.app/api";
+function resolveApiBase() {
+  if (typeof window !== 'undefined') {
+    // 1) window.AZARMEHR_API_BASE (manual override)
+    if (window.AZARMEHR_API_BASE && typeof window.AZARMEHR_API_BASE === 'string') {
+      return window.AZARMEHR_API_BASE.replace(/\/+$/, '');
+    }
+    // 2) query param ?apiBase=
+    const qp = new URLSearchParams(window.location.search).get('apiBase');
+    if (qp && typeof qp === 'string') {
+      try { localStorage.setItem('AZARMEHR_API_BASE', qp.replace(/\/+$/, '')); } catch(e) {}
+      return qp.replace(/\/+$/, '');
+    }
+    // 3) localStorage key AZARMEHR_API_BASE
+    try {
+      const stored = localStorage.getItem('AZARMEHR_API_BASE');
+      if (stored && typeof stored === 'string') return stored.replace(/\/+$/, '');
+    } catch(e) {}
+    // 4) fallback /api
+    return '/api';
+  }
+  return '/api';
+}
+const API_BASE = resolveApiBase();
 
 const C = {
   bg:"#0F0F0F", surface:"#1C1C1C", surfaceAlt:"#232323", surfaceHover:"#2A2A2A",
@@ -1742,9 +1763,8 @@ const B2B_TASKS = [
 ];
 async function convertToProject(ord) {
   const token = localStorage.getItem('adminToken');
-  const BASE = 'https://azarmehr-backend-main.vercel.app/api';
   // 1. Create project
-  const pr = await fetch(`${BASE}/projects`, {
+  const pr = await fetch(`${API_BASE}/projects`, {
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
     body:JSON.stringify({
@@ -3963,16 +3983,11 @@ function AdminLogin({ onLogin }) {
     if (isIOS) setShowIOSPrompt(true);
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
-  const login = async () => {
+const login = async () => {
     setLoading(true); setErr("");
     try {
-      const res = await fetch("https://azarmehr-backend-main.vercel.app/api/login", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ username:un, password:pw })
-      });
-      const data = await res.json();
-      if (res.ok && data.token) {
+      const data = await api("POST", "/api/login", { username:un, password:pw });
+      if (data.token) {
         localStorage.setItem("adminToken", data.token);
         onLogin({ ...data.user, type:"admin" });
       } else {
@@ -4084,17 +4099,8 @@ function PortalLogin({ onLogin, onBack }) {
   const login = async () => {
     setLoading(true); setErr("");
     try {
-      const res = await fetch("https://azarmehr-backend-main.vercel.app/api/portal-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: un, password: pw })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        onLogin({ ...data, type: "customer" });
-      } else {
-        setErr("نام کاربری یا رمز عبور پرتال نادرست است");
-      }
+      const data = await api("POST", "/api/portal-login", { username: un, password: pw });
+      onLogin({ ...data, type: "customer" });
     } catch(e) { setErr("نام کاربری یا رمز عبور پرتال نادرست است"); }
     finally { setLoading(false); }
   };
@@ -5785,7 +5791,6 @@ function WhatsAppBroadcast({ me, showToast }) {
 }
 
 /* ═══════════════════════════════════════ LEADS INBOX ════════════════════════════════ */
-const LEADS_BACKEND = "https://azarmehr-backend-main.vercel.app/api";
 
 const LS = [
   { value:"new",       label:"جدید",          color:"#5ba3e6" },
@@ -7186,21 +7191,11 @@ function App() {
     setChangePwdSuccess("");
     setChangePwdLoading(true);
     try {
-      const token = localStorage.getItem("adminToken");
-      const res = await fetch("https://azarmehr-backend-main.vercel.app/api/users/reset-password", {
-        method:"POST",
-        headers:{"Content-Type":"application/json", Authorization:`Bearer ${token}`},
-        body:JSON.stringify({ currentPassword:f.currentPassword, newPassword:f.newPassword })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setChangePwdSuccess("رمز عبور با موفقیت تغییر کرد");
-        setChangePwdForm({ currentPassword:"", newPassword:"", confirmPassword:"" });
-      } else {
-        setChangePwdError(data.error || "تغییر رمز انجام نشد");
-      }
+      const data = await api("POST", "/api/users/reset-password", { currentPassword:f.currentPassword, newPassword:f.newPassword });
+      setChangePwdSuccess("رمز عبور با موفقیت تغییر کرد");
+      setChangePwdForm({ currentPassword:"", newPassword:"", confirmPassword:"" });
     } catch(e) {
-      setChangePwdError("تغییر رمز انجام نشد");
+      setChangePwdError(e.message || "تغییر رمز انجام نشد");
     } finally {
       setChangePwdLoading(false);
     }
