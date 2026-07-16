@@ -201,6 +201,9 @@
 - `supabase/fix-project-tasks-status-lifecycle.sql` → افزودن ستون `completed_at` (idempotent) + اصلاح چرخهٔ وضعیت
 - `supabase/rbac-tables.sql` / `run-all-in-dashboard.sql` → `user_roles`, `role_permissions`
 - `supabase/groups-tables.sql` → `groups`, `group_members`
+- `supabase/crm-production-baseline.sql` → **CRM Schema Source of Truth**: `crm_customers`, `crm_draft_orders`, `crm_orders`, `crm_order_items`<br>
+  ⚠️ **این فایل یک snapshot دقیق از schema production است، نه migration اجرایی.**<br>
+  ⚠️ **`supabase/create-crm-tables.sql` (draft قدیمی) با production ناسازگار است — UUID‑ها باید bigint باشند و auth_user_id وجود نداشت. از آن استفاده نکن.**
 
 ### lifecycle / status model
 - `project-tasks.js` خط ۶–۲۷ (SSOT عددی):
