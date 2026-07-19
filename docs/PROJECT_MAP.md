@@ -79,9 +79,9 @@
 - **Unknown / publicly-served debug:** `test.html`، `simple-test.html`، `test_syntax.js`، `debug_check.js`، `debug_check2.js`، `check_local.js`، `check_end.js`، `check_deploy.js` — چون deploy static با `outputDirectory:"."` است، همگی عمومی سرو می‌شوند (security follow-up).
 
 ### whatsapp-broadcast-api/
-- **Source:** `whatsapp-broadcast-api/api/webhook.js` (تنها endpoint زنده).
+- **Source:** `whatsapp-broadcast-api/api/webhook.js` (endpoint زنده). Endpointهای دیگر طبق runtime smoke تأیید شده‌اند: `whatsapp_broadcast` و `whatsapp-inbox` (verify section پایین).
 - **Generated:** ندارد.
-  - **Legacy:** `vercel.json` مسیرهای admin تبلیغ می‌کرد که پیاده‌سازی نداشتند (ghost routes) — در P1.1.2-A این مسیرهای ghost حذف شدند و فقط `/api/webhook` باقی ماند.
+  - **Legacy note:** پیش‌تر مستند شده بود که `vercel.json` مسیرهای admin تبلیغ می‌کرد که پیاده‌سازی ندارند (ghost routes) و در P1.1.2-A حذف شده‌اند. طبق بررسی فعلی `vercel.json` (خط ۵-۷) مسیرهای `/api/whatsapp_broadcast` و `/api/whatsapp-inbox` را دارد و این endpointها با runtime smoke تأیید شدند (زیر را ببینید). ادعای ghost/broken برای این مسیرها منسوخ است.
 
 ---
 
@@ -159,11 +159,16 @@
 ## WhatsApp Broadcast API
 
 - **implemented endpoints:** `POST/GET /api/webhook` (UltraMsg webhook؛ `whatsapp-broadcast-api/api/webhook.js`
-  تنها endpoint زنده است).
-- **advertised but missing:** `vercel.json` مسیرهای admin (مثل UI مدیریت WhatsApp پنل ادمین) را تبلیغ
-  می‌کند که پیاده‌سازی ندارند → UI مدیریت WhatsApp در admin-panel **۴۰۴/BROKEN** است (ghost routes).
+  endpoint زنده است) + طبق runtime smoke تأیید شده: `GET /api/whatsapp_broadcast` و `GET /api/whatsapp-inbox`.
+- **Runtime evidence update (۱۴۰۵ — local `vercel dev` smoke):**
+  WhatsApp API routes دیگر به‌عنوان ghost/broken در نظر گرفته نمی‌شوند. تأیید شد:
+  - `GET /api/webhook` → ۲۰۰ OK
+  - `GET /api/whatsapp-inbox` بدون JWT → ۴۰۱ Unauthorized (auth فعال)
+  - `GET /api/whatsapp-inbox` با JWT معتبر → ۲۰۰ OK، دادهٔ واقعی Supabase برگشت
+  - `GET /api/whatsapp_broadcast` با JWT معتبر → ۲۰۰ OK (آرایه خالی)
+  - نوشتن/ارسال/deploy/migration انجام نشد.
+- **Legacy note:** پیش‌تر مستند شده بود `vercel.json` مسیرهای admin تبلیغ می‌کرد که پیاده‌سازی ندارند (ghost routes) و در P1.1.2-A حذف شده‌اند. طبق بررسی فعلی `vercel.json` (خط ۵-۷) مسیرهای `/api/whatsapp_broadcast` و `/api/whatsapp-inbox` را دارد و با runtime smoke تأیید شدند. ادعای «UI مدیریت WhatsApp در admin-panel ۴۰۴/BROKEN است» منسوخ است **برای endpointهای API بالا**. توجه: این evidence فقط بررسی API است؛ browser/UI smoke برای خودِ admin-panel هنوز انجام نشده و نباید PASS کامل UI از آن استنتاج شود.
 - **webhook security status:** در D0 تأیید شد که هیچ تأیید امضای ورودی در `webhook.js`/`_lib.js` وجود ندارد (ABSENT). در P0 (۱۴۰۵/۰۴/۲۳) یک **shared-secret gate** افزوده شد: هدر `X-Webhook-Secret` با `ULTRAMSG_WEBHOOK_SECRET` (مقایسهٔ constant-time در `_webhook-security.js`) بررسی می‌شود؛ POST پیش از پردازش احراز می‌شود و fail-closed است. جزئیات در `docs/OMNICHANNEL_AI_AGENT_BLUEPRINT.md` §۱۶.
-  - **ghost routes:** ۱۲ مسیر تبلیغ‌شده در `vercel.json` فاقد فایل مقصدند (جستار Contract Gaps / Security Follow-ups). در P1.1.2-A حذف شدند (فقط مسیر `/api/webhook` در vercel.json باقی ماند).
 
 ---
 
@@ -346,7 +351,7 @@
 | `backend` (Supabase) | `messenger-app` | GET/POST `/api/project-tasks`, `/api/notifications`, `/api/chat` (تب projects در messenger دمو/محلی است، نه backend) |
 | `backend` (Supabase) | `wholesale-portal` | `/api/*` (order, customer, auth) + دسترسی مستقیم Supabase |
 | `backend`/Supabase | `whatsapp-broadcast-api` | می‌نویسد: `warranty_returns`, `order_requests` |
-| `whatsapp-broadcast-api` | `admin-panel` | مسیرهای admin تبلیغ‌شده اما پیاده‌نشده → ۴۰۴ (ghost) |
+| `whatsapp-broadcast-api` | `admin-panel` | endpointهای `whatsapp_broadcast` / `whatsapp-inbox` با runtime smoke تأیید شدند (۲۰۰)؛ UI browser smoke جداگانه لازم است |
 
 **قاعده:** همه frontendها به `backend` به‌عنوان منبع دادهٔ واحد (Supabase) وابسته‌اند.
 
@@ -388,8 +393,7 @@
    بازبینی RLS + چرخش anon key در صورت افشا.
 4. **webhook authentication:** تأیید امضای UltraMsg در `whatsapp-broadcast-api/api/webhook.js`
    (در این تسک verified نشد؛ فعلاً UNKNOWN).
-5. **ghost WhatsApp routes:** `whatsapp-broadcast-api/vercel.json` مسیرهای admin بی‌پیاده‌سازی تبلیغ
-   می‌کند → UI مدیریت WhatsApp در admin-panel ۴۰۴. حذف مسیرهای ghost یا پیاده‌سازی.
+5. **WhatsApp routes (obsolete ghost claim):** پیش‌تر ادعا شده بود `whatsapp-broadcast-api/vercel.json` مسیرهای admin بی‌پیاده‌سازی تبلیغ می‌کند → UI مدیریت WhatsApp در admin-panel ۴۰۴. طبق runtime smoke جدید، endpointهای `/api/whatsapp_broadcast` و `/api/whatsapp-inbox` زنده و ۲۰۰ برمی‌گردانند؛ ادعای ghost/BROKEN برای این مسیرها منسوخ است. browser/UI smoke برای admin-panel همچنان انجام نشده.
 
 ---
 
@@ -402,8 +406,7 @@
 - **backend route parity:** قبلاً `server.js` (Render) ۶ مسیر کمتر از `api/index.js` (Vercel) داشت
   (`portal-login-retail`، `roles`، `role-permissions`، `groups`، `crm-draft-orders`، `whatsapp-rules`)؛
   در تسک alignment هر ۶ مسیر به `server.js` اضافه شدند → parity برقرار است (تفاوت فقط در catch-all fallback).
-- **missing WhatsApp management endpoints:** admin-panel انتظار UI مدیریت WhatsApp دارد اما بک‌اند/
-  webhook پیاده‌سازی ندارد (ghost routes).
+- **WhatsApp management API endpoints:** طبق runtime smoke، `whatsapp_broadcast` و `whatsapp-inbox` در `whatsapp-broadcast-api` زنده و ۲۰۰ برمی‌گردانند (auth فعال). ادعای قبلی مبنی بر missing/ghost بودن این endpointها منسوخ است. تأکید: این فقط بررسی API است؛ وضعیت کامل UI مدیریت در admin-panel (browser smoke) هنوز تأیید نشده.
 - **project control / performance:** `avg_completion_time_days` در reports.js از `task_status_history`
   محاسبه می‌شود (نه ستون `completed_at`) و فقط هنگام نبود رکورد APPROVED nullable است — پس به
   migration `completed_at` وابسته نیست.   وابستگی `completed_at` فقط در `project-tasks.js` (نوشتن
