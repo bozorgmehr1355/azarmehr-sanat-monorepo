@@ -1,0 +1,37 @@
+# Environment variables
+.env
+.env.*
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+.vercel
+
+# Backup directory (reversible move of old api/ handlers)
+api/._backup_handlers/
+.env*
+
+# AZARMEHR BACKEND LOCAL SCRATCH AND DEV ARTIFACTS - DO NOT COMMIT
+/smoke-test*.js
+/smoke-*.js
+/verify-*.js
+/dev-server*.log
+/dev-server*.out
+/dev-server*.err
+/server-local.js
+/server-simple.js
+/*.tmp
+/*.out
+/*.err
