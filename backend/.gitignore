@@ -35,3 +35,6 @@ api/._backup_handlers/
 /*.tmp
 /*.out
 /*.err
+
+# Runtime artifacts
+server_pid.txt
