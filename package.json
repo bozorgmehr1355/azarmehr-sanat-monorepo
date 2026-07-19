@@ -7,6 +7,7 @@
     "check:db-source": "node scripts/check-db-source-of-truth.js",
     "check:regression-safety": "node scripts/check-regression-safety.js",
     "check:preflight": "npm run check:db-source && npm run check:regression-safety",
+    "smoke:backend": "node backend/scripts/smoke-health.js",
     "validate:products": "node scripts/validate-products.js",
     "test": "node whatsapp-broadcast-api/tests/webhook-security.test.js",
     "test:webhook-security": "node whatsapp-broadcast-api/tests/webhook-security.test.js"

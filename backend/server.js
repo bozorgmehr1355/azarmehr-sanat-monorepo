@@ -108,10 +108,12 @@ const handlers = {
   reports:                 require('./handlers/reports'),
   performanceReports:      require('./handlers/performance-reports'),
   publicWarrantyRequest:   require('./handlers/public-warranty-request'),
+  health:                  require('./handlers/health'),
 };
 
 // Mount every endpoint
 mount('/api/login',                      handlers.login);
+mount('/api/health',                     handlers.health);
 mount('/api/portal-login',               handlers.portalLogin);
 mount('/api/portal-register',            handlers.portalRegister);
 mount('/api/portal-login-retail',        handlers.portalLoginRetail);

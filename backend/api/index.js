@@ -81,7 +81,8 @@ const routes = [
   ['/api/customer-agent',              H('customer-agent')],
 ['/api/reports/performance/calculate', H('performance-reports')],
 ['/api/reports',                     H('reports')],
-['/api/public-warranty-request',     H('public-warranty-request')],
+  ['/api/public-warranty-request',     H('public-warranty-request')],
+  ['/api/health',                      H('health')],
 ];
 
 for (const [route, handler] of routes) {
