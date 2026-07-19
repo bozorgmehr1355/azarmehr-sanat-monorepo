@@ -64,3 +64,6 @@ _manual_backups/
 /db.log
 /pref.log
 /reg.log
+
+# Explicitly block deleted secret artifact
+/coades.env.txt
