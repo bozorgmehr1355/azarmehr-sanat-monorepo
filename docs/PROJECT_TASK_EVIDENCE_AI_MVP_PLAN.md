@@ -882,3 +882,40 @@ The discovery report must identify:
 - Existing audit logs
 - Smoke test commands
 - Legacy/deprecated areas
+
+---
+
+## 26. Notifications — Verified Status
+
+> **Status:** RESOLVED / VERIFIED
+> **Last evidence:** ۱۴۰۵/۰۴/۲۶ — production verification session
+
+### Evidence Summary
+
+```
+Staging (local backend):
+- POST /api/notifications → 201 ✅
+- GET  /api/notifications → 200 ✅
+
+Production (azarmehr-backend.vercel.app):
+- Table public.notifications EXISTS (no migration needed)
+- RLS enabled and operational
+- Initial POST → 405 (production backend was outdated/stale)
+- Backend redeployed from current backend/ (no code changes)
+- POST /api/notifications → 201 ✅
+- GET  /api/notifications → 200 ✅
+```
+
+### Important Clarifications
+
+- **No migration was executed** — the `notifications` table already existed on production Supabase.
+- **No code changes were made** — the POST branch (`notifications.js:33-59`) was already in the codebase; only the Vercel deployment was stale.
+- **No schema was touched** — production database remained unchanged.
+- **Root cause** was an outdated production backend deployment, not a code or schema gap.
+- **Redeploy** was a pure `vercel --prod` sync of existing source files.
+
+### Impact on Future Work
+
+- Notifications infrastructure is ready for consumption by tasks, meetings, and AI assistant features.
+- No further notifications migration should be executed unless a new pre-check contradicts this evidence.
+- The notifications handler (`backend/handlers/notifications.js`) supports `GET`, `POST`, and `PATCH` methods with JWT auth and RBAC (`requireAdmin`).

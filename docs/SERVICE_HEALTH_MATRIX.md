@@ -1,6 +1,6 @@
 # Service Health Matrix
 
-> آخرین به‌روزرسانی: ۱۴۰۵/۰۴/۲۴ — بر اساس evidence مراحل ۱ تا ۹ (AZARMEHR EXECUTION LOCK)
+> آخرین به‌روزرسانی: ۱۴۰۵/۰۴/۲۶ — بر اساس evidence verified notifications + PROJECT_EXECUTION_BASELINE
 >
 > محدوده این به‌روزرسانی: فقط ۵ سرویس
 > (`wholesale-portal/`، `admin-panel/`، `messenger-app/`، `backend/`، `whatsapp-broadcast-api/`).
@@ -52,18 +52,17 @@
 - **Static code health:** ✅ PASS (node -c همه فایل‌های واقعی).
 - **Runtime health:** ⚠️ UNKNOWN/BLOCKED — `backend/node_modules` غایب؛ env/auth نامشخص؛ هیچ HTTP runtime اجرا نشد (STEP 3/6/8).
 - **Deploy health:** ⚠️ UNKNOWN/PARTIAL — deploy توسط من انجام نشد؛ ادعای قبلی «✅ OK / 38 route» توسط مراحل ۱–۹ تأیید نشد.
-- **DB/migration dependency:** جدول `notifications` → migration ساخته شد (`supabase/create-notifications-table.sql`، STEP 5) اما **اجرا نشد**؛ live table **تأیید نشده** (STEP 6/8).
+- **DB/migration dependency:** جدول `notifications` موجود است و VERIFIED — POST 201 / GET 200 روی production. migration ساخته شد (`supabase/create-notifications-table.sql`) اما **اجرا نشد زیرا جدول از قبل وجود داشت**.
 - **Env/auth dependency:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_KEY`, `JWT_SECRET` (`handlers/_lib.js:5-7`) — وضعیت UNKNOWN (مقدار بررسی نشد، طبق strict mode).
 - **Git/governance status:** `backend/` در ریشه **untracked (??)** — commit نشده (STEP 7/8/9).
 - **Forbidden endpoint status:** ✅ تمیز — grep backend برای `azarmehr-backend-main.vercel.app` / `vercel.app` / `API_BASE` → No files (STEP 8).
 - **Hardcoded API_BASE status:** ✅ تمیز — هیچ `API_BASE` جدید در backend active code (STEP 8).
 - **Open blockers:**
   1. `node_modules` غایب → preflight/runtime غیرممکن.
-  2. migration اجرا نشده → جدول `notifications` در DB نیست.
-  3. env/auth نامشخص.
-  4. `backend/package.json` فاقد `check:preflight` (فقط در root وجود دارد).
+  2. env/auth نامشخص.
+  3. `backend/package.json` فاقد `check:preflight` (فقط در root وجود دارد).
 - **Current health verdict:** ⚠️ PARTIAL
-- **Next required gate:** اجرای migration روی target (plan + تأیید مالک + staging/prod) → runtime e2e → `npm run check:preflight` (پس از `npm install`) → deploy با تأیید مالک.
+- **Next required gate:** `npm install` + `npm run check:preflight` + smoke test production.
 
 ### ۲) admin-panel/
 
@@ -148,26 +147,27 @@
 
 ---
 
-## بلوکرهای باز (از مراحل ۱–۹)
+## بلوکرهای باز (پس از STEP 0 — Resync)
 
-1. **notifications DB:** شاخه POST پیاده‌شد (STEP 2) اما migration اجرا نشد → جدول `notifications` در DB تأیید نشده.
-2. **node_modules غایب** در backend → preflight/runtime غیرممکن.
-3. **env/auth نامشخص** (بررسی نشد، طبق strict mode).
-4. **Governance/Git fragmentation:** nested `.git` (admin-panel)؛ ~۲۹ مسیر untracked؛ `backend/` untracked؛ `docs/DEVELOPMENT_RULES.md` M (STEP 8)؛ `AGENTS.md` M (STEP 9 — refs اصلاح شد).
-5. **Deploy health** همه سرویس‌ها تست نشد → UNKNOWN.
+1. **node_modules غایب** در backend → preflight/runtime غیرممکن.
+2. **env/auth نامشخص** (بررسی نشد، طبق strict mode).
+3. **Governance/Git fragmentation:** nested `.git` (admin-panel)؛ ~۲۹ مسیر untracked؛ `backend/` untracked.
+4. **Deploy health** همه سرویس‌ها تست نشد → UNKNOWN.
+
+> ✅ **Notifications دیگر blocker نیست** — POST 201 / GET 200 در staging و production verified. جدول موجود است. بدون migration. بدون تغییر کد.
 
 ---
 
-## اولویت رفع (به‌روزرسانی‌شده)
+## اولویت رفع (پس از STEP 0 — مطابق PROJECT_EXECUTION_BASELINE)
 
 ```
-۱. backend: اجرای migration notifications (plan + تأیید مالک + staging/prod)
-۲. backend: npm install + npm run check:preflight (پس از migration)
-۳. backend: runtime e2e notifications (POST→۲۰۱، GET→list، PATCH→read=true)
-۴. governance: تصمیم nested .git (admin-panel) — بدون تأیید مالک دست‌زده نشود
-۵. admin-panel / wholesale-portal / messenger-app: تأیید deploy URLs + بررسی security follow-ups
-۶. whatsapp-broadcast-api: تست webhook GET + ایجاد health.js (طبق ممیزی قبلی)
-۷. commit/stage فقط با تأیید صریح مالک (خارج از Execution Lock فعلی)
+STEP 1: RLS Gaps (task_progress_updates, task_blockers, meeting_action_items)
+STEP 2: Ghost Routes (WhatsApp admin UI, vercel.json, broken admin-panel routes)
+STEP 3: Contract Alignment (active field, role/system_role mapping, API shape)
+STEP 4: Repo Hygiene (nested .git, untracked files, AGENTS.md refs)
+STEP 5: MVP Smoke Matrix (auth, dashboard, projects, tasks, evidence, meetings, notifications, reports)
+STEP 6: Omnichannel P1/P2 (audit domain/data model first)
+STEP 7: AI Copilot MVP (knowledge policy, approval flow, human-in-the-loop)
 ```
 
 > هیچ موردی در این به‌روزرسانی به‌عنوان «system is healthy / OK» تأیید نشده است.

@@ -20,7 +20,7 @@
 | 5 | `supabase/fix-project-tasks-status-lifecycle.sql` | اضافه completed_at + normalize pending→ASSIGNED + DEFAULT + CHECK(۱۳ وضعیت) + index + comment | ۱ ستون، ۱ UPDATE، ۱ CONSTRAINT، ۱ INDEX | YES (DROP قبل ADD) | بعد از ۱ | **MEDIUM** | YES* | YES* | DROP COLUMN/CONSTRAINT (ریسک متوسط) |
 | 6 | `supabase/add-reporting-indexes.sql` | indexهای performance برای گزارش‌ها | ۱۸ `CREATE INDEX IF NOT EXISTS` | YES | بعد از ۱/۲/۳/۴ | LOW | YES | YES | DROP INDEX |
 | 7 | `supabase/rls-policies.sql` | ENABLE RLS روی ۱۲ جدول + ۸ CREATE POLICY | RLS + ۸ policy | YES (DO block drop-first) | بعد از ۱/۲/۳ | LOW | YES | YES | DROP POLICY / DISABLE RLS (توصیه نمی‌شود) |
-| 8 | `supabase/rls-policies-project-control-addendum.sql` (**پیشنهادی، اجرا نشده**) | ۳ policy گم‌شده برای task_progress_updates, task_blockers, meeting_action_items | ۶ policy | YES (DROP POLICY IF EXISTS) | بعد از ۷ | LOW | YES | YES | DROP POLICY |
+| 8 | `supabase/rls-policies-project-control-addendum.sql` (**اجرا شده توسط مالک در Dashboard**) | ۳ policy گم‌شده برای task_progress_updates, task_blockers, meeting_action_items | ۶ policy | YES (DROP POLICY IF EXISTS) | بعد از ۷ | LOW | YES | YES | DROP POLICY |
 
 \* `fix-project-tasks-status-lifecycle.sql` روی rerun ایمن است چون `DROP CONSTRAINT IF EXISTS` قبل از
 `ADD CONSTRAINT` اجرا می‌شود. ریسک MEDIUM به دلیل: (الف) `ADD CONSTRAINT` اگر هر `status` خارج از ۱۳
@@ -38,18 +38,24 @@
 | project_tasks | YES | tasks_admin_all, tasks_member_read, tasks_assignee_update | admin=all, member=read, assignee=update | unaffected | denied | — |
 | task_status_history | YES | task_children_read | member/creator=read | unaffected | denied | — |
 | task_attachments | YES | task_children_read_2 | member/creator=read | unaffected | denied | — |
-| **task_progress_updates** | YES | **NONE** | (should: admin=all, member/creator=read) | unaffected | **deny-all** | **GAP** |
-| **task_blockers** | YES | **NONE** | (should: admin=all, member/creator=read) | unaffected | **deny-all** | **GAP** |
+| **task_progress_updates** | YES | **tpu_admin_all, tpu_children_read** | admin=all, member/creator=read | unaffected | denied (no anon path) | **RESOLVED** |
+| **task_blockers** | YES | **tb_admin_all, tb_children_read** | admin=all, member/creator=read | unaffected | denied (no anon path) | **RESOLVED** |
 | meetings | YES | meetings_admin_all, meetings_member_read | admin=all, member=read | unaffected | denied | — |
-| **meeting_action_items** | YES | **NONE** | (should: admin=all, member=read) | unaffected | **deny-all** | **GAP** |
+| **meeting_action_items** | YES | **mai_admin_all, mai_member_read** | admin=all, member=read | unaffected | denied (no anon path) | **RESOLVED** |
 | ai_drafts | YES | ai_drafts_owner | owner=all | unaffected | denied | — |
 | audit_logs | YES | audit_logs_admin | admin=read | unaffected | denied | — |
 
-**تعداد gap: ۳ جدول** (task_progress_updates, task_blockers, meeting_action_items).
-**شدت gap: LOW.** بک‌اند از service-role استفاده می‌کند (RLS را دور می‌زند) و admin-panel از پراکسی
-بک‌اند استفاده می‌کند → هیچ مسیر زنده‌ای نمی‌شکند. این gap صرفاً «fail-closed» است (ناسازگار با بقیه
-جداول که policy دارند) و فقط اگر روزی کلاینتی مستقیماً با کلید anon/authenticated به این ۳ جدول دسترسی
-پیدا کند اثر می‌گذارد (فعلاً چنین مسیری در frontend وجود ندارد).
+**تعداد gap: ۰ جدول unresolved** (task_progress_updates, task_blockers, meeting_action_items → RESOLVED).
+**شدت gap قبلی: LOW.** این gap «fail-closed» RLS بود (ناسازگار با بقیه جداول). اکنون با اجرای دستی
+addendum در Supabase Dashboard توسط مالک و تأیید خروجی `pg_policies`، وضعیت **RESOLVED** است.
+**منبع تأیید:** خروجی `pg_policies` ارائه‌شده توسط مالک روی پروژه `apscmdspkitpwzhizgkq` (۶ policy مشاهده شدند).
+**policyهای تأییدشده:**
+- task_progress_updates: tpu_admin_all, tpu_children_read
+- task_blockers: tb_admin_all, tb_children_read
+- meeting_action_items: mai_admin_all, mai_member_read
+
+> نکته: بک‌اند از service-role استفاده می‌کند (RLS را دور می‌زند) و admin-panel از پراکسی بک‌اند استفاده
+> می‌کند → هیچ مسیر زنده‌ای نمی‌شکند. این تغییر صرفاً همسوسازی fail-closed با بقیه جداول است.
 
 ---
 
@@ -168,7 +174,7 @@ SELECT COUNT(*) AS draft_action_items FROM meeting_action_items WHERE status = '
   - `ADD CONSTRAINT` در migration شماره ۵ اگر `status` خارج از ۱۳ وضعیت رسمی وجود داشته باشد fail
     می‌دهد (pre-check شماره ۵ الزامی).
 - **Medium:**
-  - ۳ جدول فاقد RLS policy (deny-all) — ناسازگار؛ addendum پیشنهادی آماده است.
+  - ۳ جدول project-control قبلاً فاقد RLS policy بودند (deny-all، ناسازگار) — **اکنون RESOLVED** (addendum توسط مالک در Dashboard اجرا شد و خروجی `pg_policies` تأیید کرد).
   - `add-reporting-indexes.sql` اجرا نشده (صرفاً performance؛ در حجم کوچک بی‌اثر).
 - **Low:**
   - همهٔ create-/fix-missing/idnexes idempotent و LOW risk.
@@ -182,8 +188,8 @@ SELECT COUNT(*) AS draft_action_items FROM meeting_action_items WHERE status = '
 
 ## G) Changes
 
-- `docs/DB_MIGRATION_READINESS.md` ایجاد شد (این فایل).
-- `supabase/rls-policies-project-control-addendum.sql` ایجاد شد (**پیشنهادی، اجرا نشده**).
+- `docs/DB_MIGRATION_READINESS.md` ایجاد شد (این فایل) و سپس به‌روزرسانی شد (بخش RLS Matrix: ۳ gap → RESOLVED).
+- `supabase/rls-policies-project-control-addendum.sql` ایجاد شد و **توسط مالک در Supabase Dashboard اجرا شد** (۶ policy؛ خروجی `pg_policies` تأیید کرد).
 - `docs/PROJECT_MAP.md` به‌روزرسانی شد: ۳ gap واقعی RLS (به‌جای ۲) + ارجاع به این سند.
 
 ## H) Files not changed and why
@@ -197,12 +203,13 @@ SELECT COUNT(*) AS draft_action_items FROM meeting_action_items WHERE status = '
 
 ## I) Security / Contract Impact
 
-- RLS در codebase/docs بهتر شد: YES (سند + addendum پیشنهادی؛ اجرا نشده).
-- live DB changed: **NO**.
-- migration executed: **NO**.
+- RLS در codebase/docs بهتر شد: YES (سند + addendum اجرا شد توسط مالک در Dashboard؛ ۶ policy تأیید شد).
+- live DB changed: **YES** (فقط policyها، توسط مالک در Dashboard — نه توسط agent).
+- migration executed: **NO** (agent هیچ migrationی اجرا نکرد).
+- SQL executed manually by owner in Supabase Dashboard: **YES** (addendum).
 - deploy performed: **NO**.
 - secrets added: **NO**.
-- production runtime changed: **NO**.
+- production runtime changed: **NO** (تغییر صرفاً افزودن policyهای RLS بود؛ رفتار زنده بک‌اند/پنل تغییر نکرد).
 
 ## J) Validation
 
@@ -212,7 +219,8 @@ SELECT COUNT(*) AS draft_action_items FROM meeting_action_items WHERE status = '
 - secret scan: هیچ secret در فایل‌های جدید / backend / admin-panel یافت نشد.
 - notes: migration اجرا نشد؛ deploy انجام نشد.
 
-## Final status: **PARTIAL**
+## Final status: **PARTIAL** (RLS gap بخشِ project-control: RESOLVED)
 - علت: بررسی و مستندسازی کامل انجام شد؛ migration `completed_at` آماده اما **اجرا نشده** (نیازمند
-  اجرای دستی در Supabase Dashboard)؛ ۳ gap RLS شناسایی و فایل پیشنهادی آماده شد (اجرا نشده).
-  با اجرای شماره ۵ + ۷ + ۸ در Supabase، وضعیت به READY/PASSED ارتقا می‌یابد.
+  اجرای دستی در Supabase Dashboard). ۳ gap RLS شناسایی شده بودند و addendum توسط مالک در Dashboard
+  اجرا شد و خروجی `pg_policies` هر ۶ policy را تأیید کرد → **RLS gap project-control: RESOLVED**.
+  با اجرای شماره ۵ + ۷ در Supabase، وضعیت کلی به READY/PASSED ارتقا می‌یابد (مورد ۸ قبلاً انجام شد).
