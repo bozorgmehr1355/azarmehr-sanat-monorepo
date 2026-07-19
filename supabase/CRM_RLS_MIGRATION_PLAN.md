@@ -235,3 +235,122 @@
 - هیچ DROP POLICY / ALTER TABLE / GRANT / REVOKE اجرا نشد.
 - هیچ SQL به Supabase ارسال نشد.
 - stage/commit/push/deploy انجام نشد.
+
+## 23. CRM RLS Pre-Migration Gate
+
+### Status
+- **investigation_complete:** YES
+- **readiness_status:** NOT CLEARED
+- **SQL migration allowed:** NO
+- **SQL execution allowed:** NO
+
+> قبل از ساخت یا اجرای هرگونه CRM RLS SQL migration، گیت‌های زیر باید بسته شوند.
+
+### 1. معنای `crm_customers.user_id`
+**وضعیت فعلی: AMBIGUOUS**
+ستون `crm_customers.user_id` نباید به‌عنوان مبنای ownership یا کنترل دسترسی استفاده شود تا زمانی که معنای آن از production source of truth تأیید و owner approval گرفته شود.
+
+**الزامات پیش از migration:**
+- تأیید کنید `user_id` به کدام مفهوم نگاشت می‌شود: admin داخلی، customer user، legacy user، sales owner، یا مفهوم دیگر؛
+- تأیید کنید آیا هنوز فعال استفاده می‌شود یا نه؛
+- تأیید کنید آیا رابطه‌ای با Supabase `auth.uid()` دارد یا نه.
+
+**قانون تصمیم:** تا زمانی که این مورد ambiguous است، سیاست‌های ownership RLS را روی `crm_customers.user_id` نسازید.
+
+### 2A. schema / RLS / source of truth جدول `crm_notifications`
+**وضعیت فعلی: BLOCKED**
+جدول `crm_notifications` باید جداگانه قبل از هر CRM RLS migration بررسی شود.
+
+**الزامات پیش از migration:**
+- تأیید production schema / source of truth؛
+- تأیید فعال بودن RLS؛
+- فهرست‌برداری از policyها، grantها، indexها، triggerها و dependencyهای موجود؛
+- تأیید اینکه جدول بخشی از scope دسترسی CRM است یا یک زیرسیستم notification جداگانه.
+
+**قانون تصمیم:** تا زمانی که وضعیت production تأیید نشده، `crm_notifications` را داخل یک CRM RLS migration نیاورید.
+
+### 2B. side effect تابع/trigger `notify_next_team_member()`
+**وضعیت فعلی: BLOCKED**
+dependency اطراف `notify_next_team_member()` باید قبل از هر اجرای CRM RLS بررسی شود.
+
+**الزامات پیش از migration:**
+- تأیید definition تابع و حالت امنیتی آن؛
+- تأیید اینکه `SECURITY DEFINER` است یا `SECURITY INVOKER`؛
+- تأیید اینکه کدام جدول/event آن را فراخوانی می‌کند؛
+- تأیید اینکه تغییرات RLS می‌توانند insert/updateهای تابع/trigger را مسدود کنند یا نه؛
+- تعریف پوشش smoke test برای side effectهای notification.
+
+**قانون تصمیم:** تغییرات CRM RLS که ممکن است نوشتن notification را تحت تأثیر قرار دهد اجرا نکنید تا زمانی که رفتار تابع/trigger تأیید شود.
+
+### 3. مسیر دسترسی `wholesale-portal`
+**وضعیت فعلی: CLEAR، اما باید در طراحی نهایی policy لحاظ شود**
+این یک unknown مسدودکننده نیست، اما باید صراحتاً در طراحی نهایی CRM RLS در نظر گرفته شود چون دسترسی mixed است:
+- مسیر backend proxy / service-role؛
+- مسیر direct Supabase client برای بخش‌های منتخب.
+
+**الزامات پیش از migration:**
+- مستند کنید کدام عملیات CRM فقط backend هستند؛
+- مستند کنید کدام عملیات (اگر هست) از direct Supabase استفاده می‌کنند؛
+- اطمینان حاصل کنید سیاست‌های نهایی RLS به‌طور تصادفی خواندن/نوشتن‌های لازمِ direct-client را مسدود نمی‌کنند؛
+- اطمینان حاصل کنید direct-client access تا زمان تأیید صریح deny-by-default باقی می‌ماند.
+
+**قانون تصمیم:** خودش blocker نیست، اما طراحی نهایی SQL باید صراحتاً این مسیر دسترسی را در نظر بگیرد.
+
+### 4. custom claim `system_role` در Supabase Dashboard
+**وضعیت فعلی: AMBIGUOUS**
+بررسی repo هیچ Supabase auth hook، trigger یا کانفیگ `app_metadata` / `raw_app_meta_data` که `system_role` را داخل Supabase JWT تزریق کند پیدا نکرد.
+JWT داخلی backend شامل `system_role` است، اما آن توکن همان توکن Supabase `auth.jwt()` که توسط RLS policyها استفاده می‌شود نیست.
+
+**الزامات پیش از migration:**
+- owner باید در Supabase Dashboard تأیید کند آیا custom claim `system_role` برای توکن‌های Supabase auth کانفیگ شده یا نه؛
+- اگر تأیید نشود، production RLS نباید به موارد زیر تکیه کند:
+  ```sql
+  auth.jwt() ->> 'system_role'
+  ```
+
+**قانون تصمیم:** `auth.jwt()` `system_role` را تا زمان تأیید صریح خارج از repo، unavailable در نظر بگیرید.
+
+### 5. production schema `public.users.system_role` و سازگاری `users.id = auth.uid()`
+**وضعیت فعلی: OPEN / NEEDS CONFIRMATION**
+الگوی امن‌تر پیشنهادی admin-RLS مبتنی بر ستون دیتابیس است:
+```sql
+EXISTS (
+  SELECT 1
+  FROM public.users u
+  WHERE u.id = auth.uid()
+    AND u.system_role IN ('super_admin', 'admin')
+)
+```
+پیش از اتکا به این الگو، production schema باید تأیید کند:
+- `public.users` وجود دارد؛
+- `public.users.id` از نظر نوع با `auth.uid()` سازگار است؛
+- `public.users.system_role` وجود دارد؛
+- مقادیر نقش مجاز شامل `super_admin` و `admin` هستند؛
+- جدول بدون recursion یا مشکل privilege از RLS policy قابل ارجاع است.
+
+**قانون تصمیم:** الگوی admin ستون‌دیتابیس را در production SQL استفاده نکنید تا زمانی که سازگاری production `public.users` تأیید شود.
+
+### Go / No-Go
+
+#### Go فقط اگر:
+- معنای `crm_customers.user_id` حل شود یا صراحتاً از طراحی policy حذف شود؛
+- schema/RLS/dependencyهای تابع `crm_notifications` تأیید یا صراحتاً excluded شوند؛
+- مسیر دسترسی `wholesale-portal` در طراحی نهایی policy لحاظ شود؛
+- claim Supabase `system_role` یا تأیید شود یا صراحتاً استفاده نشود؛
+- `public.users.system_role` و سازگاری `users.id = auth.uid()` پیش از استفاده از الگوی admin ستون‌دیتابیس تأیید شوند؛
+- owner approval ثبت شود.
+
+#### No-Go اگر:
+- هر موردی `BLOCKED` باقی بماند؛
+- هر نگاشت ownership موردنیاز به حدس متکی باشد؛
+- طراحی policy به unconfirmed Supabase JWT custom claim متکی باشد؛
+- طراحی policy به unconfirmed production `public.users` schema متکی باشد؛
+- side effectهای notification درک نشده باشند؛
+- owner approval وجود نداشته باشد.
+
+### Safety
+تا زمانی که همهٔ گیت‌های لازم باز شوند:
+- هیچ CRM RLS SQL migration ساخته نشود؛
+- هیچ CRM RLS SQL migration اجرا نشود؛
+- هیچ production RLS policy به `auth.jwt() ->> 'system_role'` متکی نباشد؛
+- هیچ ownership policy به ستون‌های ambiguous متکی نباشد.
