@@ -1,6 +1,10 @@
 {
   "version": 2,
   "routes": [
-    { "src": "/api/webhook", "dest": "/api/webhook.js" }
+    { "src": "/api/webhook", "dest": "/api/webhook.js" },
+    { "src": "/api/whatsapp_broadcast", "dest": "/api/whatsapp_broadcast.js" },
+    { "src": "/api/whatsapp-inbox/(.*)", "dest": "/api/whatsapp_inbox.js" },
+    { "src": "/api/whatsapp-inbox", "dest": "/api/whatsapp_inbox.js" },
+    { "src": "/api/send-customer-welcome", "dest": "/api/send-customer-welcome.js" }
   ]
 }
