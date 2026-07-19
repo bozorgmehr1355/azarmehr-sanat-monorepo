@@ -42,3 +42,25 @@ yarn-error.log*
 # Manual database backups and dumps must never be committed
 _manual_backups/
 *.dump
+
+.vercel
+.env*
+
+# AZARMEHR ROOT LOCAL SCRATCH AND SECRET ARTIFACTS - DO NOT COMMIT
+/.admin-jwt-temp.txt
+/auth-inbox*.txt
+/unauth-inbox*.txt
+/fresh-jwt*.txt
+/*jwt*.txt
+/login-body*.txt
+/response*.txt
+/tmp-*.txt
+/verify-jwt.txt
+/verify-jwt.js
+/proxy-server.js
+/smoke-server.js
+/serve.js
+/fix-pin*.js
+/db.log
+/pref.log
+/reg.log
