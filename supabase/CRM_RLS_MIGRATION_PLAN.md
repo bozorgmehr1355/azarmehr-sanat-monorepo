@@ -147,7 +147,7 @@
 
 ## 17. Secret Scan (فقط روی scope/staged file)
 - ابزار رسمی repo: `npm run check:db-source` (بخش E: Env File Tracking + Hardcoded Secret) اجرا شد → PASS، هیچ secret در tracked/staged یافت نشد.
-- scan سبک read-only روی فایل جدید `supabase/CRM_RLS_MIGRATION_PLAN.md`: فقط متن مستنداتی است؛ هیچ pattern secret (service_role/api_key/password/postgres:///DATABASE_URL) ندارد → PASS.
+- scan سبک read-only روی فایل جدید `supabase/CRM_RLS_MIGRATION_PLAN.md`: فقط متن مستنداتی است؛ هیچ pattern secret (service_role / api_key / password / link-to-DB-connection-string / DATABASE_URL) ندارد → PASS.
 - نکته: فایل baseline شامل ستون‌های `password`/`portal_password` (داده schema، نه secret در فایل) است؛ در این plan چاپ/نشده‌اند.
 
 ## 18. Owner Approval Checklist
@@ -155,8 +155,57 @@
 - [ ] تایید نقش دقیق `user_id` (integer) در crm_customers (BLOCKED/TBD).
 - [ ] تایید مسیر wholesale-portal (backend proxy vs direct client) قبل از محدودسازی INSERT/UPDATE.
 - [ ] بررسی امنیتی `notify_next_team_member()` (SECURITY DEFINER) و وضعیت RLS `crm_notifications`.
+- [ ] تأیید/رد custom claim `system_role` در Supabase Dashboard (بخش ۱۸.۵ — فعلاً AMBIGUOUS؛ الگوی DB-column توصیه شد).
+- [ ] تأیید production schema برای `public.users.system_role` و سازگاری `users.id = auth.uid()` (پیش‌شرط الگوی admin RLS).
 - [ ] تایید production approval جداگانه قبل از اجرای prod.
 - [ ] اجرای preflightها در زمان واقعی.
+
+## 18.5. تصمیم طراحی: claim `system_role` در JWT (نتیجه بررسی read-only — ۱۴۰۵)
+
+> وضعیت: **AMBIGUOUS برای Supabase `auth.jwt()`** / **PASS برای JWT داخلی backend**
+> (بررسی فقط read-only؛ هیچ SQL/commit/push/deploy انجام نشد)
+
+### دو مکانیزم متفاوت (نباید قاطی شوند)
+1. **JWT داخلی backend (معتبر / production-backed):**
+   - `backend/handlers/login.js` (خط ۹۳‑۹۷) توکن را با `jsonwebtoken.sign({ id, username, system_role, permissions }, JWT_SECRET)` صادر می‌کند.
+   - `system_role` از **ستون دیتابیس `users.system_role`** می‌آید و در **بدنهٔ اصلی توکن** (root claim) قرار می‌گیرد — نه در Supabase JWT.
+   - `requireRole`/`requireAdmin`/`requireSuperAdmin` (`_lib.js:48`) آن را از توکنِ decode‌شده می‌خوانند.
+   - ✅ این مسیر self-contained است و به `auth.jwt()` ربطی ندارد.
+
+2. **Supabase JWT / `auth.jwt() ->> 'system_role'` (نامشخص / وابسته به Dashboard):**
+   - سیاست‌های RLS متعدد (رجوع به پایین) از `auth.jwt() ->> 'system_role' IN ('super_admin','admin')` استفاده می‌کنند.
+   - این فرض می‌کند توکنِ صادرشده توسط **Supabase** یک claim سطح‌اول به نام `system_role` داشته باشد.
+   - **هیچ کانفیگ/trigger/hook** در ریپو که این claim را داخل Supabase JWT تزریق کند (جستجو برای `app_metadata`/`raw_app_meta_data`/`auth.users trigger`/custom claim) **یافت نشد**.
+   - `docs/DB_MIGRATION_READINESS.md` (خط ۱۸۴‑۱۸۵) صراحتاً این را سؤال باز گذاشته: اگر claim کانفیگ نشده باشد، این policyها برای client مستقیم همیشه `false` ارزیابی می‌شوند (fail-closed — امن اما admin دسترسی ندارد).
+
+### محل‌های مصرف فعلی در repo
+- **الگوی `auth.jwt() ->> 'system_role'` (وابسته به کانفیگ خارج‌از‌ریپو — توصیه نمی‌شود):**
+  - `supabase/rls-policies.sql` (خط ۲۹/۳۲/۳۶/۴۵/۵۰): `projects`, `project_members`, `project_tasks`, `meetings`, `audit_logs`
+  - `supabase/rls-policies-project-control-addendum.sql` (خط ۲۲/۳۳/۴۴)
+  - `supabase/create-support-tickets.sql` (۹۰/۹۱)
+  - `supabase/create-notifications-table.sql` (۴۰)
+  - `supabase/create-performance-scores.sql` (۵۷/۵۸)
+- **الگوی ایمن‌تر — ستون دیتابیس (repo-backed، توصیه‌شده):**
+  - `supabase/rbac-users-system-role.sql`, `create-groups-tables.sql`, `groups-tables.sql`:
+    `EXISTS (SELECT 1 FROM public.users u WHERE u.id = auth.uid() AND u.system_role IN ('super_admin','admin'))`
+
+### تصمیم طراحی برای RLS جدید CRM
+- ❌ **استفاده نشود:** `auth.jwt() ->> 'system_role'` — چون در Supabase JWT اثبات‌نشده است و به تنظیم Dashboard وابسته است.
+- ✅ **الگوی پیشنهادی (admin RLS):** فقط پس از تأیید production schema، از الگوی DB-column EXISTS استفاده شود:
+  ```sql
+  EXISTS (
+    SELECT 1
+    FROM public.users u
+    WHERE u.id = auth.uid()
+      AND u.system_role IN ('super_admin', 'admin')
+  )
+  ```
+- ✅ پیش‌شرط‌های تأیید در production (قبل از هر اجرا):
+  1. جدول `public.users` وجود دارد؛
+  2. `users.id` با `auth.uid()` (uuid) قابل مقایسه است؛
+  3. ستون `users.system_role` واقعاً وجود دارد؛
+  4. مقادیر مجاز آن همان `'super_admin' | 'admin'` است.
+- 🔒 مسیر backend (service-role) تحت تأثیر نیست؛ فقط client direct مربوط می‌شود.
 
 ## 19. معیارهای Go/No-Go
 - **GO** اگر: SoT تایید شد + backup انجام شد + staging تست شد + owner approval + تناقض wholesale-portal حل شد.
@@ -166,7 +215,7 @@
 - **BLOCKED/TBD:** معنای دقیق `crm_customers.user_id` (integer) — نباید با `auth.uid()` اشتباه شود.
 - **BLOCKED/TBD:** وضعیت RLS جدول `crm_notifications` (خارج از scope ۴ جدول) و سازگاری با تریگر `notify_next_team_member()`.
 - **BLOCKED/TBD:** مسیر دقیق wholesale-portal (backend proxy یا direct Supabase client) — تأثیر روی policyهای INSERT/UPDATE مشتری.
-- **BLOCKED/TBD:** آیا claim `system_role` در JWT کانفیگ است؟ (برای هر policy احتمالی admin مبتنی بر `auth.jwt()`).
+- **BLOCKED/TBD (تصمیم شد):** claim `system_role` در Supabase `auth.jwt()` = **AMBIGUOUS / وابسته به Dashboard** (در ریپو اثبات نشد)؛ در JWT داخلی backend = **معتبر اما برای RLS Supabase نامربوط**. بنابراین برای policyهای admin جدید CRM از الگوی `auth.jwt() ->> 'system_role'` استفاده نشود؛ الگوی repo-backed (ستون دیتابیس `EXISTS (... users u WHERE u.id = auth.uid() AND u.system_role IN ('super_admin','admin'))`) توصیه می‌شود — منوط به تأیید production schema (بخش ۱۸.۵).
 
 ## 21. صریحاً اعلام می‌شود
 - **هیچ SQL اجرا نشده** (نه local، نه staging، نه live).
