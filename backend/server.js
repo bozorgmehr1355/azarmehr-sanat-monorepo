@@ -23,7 +23,13 @@ const PORT = process.env.PORT || 3000;
 // ───────────────────────────────────────────
 
 // Parse JSON bodies (matches Vercel's auto-parsed req.body)
-app.use(express.json());
+// Skip global JSON parsing for /api/growth routes — the growth-decide handler
+// owns raw-body parsing to return a clean 400 INVALID_REQUEST on bad bodies.
+app.use(
+  express.json({
+    type: (req) => (req.path || '').startsWith('/api/growth') ? false : 'application/json',
+  })
+);
 
 // CORS — handles OPTIONS preflight before any handler sees the request
 app.use((req, res, next) => {
@@ -108,7 +114,8 @@ const handlers = {
   reports:                 require('./handlers/reports'),
   performanceReports:      require('./handlers/performance-reports'),
   publicWarrantyRequest:   require('./handlers/public-warranty-request'),
-  health:                  require('./handlers/health'),
+  health:                   require('./handlers/health'),
+  growthDecide:             require('./handlers/growth-decide'),
 };
 
 // Mount every endpoint
@@ -164,6 +171,7 @@ mount('/api/customer-agent',              handlers.customerAgent);
 mount('/api/reports/performance/calculate', handlers.performanceReports);
 mount('/api/reports',                     handlers.reports);
 mount('/api/public-warranty-request',     handlers.publicWarrantyRequest);
+mount('/api/growth/decide',              handlers.growthDecide);
 
 // Root catch-all — returns route listing
 app.all('/', (req, res) => {

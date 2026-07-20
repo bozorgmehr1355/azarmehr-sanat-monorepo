@@ -16,7 +16,13 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // ── Build Express app (cached across warm invocations) ────────────
 const app = express();
-app.use(express.json());
+// Skip global JSON parsing for /api/growth routes — the growth-decide handler
+// owns raw-body parsing to return a clean 400 INVALID_REQUEST on bad bodies.
+app.use(
+  express.json({
+    type: (req) => (req.path || '').startsWith('/api/growth') ? false : 'application/json',
+  })
+);
 
 // ── CORS middleware ───────────────────────────────────────────────
 app.use((_req, res, next) => {
@@ -83,6 +89,7 @@ const routes = [
 ['/api/reports',                     H('reports')],
   ['/api/public-warranty-request',     H('public-warranty-request')],
   ['/api/health',                      H('health')],
+  ['/api/growth/decide',               H('growth-decide')],
 ];
 
 for (const [route, handler] of routes) {
