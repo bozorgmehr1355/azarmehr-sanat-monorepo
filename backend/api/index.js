@@ -90,6 +90,7 @@ const routes = [
   ['/api/public-warranty-request',     H('public-warranty-request')],
   ['/api/health',                      H('health')],
   ['/api/growth/decide',               H('growth-decide')],
+  ['/api/growth/drafts',               H('growth-drafts')],
 ];
 
 for (const [route, handler] of routes) {

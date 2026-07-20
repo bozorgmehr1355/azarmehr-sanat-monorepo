@@ -116,6 +116,7 @@ const handlers = {
   publicWarrantyRequest:   require('./handlers/public-warranty-request'),
   health:                   require('./handlers/health'),
   growthDecide:             require('./handlers/growth-decide'),
+  growthDrafts:             require('./handlers/growth-drafts'),
 };
 
 // Mount every endpoint
@@ -172,6 +173,7 @@ mount('/api/reports/performance/calculate', handlers.performanceReports);
 mount('/api/reports',                     handlers.reports);
 mount('/api/public-warranty-request',     handlers.publicWarrantyRequest);
 mount('/api/growth/decide',              handlers.growthDecide);
+mount('/api/growth/drafts',              handlers.growthDrafts);
 
 // Root catch-all — returns route listing
 app.all('/', (req, res) => {
