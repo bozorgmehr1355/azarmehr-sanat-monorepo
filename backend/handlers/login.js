@@ -64,7 +64,8 @@ module.exports = async (req, res) => {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { username, password } = req.body || {};
+  const username = String(req.body?.username ?? '').trim();
+  const password = req.body?.password;
 
   if (!username || !password) {
     return res.status(400).json({ error: 'نام کاربری و رمز عبور الزامی است' });
@@ -74,7 +75,7 @@ module.exports = async (req, res) => {
     const { data, error } = await supabase
       .from('users')
       .select('id, full_name, username, password, role, system_role, avatar')
-      .eq('username', username)
+      .ilike('username', username)
       .single();
 
     if (error || !data) {
