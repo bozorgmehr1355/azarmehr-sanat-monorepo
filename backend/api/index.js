@@ -89,6 +89,7 @@ const routes = [
 ['/api/reports',                     H('reports')],
   ['/api/public-warranty-request',     H('public-warranty-request')],
   ['/api/health',                      H('health')],
+  ['/api/leads',                        H('leads')],
   ['/api/growth/decide',               H('growth-decide')],
   ['/api/growth/drafts',               H('growth-drafts')],
 ];

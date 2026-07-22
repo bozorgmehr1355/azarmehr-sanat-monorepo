@@ -115,13 +115,17 @@ const handlers = {
   performanceReports:      require('./handlers/performance-reports'),
   publicWarrantyRequest:   require('./handlers/public-warranty-request'),
   health:                   require('./handlers/health'),
+  leads:                    require('./handlers/leads'),
   growthDecide:             require('./handlers/growth-decide'),
   growthDrafts:             require('./handlers/growth-drafts'),
+  messageOrchestrator:      require('./handlers/message-orchestrator').handler,
+  baleWebhook:              require('../bale-adapter/bale-webhook-handler').handler,
 };
 
 // Mount every endpoint
 mount('/api/login',                      handlers.login);
 mount('/api/health',                     handlers.health);
+mount('/api/leads',                      handlers.leads);
 mount('/api/portal-login',               handlers.portalLogin);
 mount('/api/portal-register',            handlers.portalRegister);
 mount('/api/portal-login-retail',        handlers.portalLoginRetail);
@@ -174,6 +178,36 @@ mount('/api/reports',                     handlers.reports);
 mount('/api/public-warranty-request',     handlers.publicWarrantyRequest);
 mount('/api/growth/decide',              handlers.growthDecide);
 mount('/api/growth/drafts',              handlers.growthDrafts);
+mount('/api/message-orchestrator',       handlers.messageOrchestrator);
+
+// Bale Webhook — /api/bale/webhook (with secret validation)
+const BALE_WEBHOOK_SECRET = process.env.BALE_WEBHOOK_SECRET;
+app.all('/api/bale/webhook', (req, res, next) => {
+  // CORS preflight — allow without auth
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-bale-webhook-secret');
+    return res.status(200).end();
+  }
+
+  // Health check GET — allow without auth
+  if (req.method === 'GET') {
+    return handlers.baleWebhook(req, res);
+  }
+
+  // POST — require secret header
+  const secret = req.headers['x-bale-webhook-secret'];
+  if (!secret) {
+    return res.status(401).json({ error: 'missing_webhook_secret' });
+  }
+  if (secret !== BALE_WEBHOOK_SECRET) {
+    return res.status(401).json({ error: 'invalid_webhook_secret' });
+  }
+
+  // Secret valid — delegate to Bale handler
+  return handlers.baleWebhook(req, res);
+});
 
 // Root catch-all — returns route listing
 app.all('/', (req, res) => {
