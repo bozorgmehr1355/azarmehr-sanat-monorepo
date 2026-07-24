@@ -103,61 +103,86 @@ function useWindowWidth() {
 }
 
 /* ═══════════════════════════════════════ CONFIG ══════════════════════════════════════ */
+// Normalize: هر BASE باید به /api ختم شود (api() مسیر /api/ را strip می‌کند)
+const na = (b) => { const s = b.replace(/\/+$/, ''); return s.endsWith('/api') ? s : s + '/api'; };
 function resolveApiBase() {
   if (typeof window !== 'undefined') {
     // 1) window.AZARMEHR_API_BASE (manual override)
     if (window.AZARMEHR_API_BASE && typeof window.AZARMEHR_API_BASE === 'string') {
-      return window.AZARMEHR_API_BASE.replace(/\/+$/, '');
+      return na(window.AZARMEHR_API_BASE);
     }
     // 2) query param ?apiBase=
     const qp = new URLSearchParams(window.location.search).get('apiBase');
     if (qp && typeof qp === 'string') {
-      try { localStorage.setItem('AZARMEHR_API_BASE', qp.replace(/\/+$/, '')); } catch(e) {}
-      return qp.replace(/\/+$/, '');
+      try { localStorage.setItem('AZARMEHR_API_BASE', na(qp)); } catch(e) {}
+      return na(qp);
     }
     // 3) localStorage key AZARMEHR_API_BASE
     try {
       const stored = localStorage.getItem('AZARMEHR_API_BASE');
-      if (stored && typeof stored === 'string') return stored.replace(/\/+$/, '');
+      if (stored && typeof stored === 'string') return na(stored);
     } catch(e) {}
-    // 4) fallback /api
-    return '/api';
+    // 4) production backend fallback (پیش‌فرض)
+    return 'https://azarmehr-backend.vercel.app/api';
   }
-  return '/api';
+  return 'https://azarmehr-backend.vercel.app/api';
 }
 const API_BASE = resolveApiBase();
 
 const C = {
-  bg:"#0F0F0F", surface:"#1C1C1C", surfaceAlt:"#232323", surfaceHover:"#2A2A2A",
-  border:"#303030", borderLight:"#3E3E3E",
-  primary:"#D4880E", primaryDim:"#D4880E18", primaryHover:"#E8960F",
-  text:"#F4F6F9", textMuted:"#C0C8D4", textDim:"#98A0AE",
-  success:"#10B981", successDim:"#10B98118",
-  warning:"#F59E0B", warningDim:"#F59E0B18",
-  danger:"#EF4444", dangerDim:"#EF444418",
-  info:"#3B82F6", infoDim:"#3B82F618",
-  purple:"#8B5CF6", purpleDim:"#8B5CF618",
+  bg:"#0B0D10", surface:"#14171C", surfaceAlt:"#1B1F26", surfaceHover:"#242A33",
+  border:"#2F3742", borderLight:"#46515F",
+  primary:"#CA8A04", primaryDim:"#CA8A0420", primaryHover:"#EAB308",
+  text:"#F3F4F6", textMuted:"#CBD5E1", textDim:"#94A3B8",
+  success:"#22C55E", successDim:"#22C55E20",
+  warning:"#CA8A04", warningDim:"#CA8A0420",
+  danger:"#991B1B", dangerDim:"#991B1B20",
+  info:"#581C87", infoDim:"#581C8720",
+  purple:"#581C87", purpleDim:"#581C8720",
+  blue:"#3B82F6", blueDim:"#3B82F620",
+  indigo:"#8B5CF6", indigoDim:"#8B5CF620",
+  amber:"#F59E0B", amberDim:"#F59E0B20",
+  cyan:"#06B6D4", cyanDim:"#06B6D420",
+  // Zyloo-inspired limited accent palette
+  accent1:"#CA8A04", // vàng
+  accent2:"#22C55E", // زمرد (سبز)
+  accent3:"#3B82F6", // هماند (آبی)
+  accent4:"#F59E0B", // زرد
+  // Dark surface hierarchy
+  surfaceLighter:"#1D2128", surfaceDarker:"#0B0D10",
 };
-const FF = "'Vazirmatn', Tahoma, sans-serif";
+
+const FF = "'IRANSans', 'Vazirmatn', Tahoma, sans-serif";
+
+// 8px spacing grid - all values in multiples of 8px for consistent rhythm
 const SP = { xs:4, sm:8, md:12, lg:16, xl:20, xxl:24, xxxl:32 };
+
 const RD = { sm:8, md:12, lg:16 };
 const FZ = { xs:12, sm:12, base:14, md:16, lg:18, xl:20, xxl:22, hero:28 };
 const IZ = { xs:14, sm:16, md:18, lg:20, xl:22, xxl:24 };
 const BH = { sm:32, md:36, lg:40, xl:44 };
 
-const cardStyle = { background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:16 };
-
-const glowBtn = {
-  display:"inline-flex", alignItems:"center", gap:6, justifyContent:"center",
-  borderRadius:10, border:"none", background:C.primary,
-  color:"#111", cursor:"pointer", fontFamily:FF, fontWeight:700, fontSize:13,
-  padding:"11px 20px",
-  boxShadow:"0 0 20px #D4880E33",
-  transition:"0.12s",
+const cardStyle = { 
+  background: C.surface, 
+  border: `1px solid ${C.border}`, 
+  borderRadius: 4, 
+  padding: 16, 
+  boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+  transition: "all 0.12s ease",
+  position:"relative",
+  overflow:"hidden"
 };
 
-// کاربران ادمین از Supabase خوانده می‌شوند. تب کنترل دسترسی موقتاً غیرفعال است
-// تا اتصال به API کاربران در Task جدا تکمیل شود.
+const SH = {
+  sm: "0 1px 3px rgba(0,0,0,0.25)",
+  md: "0 2px 8px rgba(0,0,0,0.30)",
+  glow: "0 0 20px rgba(202,138,4,0.35)",
+};
+
+// customer users from Supabase. The access control tab is temporarily inactive
+// until the user API connection is completed in a separate Task.
+// customer users from Supabase. The access control tab is temporarily inactive
+// until the user API connection is completed in a separate Task.
 
 /* ═══════════════════════════════════════ HELPERS ═════════════════════════════════════ */
 const fa  = (n) => String(n).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
@@ -455,24 +480,24 @@ function Ic({ name, size=18, color=C.textMuted, style }) {
 
 /* ═══════════════════════════════════════ ORDER STATUS ════════════════════════════════ */
 const ORDER_STATUS = {
-  registered:        { label:"ثبت شد",             color:"#3B82F6", bg:"#3B82F622" },
-  pending_review:    { label:"در انتظار بررسی",     color:"#8B5CF6", bg:"#8B5CF622" },
-  confirmed:         { label:"تأیید شده",          color:"#10B981", bg:"#10B98122" },
-  customer_approval:{ label:"تأیید مشتری جدید",    color:"#8B5CF6", bg:"#8B5CF622" },
-  stock_check:      { label:"بررسی موجودی",        color:"#3B82F6", bg:"#3B82F622" },
-  proforma_issued:  { label:"پیش‌فاکتور صادر شد",   color:"#F59E0B", bg:"#F59E0B22" },
-  contract_pending: { label:"در انتظار قرارداد",    color:"#F59E0B", bg:"#F59E0B22" },
-  contract_signed:  { label:"قرارداد امضا شد",      color:"#10B981", bg:"#10B98122" },
-  in_production:    { label:"در حال تولید",          color:"#D4880E", bg:"#D4880E22" },
-  pending_payment:  { label:"در انتظار پرداخت",      color:"#F59E0B", bg:"#F59E0B22" },
-  payment_confirmed:{ label:"پرداخت تأیید شد",       color:"#10B981", bg:"#10B98122" },
-  paid:             { label:"پرداخت شده",           color:"#22C55E", bg:"#22C55E22" },
-  ready_to_ship:    { label:"آماده ارسال",           color:"#06B6D4", bg:"#06B6D422" },
-  exit_approval:    { label:"تأیید خروج کالا",       color:"#22C55E", bg:"#22C55E22" },
-  shipped:          { label:"ارسال شد",              color:"#3B82F6", bg:"#3B82F622" },
-  delivered:        { label:"تحویل داده شد",          color:"#22C55E", bg:"#22C55E22" },
-  cancelled:        { label:"لغو شده",               color:"#EF4444", bg:"#EF444422" },
-  invoice_issued:   { label:"فاکتور صادر شد",        color:"#22C55E", bg:"#22C55E22" },
+  registered:        { label:"ثبت شد",             color:C.blue, bg:C.blueDim },
+  pending_review:    { label:"در انتظار بررسی",     color:C.indigo, bg:C.indigoDim },
+  confirmed:         { label:"تأیید شده",          color:C.success, bg:C.successDim },
+  customer_approval:{ label:"تأیید مشتری جدید",    color:C.indigo, bg:C.indigoDim },
+  stock_check:      { label:"بررسی موجودی",        color:C.blue, bg:C.blueDim },
+  proforma_issued:  { label:"پیش‌فاکتور صادر شد",   color:C.amber, bg:C.amberDim },
+  contract_pending: { label:"در انتظار قرارداد",    color:C.amber, bg:C.amberDim },
+  contract_signed:  { label:"قرارداد امضا شد",      color:C.success, bg:C.successDim },
+  in_production:    { label:"در حال تولید",          color:C.primary, bg:C.primaryDim },
+  pending_payment:  { label:"در انتظار پرداخت",      color:C.amber, bg:C.amberDim },
+  payment_confirmed:{ label:"پرداخت تأیید شد",       color:C.success, bg:C.successDim },
+  paid:             { label:"پرداخت شده",           color:C.success, bg:C.successDim },
+  ready_to_ship:    { label:"آماده ارسال",           color:C.cyan, bg:C.cyanDim },
+  exit_approval:    { label:"تأیید خروج کالا",       color:C.success, bg:C.successDim },
+  shipped:          { label:"ارسال شد",              color:C.blue, bg:C.blueDim },
+  delivered:        { label:"تحویل داده شد",          color:C.success, bg:C.successDim },
+  cancelled:        { label:"لغو شده",               color:C.danger, bg:C.dangerDim },
+  invoice_issued:   { label:"فاکتور صادر شد",        color:C.success, bg:C.successDim },
 };
 
 /* قیمت‌گذاری بر اساس حجم سفارش */
@@ -560,8 +585,10 @@ function Modal({ title, onClose, children, maxWidth=700 }) {
 }
 
 const iStyle = {
-  width:"100%", padding:"10px 14px", borderRadius:10, border:`1px solid ${C.border}`,
-  background:C.bg, color:C.text, fontFamily:FF, fontSize:13,
+  width:"100%", padding:"10px 14px", borderRadius:4, border:`1px solid ${C.border}`,
+  background:C.surface, color:C.text, fontFamily:FF, fontSize:13,
+  transition:"0.12s",
+  ':focus': { borderColor:C.accent1, boxShadow:`0 0 0 2px ${C.accent1}22` }
 };
 
 function Fld({ label, children }) {
@@ -575,9 +602,9 @@ function Fld({ label, children }) {
 
 function Btn({ label, onClick, icon, color=C.primary, outline, danger, small, disabled, full }) {
   const isDanger = danger && !outline;
-  const bg   = outline ? "transparent" : (isDanger ? "#EF444422" : color);
-  const bdr  = outline ? `1px solid #2A2A2A` : (isDanger ? "1px solid #EF444444" : "none");
-  const clr  = outline ? "#D1D3D4" : (isDanger ? "#EF4444" : "#111111");
+  const bg   = outline ? "transparent" : (isDanger ? C.dangerDim : color);
+  const bdr  = outline ? "1px solid "+C.borderLight : (isDanger ? "1px solid "+C.danger+"44" : "none");
+  const clr  = outline ? C.textMuted : (isDanger ? C.danger : "#111111");
   return (
     <button onClick={onClick} disabled={disabled} style={{
       display:"inline-flex", alignItems:"center", gap:6, justifyContent:"center",
@@ -587,7 +614,7 @@ function Btn({ label, onClick, icon, color=C.primary, outline, danger, small, di
       color: disabled ? "#6B7280" : clr, cursor: disabled ? "not-allowed" : "pointer",
       fontFamily:FF, fontSize: small ? 12 : 13, fontWeight:700, opacity: disabled ? 0.5 : 1,
       transition:"0.12s",
-      boxShadow: (!outline && !isDanger && !disabled) ? "0 0 20px #D4880E33" : "none",
+      boxShadow: (!outline && !isDanger && !disabled) ? "0 0 20px rgba(202,138,4,0.40)" : "none",
     }}>
       {icon && <Ic name={icon} size={14} color={disabled ? "#6B7280" : clr} />}
       {label}
@@ -1103,7 +1130,7 @@ function Dashboard({ me, showToast, onNavigate }) {
         <KPICard label="کل سفارشات"   value={fa(stats.orders)}    icon="cart"     color={C.purple}  onClick={() => onNavigate("orders")} />
         <KPICard label="درآمد ثبت‌شده" value={shortCur(stats.revenue)} sub="از فاکتورهای رسمی" icon="wallet" color={C.success} onClick={() => onNavigate("financial")} />
         <KPICard label="در انتظار پرداخت" value={shortCur(stats.outstanding)} sub="پیش‌فاکتورهای صادرشده" icon="alert" color={C.warning} onClick={() => onNavigate("financial")} />
-        <KPICard label="محصولات"       value={fa(stats.products)}  icon="package"  color={C.teal}    onClick={() => onNavigate("products")} />
+        <KPICard label="محصولات"       value={fa(stats.products)}  icon="package"  color={C.cyan}    onClick={() => onNavigate("products")} />
         <KPICard label="مرجوعی در انتظار" value={fa(claims.filter(c=>c.status==="pending").length)} sub="نیاز به بررسی" icon="shield" color="#EF4444" onClick={() => onNavigate("guarantee")} />
       </div>
 
@@ -1796,7 +1823,7 @@ async function convertToProject(ord) {
   return proj.id;
 }
 
-function OrderDetail({ order, customer, me, showToast, onUpdate, onClose }) {
+function OrderDetail({ order, customer, me, showToast, onUpdate, onClose, onCustomerClick }) {
   const [items, setItems]         = useState([]);
   const [log, setLog]             = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -1958,7 +1985,12 @@ function OrderDetail({ order, customer, me, showToast, onUpdate, onClose }) {
       <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
         <div style={{ flex:1, minWidth:180, padding:14, background:C.surfaceAlt, borderRadius:10 }}>
           <p style={{ fontSize:11, color:C.textMuted, marginBottom:5, fontWeight:600 }}>مشتری</p>
-          <p style={{ fontSize:14, fontWeight:600, marginBottom:3 }}>{customer?.name||"—"}</p>
+          <p onClick={onCustomerClick ? () => onCustomerClick(customer) : undefined}
+             style={{ fontSize:14, fontWeight:600, marginBottom:3,
+               cursor:onCustomerClick?'pointer':'default',
+               color:onCustomerClick?C.primary:C.text,
+               textDecoration:onCustomerClick?'underline':'none',
+               textUnderlineOffset:2 }}>{customer?.name||"—"}</p>
           <div style={{ display:"flex", gap:10, fontSize:11, color:C.textMuted }}>
             {customer?.phone && <span>📞 {fa(customer.phone)}</span>}
             {creditAllowed && <span style={{ color:C.success }}>✓ اعتباری</span>}
@@ -2010,7 +2042,7 @@ function OrderDetail({ order, customer, me, showToast, onUpdate, onClose }) {
               ))}
             </div>
           ) : (
-            <span style={{ fontSize:13, fontWeight:600, color:orderType==="custom"?C.purple:C.teal }}>
+            <span style={{ fontSize:13, fontWeight:600, color:orderType==="custom"?C.indigo:C.cyan }}>
               {orderType==="custom"?"سفارشی / تولیدی":"موجودی انبار"}
             </span>
           )}
@@ -2240,6 +2272,7 @@ function CRMModule({ me, showToast }) {
   const [showForm, setShowForm] = useState(false);
   const [editCust, setEditCust] = useState(null);
   const [detailOrder, setDetailOrder] = useState(null);
+  const [selectedCust, setSelectedCust] = useState(null);
   const [search, setSearch] = useState("");
   const [cTypeFilter, setCTypeFilter] = useState("all");
   const isSA = me?.system_role==="super_admin" || [1,2].includes(me?.id);
@@ -2281,6 +2314,52 @@ function CRMModule({ me, showToast }) {
   const gradeColor = g => ({ standard:C.textMuted, silver:"#9CA3AF", gold:"#F59E0B", vip:"#8B5CF6" }[g]||C.textMuted);
   const custStatusLabel = s => ({ active:"فعال", new:"جدید", suspended:"تعلیق" }[s]||s);
   const custStatusColor = s => ({ active:"#10B981", new:"#EC4899", suspended:"#EF4444" }[s]||C.textMuted);
+
+  const renderCustomerDetail = function() {
+    if (!selectedCust) return null;
+    const c = selectedCust;
+    const customerOrders = orders.filter(function(o){ return o.customer_id === c.id; });
+    const totalAmount = customerOrders.reduce(function(s,o){ return s + Number(o.total_amount||0); }, 0);
+    const FieldItem = function({ label, value }) {
+      return (
+        <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid " + C.border }}>
+          <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>{label}</div>
+          <div style={{ flex:1, color:C.text, fontSize:13, whiteSpace:"pre-wrap", wordBreak:"break-word" }}>{value == null || value === "" ? "\u2014" : value}</div>
+        </div>
+      );
+    };
+    return (
+      <div>
+        <div onClick={function(){ setSelectedCust(null); }} style={{ position:"fixed", inset:0, background:"#000a", zIndex:200 }} />
+        <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:"min(640px,92vw)", maxHeight:"86vh", overflowY:"auto", background:C.surface, border:"1px solid " + C.border, borderRadius:16, padding:20, zIndex:201 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <h3 style={{ fontSize:16, color:C.text }}>{c.name || "جزئیات مشتری"}</h3>
+            <button onClick={function(){ setSelectedCust(null); }} style={{ background:"transparent", border:"none", color:C.textMuted, cursor:"pointer", fontSize:18, lineHeight:1 }}>✕</button>
+          </div>
+          <FieldItem label="شناسه" value={c.id} />
+          <FieldItem label="نام" value={c.name} />
+          <FieldItem label="تلفن" value={c.phone ? fa(c.phone) : null} />
+          <FieldItem label="شرکت" value={c.company} />
+          <FieldItem label="شهر" value={c.city} />
+          <FieldItem label="استان" value={c.province} />
+          <FieldItem label="ایمیل" value={c.email} />
+          <FieldItem label="آدرس" value={c.address} />
+          <FieldItem label="وضعیت" value={c.customer_status ? custStatusLabel(c.customer_status) : null} />
+          <FieldItem label="درجه" value={c.grade ? gradeLabel(c.grade) : null} />
+          <FieldItem label="نوع مشتری" value={c.customer_type === 'retail' ? 'خرده‌فروش' : c.customer_type === 'wholesale' ? 'عمده‌فروش' : c.customer_type} />
+          <FieldItem label="تاریخ ایجاد" value={c.created_at ? String(c.created_at).slice(0,19).replace("T"," ") : null} />
+          <FieldItem label="بروزرسانی" value={c.updated_at ? String(c.updated_at).slice(0,19).replace("T"," ") : null} />
+          {customerOrders.length > 0 && (
+            <div style={{ marginTop:14 }}>
+              <div style={{ borderTop:"1px solid " + C.border, marginBottom:10 }} />
+              <p style={{ fontSize:13, color:C.text, fontWeight:600, marginBottom:6 }}>{"سفارشات (" + fa(customerOrders.length) + ")"}</p>
+              <p style={{ fontSize:12, color:C.textMuted }}>{"مجموع مبلغ: " + shortCur(totalAmount)}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div style={{ animation:"fadeUp 0.3s ease" }}>
@@ -2328,7 +2407,7 @@ function CRMModule({ me, showToast }) {
               padding:16, ...cardStyle,
               display:"flex", justifyContent:"space-between", alignItems:"center", gap:12
             }}>
-              <div style={{ flex:1 }}>
+              <div style={{ flex:1, cursor:"pointer" }} onClick={function(){ setSelectedCust(c); }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5, flexWrap:"wrap" }}>
                   <p style={{ fontSize:14, fontWeight:600, color:C.text }}>{c.name}</p>
                   <span style={{ fontSize:10, padding:"2px 7px", borderRadius:4, background:gradeColor(c.grade)+"20", color:gradeColor(c.grade), fontWeight:600 }}>{gradeLabel(c.grade)}</span>
@@ -2379,7 +2458,8 @@ function CRMModule({ me, showToast }) {
       )}
 
       {showForm && <CustomerForm customer={editCust} onSave={() => { setShowForm(false); load(); }} onCancel={() => setShowForm(false)} showToast={showToast} />}
-      {detailOrder && <OrderDetail order={detailOrder.order} customer={detailOrder.customer} me={me} showToast={showToast} onUpdate={load} onClose={() => setDetailOrder(null)} />}
+      {detailOrder && <OrderDetail order={detailOrder.order} customer={detailOrder.customer} me={me} showToast={showToast} onUpdate={load} onClose={() => setDetailOrder(null)} onCustomerClick={(cust) => { setDetailOrder(null); setSelectedCust(cust); }} />}
+      {selectedCust && renderCustomerDetail()}
     </div>
   );
 }
@@ -2735,25 +2815,21 @@ function MarketingModule({ me, showToast }) {
 /* mini helper */
 function OrderSummaryCards({ filtered }) {
   const totalRev  = filtered.reduce((s,o)=>s+(o.total_amount||0),0);
-  const pending   = filtered.filter(o=>["pending_payment","contract_pending","stock_check"].includes(o.order_status)).length;
+  const unpaid    = filtered.filter(o=>["pending_payment","contract_pending","registered","stock_check"].includes(o.order_status)).length;
   const delivered = filtered.filter(o=>o.order_status==="delivered").length;
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))", gap:10, marginBottom:14 }}>
-      <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 14px" }}>
-        <p style={{ fontSize:10, color:C.textDim, marginBottom:4 }}>فیلترشده</p>
-        <p style={{ fontSize:18, fontWeight:700, color:C.primary }}>{fa(filtered.length)}</p>
+    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:16 }}>
+      <div style={{ background:C.surface, borderBottom:`2px solid ${C.primary}44`, padding:"12px 16px" }}>
+        <p style={{ fontSize:9, color:C.textDim, letterSpacing:"0.3px", marginBottom:4 }}>فیلتر شده</p>
+        <p style={{ fontSize:22, fontWeight:700, color:C.text, lineHeight:1.2 }}>{fa(filtered.length)}</p>
       </div>
-      <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 14px" }}>
-        <p style={{ fontSize:10, color:C.textDim, marginBottom:4 }}>مجموع مبلغ</p>
-        <p style={{ fontSize:15, fontWeight:700, color:C.success }}>{shortCur(totalRev)}</p>
+      <div style={{ background:C.surface, borderBottom:`2px solid ${C.warning}44`, padding:"12px 16px" }}>
+        <p style={{ fontSize:9, color:C.textDim, letterSpacing:"0.3px", marginBottom:4 }}>مجموع مبلغ</p>
+        <p style={{ fontSize:16, fontWeight:700, color:C.primary, lineHeight:1.2 }}>{shortCur(totalRev)}</p>
       </div>
-      <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 14px" }}>
-        <p style={{ fontSize:10, color:C.textDim, marginBottom:4 }}>در انتظار</p>
-        <p style={{ fontSize:18, fontWeight:700, color:C.warning }}>{fa(pending)}</p>
-      </div>
-      <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 14px" }}>
-        <p style={{ fontSize:10, color:C.textDim, marginBottom:4 }}>تحویل‌داده‌شده</p>
-        <p style={{ fontSize:18, fontWeight:700, color:C.success }}>{fa(delivered)}</p>
+      <div style={{ background:C.surface, borderBottom:`2px solid ${C.success}44`, padding:"12px 16px" }}>
+        <p style={{ fontSize:9, color:C.textDim, letterSpacing:"0.3px", marginBottom:4 }}>تحویل شده</p>
+        <p style={{ fontSize:22, fontWeight:700, color:C.success, lineHeight:1.2 }}>{fa(delivered)}</p>
       </div>
     </div>
   );
@@ -2907,7 +2983,7 @@ function OrdersModule({ me, showToast }) {
                     <div style={{ padding:"12px 14px", fontSize:13, fontWeight:600, color:C.text, borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>{cust?.name||o.customer_name||"—"}</div>
                     <div style={{ padding:"12px 14px", fontSize:11, color:C.textMuted, borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>{o.created_at ? new Date(o.created_at).toLocaleDateString("fa-IR") : "—"}</div>
                     <div style={{ padding:"12px 14px", borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>
-                      <span style={{ fontSize:11, padding:"3px 8px", borderRadius:5, background:o.order_type==="custom"?"#8B5CF622":"#06B6D422", color:o.order_type==="custom"?"#8B5CF6":C.teal }}>{o.order_type==="custom"?"سفارشی":"انبار"}</span>
+                      <span style={{ fontSize:11, padding:"3px 8px", borderRadius:5, background:o.order_type==="custom"?C.indigoDim:C.cyanDim, color:o.order_type==="custom"?C.indigo:C.cyan }}>{o.order_type==="custom"?"سفارشی":"انبار"}</span>
                     </div>
                     <div style={{ padding:"12px 14px", fontSize:11, color:C.textMuted, borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>
                       {o.sales_channel==="retail"?"خرد":o.sales_channel==="wholesale"?"عمده":"—"}
@@ -2934,7 +3010,7 @@ function OrdersModule({ me, showToast }) {
                   </div>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px 14px", marginBottom:10 }}>
                     <div><span style={{ fontSize:10, color:C.textDim }}>تاریخ</span><div style={{ fontSize:12, color:C.text }}>{o.created_at ? new Date(o.created_at).toLocaleDateString("fa-IR") : "—"}</div></div>
-                    <div><span style={{ fontSize:10, color:C.textDim }}>نوع</span><div style={{ fontSize:12 }}><span style={{ padding:"2px 8px", borderRadius:5, background:o.order_type==="custom"?"#8B5CF622":"#06B6D422", color:o.order_type==="custom"?"#8B5CF6":C.teal, fontSize:11 }}>{o.order_type==="custom"?"سفارشی":"انبار"}</span></div></div>
+                    <div><span style={{ fontSize:10, color:C.textDim }}>نوع</span><div style={{ fontSize:12 }}><span style={{ padding:"2px 8px", borderRadius:5, background:o.order_type==="custom"?C.indigoDim:C.cyanDim, color:o.order_type==="custom"?C.indigo:C.cyan, fontSize:11 }}>{o.order_type==="custom"?"سفارشی":"انبار"}</span></div></div>
                     <div><span style={{ fontSize:10, color:C.textDim }}>مبلغ</span><div style={{ fontSize:13, fontWeight:700, color:C.primary }}>{shortCur(o.total_amount)}</div></div>
                     <div><span style={{ fontSize:10, color:C.textDim }}>کانال</span><div style={{ fontSize:12, color:C.text }}>{o.sales_channel==="retail"?"خرد":o.sales_channel==="wholesale"?"عمده":"—"}</div></div>
                   </div>
@@ -4003,7 +4079,11 @@ const login = async () => {
         setErr("نام کاربری یا رمز عبور نادرست است");
       }
     } catch(e) {
-      setErr("خطا در اتصال به سرور");
+      if (e.name === 'TypeError') {
+        setErr("خطا در اتصال به سرور");
+      } else {
+        setErr(e.message || "خطا در اتصال به سرور");
+      }
     }
     setLoading(false);
   };
@@ -6696,6 +6776,194 @@ const thStyle = { padding:"10px 14px", textAlign:"right", color:C.textMuted, fon
 const tdStyle = { padding:"10px 14px", color:C.text };
 
 /* ═══════════════════════════════════════ SIDEBAR ════════════════════════════════════ */
+function AIDrafts({ me, showToast }) {
+  const [drafts, setDrafts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadErr, setLoadErr] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("pending");
+  const [detail, setDetail] = useState(null);
+  const [acting, setActing] = useState(false);
+  const [actErr, setActErr] = useState("");
+
+  const load = async function() {
+    setLoading(true);
+    setLoadErr("");
+    try {
+      const q = statusFilter === "all" ? "" : "?approval_status=eq." + statusFilter.toUpperCase();
+      const data = await api("GET", "ai-drafts" + q);
+      setDrafts(Array.isArray(data) ? data : []);
+    } catch(e) {
+      setLoadErr("خطا در بارگذاری: " + (e.message || ""));
+      showToast("خطا در بارگذاری پیش‌نویس‌ها", "error");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(function(){ load(); }, [statusFilter]);
+
+  const act = async function(decision) {
+    if (!detail || acting) return;
+    setActing(true); setActErr("");
+    try {
+      await api("POST", "ai-drafts/" + detail.id + "/" + (decision === "approve" ? "approve" : "reject"));
+      showToast(decision === "approve" ? "✅ پیش‌نویس تایید شد" : "✅ پیش‌نویس رد شد");
+      setDetail(null);
+      setRefreshing(true);
+      load();
+    } catch(e) {
+      setActErr("خطا: " + (e.message || ""));
+      showToast("❌ خطا در عملیات", "error");
+    } finally {
+      setActing(false);
+    }
+  };
+
+  if (loading) return (
+    <div style={{ animation:"fadeUp 0.3s ease", textAlign:"center", padding:40 }}>
+      <Spinner />
+      <p style={{ marginTop:12, fontSize:13, color:C.textMuted }}>در حال بارگذاری پیش‌نویس‌ها...</p>
+    </div>
+  );
+
+  if (loadErr) return (
+    <div style={{ animation:"fadeUp 0.3s ease", textAlign:"center", padding:40 }}>
+      <div style={{ background:C.dangerDim, border:"1px solid "+C.danger, borderRadius:12, padding:24, maxWidth:400, margin:"0 auto" }}>
+        <p style={{ fontSize:14, color:C.danger, marginBottom:8, fontWeight:600 }}>⚠️ خطا در بارگذاری</p>
+        <p style={{ fontSize:12, color:C.textMuted, marginBottom:16 }}>{loadErr}</p>
+        <Btn label="تلاش مجدد" icon="refresh" onClick={load} />
+      </div>
+    </div>
+  );
+
+  const STATUS_MAP = {
+    PENDING:  { label:"در انتظار", color:C.warning },
+    APPROVED: { label:"تایید شده", color:C.success },
+    REJECTED: { label:"رد شده",   color:C.danger },
+  };
+  const metaDisplay = function(m) {
+    if (m == null) return "—";
+    if (typeof m === "object") { try { return JSON.stringify(m, null, 2); } catch(e) { return "—"; } }
+    return String(m);
+  };
+  const Field = function(props) {
+    return (
+      <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+        <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>{props.label}</div>
+        <div style={{ flex:1, color:C.text, fontSize:13, whiteSpace:"pre-wrap", wordBreak:"break-word" }}>{props.value == null || props.value === "" ? "—" : props.value}</div>
+      </div>
+    );
+  };
+  const filters = [["pending","در انتظار"],["approved","تایید شده"],["rejected","رد شده"],["all","همه"]];
+  const renderDetail = function() {
+    if (!detail) return null;
+    const d = detail;
+    const st = STATUS_MAP[d.approval_status] || { label:d.approval_status||"—", color:C.textMuted };
+    return (
+      <div>
+        <div onClick={function(){ setDetail(null); }} style={{ position:"fixed", inset:0, background:"#000a", zIndex:200 }} />
+        <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:"min(640px,92vw)", maxHeight:"86vh", overflowY:"auto", background:C.surface, border:"1px solid "+C.border, borderRadius:16, padding:20, zIndex:201 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <h3 style={{ fontSize:16, color:C.text }}>جزئیات پیش‌نویس</h3>
+            <button onClick={function(){ setDetail(null); }} style={{ background:"transparent", border:"none", color:C.textMuted, cursor:"pointer", fontSize:18 }}>✕</button>
+          </div>
+          <Field label="شناسه" value={d.id} />
+          <Field label="وضعیت" value={<span style={{ color:st.color, fontWeight:700 }}>{st.label}</span>} />
+          <Field label="نوع پیش‌نویس" value={d.draft_type} />
+          <Field label="موجودیت" value={(d.entity_type || "") + (d.entity_id ? " (" + d.entity_id + ")" : "")} />
+          <Field label="متن ورودی" value={d.input_text} />
+          <Field label="متن خروجی" value={d.output_text} />
+          <Field label="ایجاد کننده" value={d.created_by} />
+          <Field label="منبع" value={d.source} />
+          <Field label="متادیتا" value={metaDisplay(d.metadata)} />
+          <Field label="ایجاد شده" value={d.created_at} />
+          <Field label="بروزرسانی" value={d.updated_at} />
+          {actErr && <p style={{ color:C.danger, fontSize:12, marginTop:8 }}>{actErr}</p>}
+          {d.approval_status === "PENDING" && (
+            <div style={{ display:"flex", gap:10, marginTop:14 }}>
+              <Btn label={acting ? "..." : "✓ تایید"} onClick={function(){ act("approve"); }} disabled={acting} color={C.success} />
+              <Btn label={acting ? "..." : "✕ رد"} onClick={function(){ act("reject"); }} disabled={acting} danger />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ animation:"fadeUp 0.3s ease" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, flexWrap:"wrap", gap:10 }}>
+        <div>
+          <h2 style={{ fontSize:16, color:C.text, fontWeight:600, marginBottom:2 }}>پیش‌نویس‌های هوشمند</h2>
+          <p style={{ fontSize:12, color:C.textDim }}>بررسی و تایید/رد پیش‌نویس‌های تولید شده توسط هوش مصنوعی</p>
+        </div>
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <Btn label={refreshing?"...":"بروزرسانی"} icon="refresh" small outline onClick={function(){ setRefreshing(true); load(); }} disabled={refreshing||loading} />
+          <span style={{ fontSize:11, color:C.textDim }}>{fa(drafts.length)} پیش‌نویس</span>
+        </div>
+      </div>
+
+      <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
+        {filters.map(function(f){
+          const active = statusFilter === f[0];
+          return (
+            <button key={f[0]} onClick={function(){ setStatusFilter(f[0]); }}
+              style={{ padding:"7px 14px", borderRadius:10, cursor:"pointer", fontSize:12, fontWeight:600,
+                border:"1px solid "+(active?C.primary:C.border),
+                background: active?C.primaryDim:"transparent", color: active?C.primary:C.textMuted }}>
+              {f[1]}
+            </button>
+          );
+        })}
+      </div>
+
+      {drafts.length === 0 ? (
+        <div style={{ textAlign:"center", padding:40, color:C.textMuted, fontSize:13 }}>
+          پیش‌نویسی با این وضعیت یافت نشد.
+        </div>
+      ) : (
+        <div style={{ overflowX:"auto", border:"1px solid "+C.border, borderRadius:12 }}>
+          <table style={{ width:"100%", borderCollapse:"collapse" }}>
+            <thead>
+              <tr style={{ background:C.surfaceAlt }}>
+                <th style={thStyle}>وضعیت</th>
+                <th style={thStyle}>نوع</th>
+                <th style={thStyle}>موجودیت</th>
+                <th style={thStyle}>منبع</th>
+                <th style={thStyle}>ایجاد کننده</th>
+                <th style={thStyle}>تاریخ ایجاد</th>
+                <th style={thStyle}>عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {drafts.map(function(d){
+                const st = STATUS_MAP[d.approval_status] || { label:d.approval_status||"—", color:C.textMuted };
+                return (
+                  <tr key={d.id} style={{ borderTop:"1px solid "+C.border }}>
+                    <td style={tdStyle}><span style={{ color:st.color, fontWeight:700, fontSize:12 }}>{st.label}</span></td>
+                    <td style={tdStyle}>{d.draft_type || "—"}</td>
+                    <td style={tdStyle}>{d.entity_type || "—"}{d.entity_id ? " (" + String(d.entity_id).slice(0,8) + "…)" : ""}</td>
+                    <td style={tdStyle}>{d.source || "—"}</td>
+                    <td style={tdStyle}>{d.created_by ? String(d.created_by).slice(0,8) + "…" : "—"}</td>
+                    <td style={tdStyle}>{d.created_at ? String(d.created_at).slice(0,19).replace("T"," ") : "—"}</td>
+                    <td style={tdStyle}>
+                      <Btn label="مشاهده" icon="eye" small outline onClick={function(){ setDetail(d); setActErr(""); }} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {renderDetail()}
+    </div>
+  );
+}
+
 const NAV = [
   { section:"اصلی", items:[
     { key:"dashboard", label:"داشبورد",         icon:"dashboard" },
@@ -6724,6 +6992,7 @@ const NAV = [
     { key:"settings",  label:"تنظیمات سیستم",   icon:"settings", saOnly:true  },
     { key:"org-chart", label:"چارت سازمانی",    icon:"orgChart", saOnly:true  },
     { key:"rules",     label:"قوانین AI",       icon:"cpu",      saOnly:false },
+    { key:"aidrafts",  label:"پیش‌نویس‌های هوشمند", icon:"cpu", saOnly:false },
   ]},
 ];
 
@@ -6983,7 +7252,7 @@ function OrgChartEditor({ me, showToast }) {
       <div style={{ maxWidth:800, margin:'0 auto' }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
         <h2 style={{ fontSize:18, fontWeight:700, color:C.text }}>چارت سازمانی</h2>
-        <button onClick={() => openAdd('')} style={{...glowBtn, padding:'8px 14px', fontSize:12}}>+ افزودن سمت</button>
+        <Btn label="+ افزودن سمت" onClick={() => openAdd('')} small />
       </div>
       <div style={{...cardStyle, padding:20 }}>
         {tree.length === 0 && <Empty text="چارت سازمانی خالی است" />}
@@ -7114,27 +7383,6 @@ function Sidebar({ tab, setTab, me, onLogout, onChangePassword, isMobile, open, 
   );
 }
 
-/* ═══════════════════════════════════════ CANONICAL UI COMPONENTS ══════════════════════ */
-function Card({ children, style, onClick }) {
-  return React.createElement('div', {
-    onClick: onClick,
-    style: Object.assign({ background:C.surface, borderRadius:RD.md, border:'1px solid '+C.border, padding:SP.lg }, style||{}),
-  }, children);
-}
-
-function EmptyState({ icon, title, subtitle }) {
-  return React.createElement('div', {style:{textAlign:'center', padding:SP.xxxl+'px '+SP.lg+'px'}},
-    title ? React.createElement('p', {style:{fontSize:FZ.base, color:C.textMuted, marginBottom:4}}, title) : null,
-    subtitle ? React.createElement('p', {style:{fontSize:FZ.xs, color:C.textDim}}, subtitle) : null,
-  );
-}
-
-function Badge({ label, variant }) {
-  var mp = { success:C.success, warning:C.warning, danger:C.danger, info:C.info, primary:C.primary, default:C.textMuted };
-  var c = mp[variant] || mp.default;
-  return React.createElement('span', {style:{fontSize:FZ.xs, padding:'2px 7px', borderRadius:4, background:c+'22', color:c, whiteSpace:'nowrap', fontWeight:500}}, label);
-}
-
 /* ═══════════════════════════════════════ TOAST + APP ════════════════════════════════ */
 function ToastContainer({ toasts }) {
   return (
@@ -7218,10 +7466,11 @@ function App() {
     financial: <FinancialModule me={me} showToast={showToast} />,
     crm:       <CRMModule  me={me} showToast={showToast} />,
     scorpion:  <ScorpionModule  showToast={showToast} />,
-    orders:    <OrdersModule    me={me} showToast={showToast} />,
+    orders:    <window.OrdersModule    me={me} showToast={showToast} />,
     opsboard:  <OrderOpsBoard   me={me} showToast={showToast} />,
     products:  <ProductsModule  me={me} showToast={showToast} />,
     rules:     <RulesModule     me={me} showToast={showToast} />,
+    aidrafts:  <AIDrafts        me={me} showToast={showToast} />,
     marketing: <MarketingModule   me={me} showToast={showToast} />,
     whatsapp:  <WhatsAppBroadcast me={me} showToast={showToast} />,
     inbox:     <WhatsAppInbox me={me} showToast={showToast} />,
@@ -7330,13 +7579,40 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+/* ─── Expose shared runtime to window for extracted modules ─── */
+window.C = C; window.FF = FF; window.SP = SP; window.RD = RD;
+window.FZ = FZ; window.IZ = IZ; window.BH = BH;
+window.cardStyle = cardStyle; window.iStyle = iStyle; window.SH = SH;
+window.fa = fa; window.cur = cur; window.shortCur = shortCur;
+window.api = api; window.ORDER_STATUS = ORDER_STATUS;
+window.j2g = j2g; window.g2j = g2j;
+window.Tag = Tag; window.Btn = Btn; window.Ic = Ic;
+window.Modal = Modal; window.Spinner = Spinner;
+window.JalaliPicker = JalaliPicker; window.Empty = Empty; window.Fld = Fld;
+// Shared component (used by CRMModule, GuaranteeModule, OrdersModule)
+window.OrderDetail = OrderDetail;
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js");
-  });
-}
+</script>
+<script type="text/babel" src="orders.jsx"></script>
+<script type="text/babel">
+  /* ─── Bootstrap: fallback if orders.jsx fails to load ─── */
+  if (!window.__ORDERS_LOADED__ || !window.OrdersModule) {
+    window.OrdersModule = function OrdersModuleFallback({ showToast }) {
+      return (
+        <div style={{ padding:16, color:"#EF4444", background:"#991B1B20", border:"1px solid #991B1B44", borderRadius:8 }}>
+          سفارشات — ماژول بارگذاری نشد. لطفاً صفحه را مجدداً بارگذاری کنید.
+          <button onClick={()=>location.reload()} style={{ marginRight:8, padding:"6px 12px", background:"#991B1B", color:"#fff", border:"none", borderRadius:6, cursor:"pointer" }}>تلاش مجدد</button>
+        </div>
+      );
+    };
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/service-worker.js");
+    });
+  }
 </script>
 </body>
 </html>
