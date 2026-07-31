@@ -1303,7 +1303,7 @@ function Dashboard({ me, showToast, onNavigate, isMobile }) {
         <p style={{ fontSize:12, color:C.textDim }}>خوش آمدید، {me.name}</p>
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:14, marginBottom:24 }}>
+      <div style={{ display:"grid", gridTemplateColumns: window.innerWidth < 600 ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap:14, marginBottom:24 }}>
         <KPICard label="مشتریان عمده" value={fa(stats.customers)} icon="building" color={C.info}    onClick={() => onNavigate("crm")} />
         <KPICard label="کل سفارشات"   value={fa(stats.orders)}    icon="cart"     color={C.purple}  onClick={() => onNavigate("orders")} />
         <KPICard label="درآمد ثبت‌شده" value={shortCur(stats.revenue)} sub="از فاکتورهای رسمی" icon="wallet" color={C.success} onClick={() => onNavigate("financial")} />
