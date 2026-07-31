@@ -2,9 +2,14 @@
 
 > آخرین به‌روزرسانی: ۱۴۰۵/۰۵/۰۹ — بر اساس smoke test فاز ۱ + فعال‌سازی RLS + گیت‌های preflight
 >
-> در این به‌روزرسانی، شواهد **محلی** جدید ثبت شد: فاز ۱ (تسک/شواهد/صورتجلسه/موتور AI) با
+> در این به‌روزرسانی، شواهد **محلی** جدید ثبت شد: فاز ۱ (تسک/شواهد/صورت‌جلسه/موتور AI) با
 > smoke test ۱۶ سناریو روی استک محلی (server.js + Supabase local) تأیید شد و RLS روی
 > جداول فاز ۱ فعال گردید. **هیچ deploy یا تست production جدیدی انجام نشد** — وضعیت deploy همه سرویس‌ها همچنان UNKNOWN است.
+>
+> **به‌روزرسانی ۱۴۰۵/۰۵/۰۹ (جلسه refactor پنل):** admin-panel به معماری ماژولار (Vite + React + TypeScript)
+> بازنویسی و با داده **زنده از backend دپلوی‌شده** (داشبورد، سفارشات، گارانتی، پرداخت‌ها، پروژه‌ها، چت)
+> در پیش‌نمایش محلی (vite preview) runtime-verified شد. اعتبارسنجی: `npm run build` ✅ (tsc + vite، ۴۴ ماژول)،
+> لاگین JWT واقعی + جدول سفارشات با تاریخ جلالی. Deploy همچنان ⚠️ UNKNOWN.
 >
 > طبق `AGENTS.md` (مرحله ۳ پیش از commit/deploy): «اگر سرویسی قابل تست نیست → وضعیت UNKNOWN ثبت شود، نه OK».
 >
@@ -62,21 +67,21 @@
 
 ### ۲) admin-panel/
 
-- **Source of truth path:** `admin-panel/index.html` (تک‌فایله SPA)
-- **Production/active path status:** `index.html` فعال؛ `POST /api/notifications` در خط ۱۷۹۵ (اکنون مطابق backend handler دارای POST — STEP 1/2).
-- **Legacy/deprecated ambiguity:** `admin-panel/.git` **nested repo مستقل** (remote `azarmehr-admin.git`) — fragmentation (STEP 7)؛ `dashboard.html` LEGACY (PROJECT_MAP).
-- **Last verified evidence:** STEP 7/8/9 git status → `admin-panel/` در ریشه untracked؛ داخل nested repo `M index.html`. **ادعای قبلی «۵ فایل حذف‌شده / BROKEN» در وضعیت فعلی تأیید نشد** (فایل‌ها موجودند).
-- **Static code health:** ✅ `index.html` موجود.
-- **Runtime health:** ⚠️ UNKNOWN — اجرا نشد.
-- **Deploy health:** ⚠️ UNKNOWN — URL `azarmehr-admin.vercel.app` توسط من تست نشد (ادعای قبلی 404 unverified).
-- **DB/migration dependency:** اعلان‌ها via backend proxy (`/api/notifications`)؛ همچنین نوشتن مستقیم Supabase anon (security follow-up — PROJECT_MAP).
-- **Env/auth dependency:** JWT از backend؛ `API_BASE` resolver-based.
-- **Git/governance status:** nested `.git` مستقل؛ untracked تحت ریشه؛ **NOT a submodule**.
-- **Forbidden endpoint status:** ✅ تمیز در `index.html` فعال (فقط legacy `index.html.bak-deeplink:47` — STEP 7).
-- **Hardcoded API_BASE status:** ✅ بدون hardcode جدید (resolver) — STEP 8/PROJECT_MAP.
-- **Open blockers:** nested-git fragmentation (governance)؛ deploy URL unverified.
-- **Current health verdict:** ⚠️ UNKNOWN
-- **Next required gate:** تصمیم nested `.git` + تأیید deploy URL قبل از هر ادعای OK.
+- **Source of truth path:** `admin-panel/src/` (ماژولار: React + Vite + TypeScript) → build → `dist/`؛ `index.html` تنها اسکلت build است
+- **Production/active path status:** `npm run build` (tsc + vite)؛ پنل از `backend` دپلوی‌شده (`azarmehr-backend.vercel.app`) با JWT (localStorage `AZARMEHR_TOKEN`) تغذیه می‌شود
+- **Legacy/deprecated ambiguity:** `admin-panel/.git` **nested repo مستقل** (remote `azarmehr-admin.git`) — fragmentation؛ `index.html.bak_20260731_141509` نسخه مونولیت قبلی (مرجع رول‌بک، untracked)؛ `dashboard.html` LEGACY
+- **Last verified evidence (۱۴۰۵/۰۵/۰۹):** `npm run build` ✅ (tsc + vite، ۴۴ ماژول)؛ runtime در `vite preview` با **داده زنده** تأیید شد: لاگین JWT، داشبورد (۶۵ مشتری / ۵۲ سفارش / ارزش کل)، جدول سفارشات با تاریخ جلالی، کشوی منوی موبایل و ناوبری. گیت‌های preflight ✅ (۸۶/۰ db-source).
+- **Static code health:** ✅ PASS — build سبز؛ بدون خطای tsc.
+- **Runtime health:** ✅ **local verified** — پیش‌نمایش محلی + اتصال زنده به API دپلوی‌شده (در این جلسه).
+- **Deploy health:** ⚠️ UNKNOWN — deploy جدید روی Vercel در این جلسه انجام نشد.
+- **DB/migration dependency:** دسترسی به دیتابیس فقط از طریق backend (JWT)؛ بدون نوشتن مستقیم Supabase anon در کد جدید.
+- **Env/auth dependency:** JWT از `POST /api/login`؛ `API_BASE` resolver-based با fallback `azarmehr-backend.vercel.app`.
+- **Git/governance status:** nested `.git` مستقل؛ تغییرات فعلی در شاخه `refactor/modular-admin` ریپوی ریشه ثبت می‌شوند.
+- **Forbidden endpoint status:** ✅ تمیز.
+- **Hardcoded API_BASE status:** ✅ resolver + fallback (بدون hardcode جدید).
+- **Open blockers:** nested-git fragmentation (governance)؛ deploy URL unverified؛ فایل‌های legacy untracked در `src/modules/` (پاک‌سازی‌شده‌ها به `_backups/` منتقل شدند).
+- **Current health verdict:** ⚠️ PARTIAL — runtime local verified؛ deploy UNKNOWN.
+- **Next required gate:** deploy + تست production قبل از هر ادعای OK.
 
 ### ۳) messenger-app/
 
@@ -138,7 +143,7 @@
 
 | گیت | وضعیت | توضیح |
 |-----|-------|-------|
-| DB Source-of-Truth Gate (`node scripts/check-db-source-of-truth.js`) | ✅ PASS | ۷۷/۷۷ پاس (۱۴۰۵/۰۵/۰۹) — بدون hardcoded postgres URL، بدون env ممنوعه، بدون `.env` tracked |
+| DB Source-of-Truth Gate (`node scripts/check-db-source-of-truth.js`) | ✅ PASS | ۸۶/۸۶ پاس (۱۴۰۵/۰۵/۰۹) — بدون hardcoded postgres URL، بدون env ممنوعه، بدون `.env` tracked |
 | Regression Safety Gate (`node scripts/check-regression-safety.js`) | ✅ PASS | ۱۳/۱۳ پاس (۱۴۰۵/۰۵/۰۹) — بدون secret، مستندات الزامی موجود، بدون نقض SoT |
 
 ---

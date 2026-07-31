@@ -1,49 +1,88 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useCallback, useEffect, useState } from 'react';
 import { resolveApiBase } from '../../config/api';
+import { apiFetch } from '../../config/api';
+import { Card, Loading, ErrorBox, PageHeader, RefreshButton, faNum, faDate, StatusBadge } from '../../shared/ui';
 
 export const SystemControlView: React.FC = () => {
   const [apiBase, setApiBase] = useState(resolveApiBase());
   const [savedStatus, setSavedStatus] = useState(false);
 
+  const [users, setUsers] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState('');
+  const [health, setHealth] = useState<string>('');
+
+  const loadUsers = useCallback(async () => {
+    setUsersLoading(true);
+    setUsersError('');
+    try {
+      const data = await apiFetch('/api/users');
+      setUsers(Array.isArray(data?.users) ? data.users : []);
+    } catch (e: any) {
+      setUsersError(e?.message || 'خطا در دریافت کاربران');
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
+  const checkHealth = useCallback(async () => {
+    try {
+      const res = await fetch(`${apiBase}/api/health`, { method: 'GET' });
+      const data = await res.json().catch(() => null);
+      setHealth(data?.ok ? `✅ بک‌اند فعال — ${data.routes?.length || 0} مسیر` : `⚠️ پاسخ غیرمنتظره (${res.status})`);
+    } catch {
+      setHealth('❌ بک‌اند در دسترس نیست');
+    }
+  }, [apiBase]);
+
+  useEffect(() => {
+    checkHealth();
+  }, [checkHealth]);
+
   const handleSave = () => {
     localStorage.setItem('AZARMEHR_API_BASE', apiBase);
     setSavedStatus(true);
     setTimeout(() => setSavedStatus(false), 3000);
+    window.location.reload();
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 12px',
+    backgroundColor: '#0d1117',
+    border: '1px solid #30363d',
+    borderRadius: 6,
+    color: '#f0f6fc',
+    direction: 'ltr',
+    fontSize: 13,
+    boxSizing: 'border-box',
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#f0f6fc', marginBottom: '8px' }}>
-        ⚙️ کنترل‌پنل جامع سیستم
-      </h1>
-      <p style={{ fontSize: '13px', color: '#8b949e', marginBottom: '24px' }}>
-        مدیریت متمرکز تنظیمات صفر تا صد اپلیکیشن، سرویس‌های متصل و دیتابیس
-      </p>
+    <div>
+      <PageHeader
+        title="کنترل‌پنل جامع سیستم"
+        subtitle="تنظیمات اتصال API و مدیریت کاربران"
+        actions={<RefreshButton onClick={() => { loadUsers(); checkHealth(); }} />}
+      />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-        {/* کارت تنظیمات API & Backend */}
-        <div style={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '12px', padding: '20px' }}>
-          <h3 style={{ fontSize: '16px', color: '#f59e0b', marginBottom: '16px' }}>🌐 تنظیمات اتصال API</h3>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '12px', color: '#8b949e', marginBottom: '6px' }}>
-              آدرس بیس API (API Base URL):
-            </label>
-            <input
-              type="text"
-              value={apiBase}
-              onChange={(e) => setApiBase(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                backgroundColor: '#0d1117',
-                border: '1px solid #30363d',
-                borderRadius: '6px',
-                color: '#f0f6fc',
-                direction: 'ltr',
-                fontSize: '13px',
-              }}
-            />
-          </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginBottom: 20 }}>
+        {/* تنظیمات API */}
+        <Card>
+          <h3 style={{ fontSize: 16, color: '#f59e0b', margin: '0 0 16px' }}>🌐 تنظیمات اتصال API</h3>
+          <label style={{ display: 'block', fontSize: 12, color: '#8b949e', marginBottom: 6 }}>
+            آدرس بیس API (API Base URL):
+          </label>
+          <input
+            type="text"
+            value={apiBase}
+            onChange={(e) => setApiBase(e.target.value)}
+            style={inputStyle}
+          />
           <button
             onClick={handleSave}
             style={{
@@ -51,45 +90,97 @@ export const SystemControlView: React.FC = () => {
               color: '#fff',
               border: 'none',
               padding: '8px 16px',
-              borderRadius: '6px',
+              borderRadius: 6,
               cursor: 'pointer',
               fontWeight: 600,
+              marginTop: 12,
             }}
           >
             ذخیره تغییرات API
           </button>
-          {savedStatus && <span style={{ marginRight: '10px', color: '#10b981', fontSize: '12px' }}>✓ ذخیره شد</span>}
-        </div>
+          {savedStatus && <span style={{ marginRight: 10, color: '#10b981', fontSize: 12 }}>✓ ذخیره شد — صفحه بازنشانی می‌شود</span>}
+        </Card>
 
-        {/* کارت وضعیت سرویس‌ها */}
-        <div style={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '12px', padding: '20px' }}>
-          <h3 style={{ fontSize: '16px', color: '#3b82f6', marginBottom: '16px' }}>🔌 وضعیت اتصال سرویس‌ها</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #21262d', paddingBottom: '8px' }}>
-              <span>دیتابیس Supabase:</span>
-              <span style={{ color: '#10b981', fontWeight: 600 }}>متصل (Active)</span>
+        {/* وضعیت سرویس‌ها */}
+        <Card>
+          <h3 style={{ fontSize: 16, color: '#3b82f6', margin: '0 0 16px' }}>🔌 وضعیت اتصال سرویس‌ها</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #21262d', paddingBottom: 8 }}>
+              <span>بک‌اند (azarmehr-backend):</span>
+              <span style={{ color: health.startsWith('✅') ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+                {health || 'در حال بررسی...'}
+              </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #21262d', paddingBottom: '8px' }}>
-              <span>آداپتور واتساپ (WhatsApp Broadcast):</span>
-              <span style={{ color: '#10b981', fontWeight: 600 }}>آماده به کار</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #21262d', paddingBottom: 8 }}>
+              <span>دیتابیس (Supabase):</span>
+              <span style={{ color: '#10b981', fontWeight: 600 }}>از طریق API بک‌اند</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #21262d', paddingBottom: '8px' }}>
-              <span>آداپتور بله (Bale Adapter):</span>
-              <span style={{ color: '#10b981', fontWeight: 600 }}>فعال</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #21262d', paddingBottom: 8 }}>
+              <span>کاربران متصل:</span>
+              <span style={{ color: '#f0f6fc', fontWeight: 600 }}>{faNum(users.length)} کاربر</span>
             </div>
           </div>
-        </div>
-
-        {/* کارت حالت توسعه و لاگ‌ها */}
-        <div style={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '12px', padding: '20px' }}>
-          <h3 style={{ fontSize: '16px', color: '#10b981', marginBottom: '16px' }}>🛠️ وضعیت محیط اجرا</h3>
-          <div style={{ fontSize: '13px', color: '#8b949e', lineHeight: '1.8' }}>
-            <div>محیط فعلی: <strong style={{ color: '#f0f6fc' }}>Vercel Static / Production</strong></div>
-            <div>معماری: <strong style={{ color: '#f0f6fc' }}>Modular Monorepo Architecture</strong></div>
-            <div>آنالیتیکس: <strong style={{ color: '#ef4444' }}>Disabled (طبق قوانین توسعه)</strong></div>
-          </div>
-        </div>
+          <button
+            onClick={checkHealth}
+            style={{
+              background: '#21262d',
+              color: '#c9d1d9',
+              border: '1px solid #30363d',
+              borderRadius: 6,
+              padding: '7px 14px',
+              cursor: 'pointer',
+              fontSize: 12,
+              marginTop: 12,
+            }}
+          >
+            بررسی مجدد سلامت
+          </button>
+        </Card>
       </div>
+
+      {/* کاربران */}
+      <h3 style={{ fontSize: 16, color: '#f0f6fc', margin: '0 0 12px' }}>👥 کاربران سیستم</h3>
+      <Card style={{ padding: 0, overflow: 'hidden' }}>
+        {usersLoading ? (
+          <Loading label="در حال دریافت کاربران..." />
+        ) : usersError ? (
+          <div style={{ padding: 16 }}>
+            <ErrorBox message={usersError} onRetry={loadUsers} />
+          </div>
+        ) : users.length === 0 ? (
+          <p style={{ padding: 24, color: '#8b949e', fontSize: 13 }}>کاربری یافت نشد.</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ color: '#8b949e', textAlign: 'right', borderBottom: '1px solid #30363d' }}>
+                  <th style={{ padding: '12px 10px' }}>نام</th>
+                  <th style={{ padding: '12px 10px' }}>نام کاربری</th>
+                  <th style={{ padding: '12px 10px' }}>نقش</th>
+                  <th style={{ padding: '12px 10px' }}>سطح سیستم</th>
+                  <th style={{ padding: '12px 10px' }}>دسترسی‌ها</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.id} style={{ borderBottom: '1px solid #21262d' }}>
+                    <td style={{ padding: '12px 10px', fontWeight: 600, color: '#f0f6fc' }}>{u.full_name || '—'}</td>
+                    <td style={{ padding: '12px 10px', direction: 'ltr', textAlign: 'right' }}>{u.username || '—'}</td>
+                    <td style={{ padding: '12px 10px' }}>{u.role || '—'}</td>
+                    <td style={{ padding: '12px 10px' }}>
+                      <StatusBadge status={u.system_role === 'super_admin' ? 'active' : u.system_role === 'admin' ? 'new' : u.system_role} />
+                      <span style={{ marginRight: 6, fontSize: 12, color: '#8b949e' }}>{u.system_role || '—'}</span>
+                    </td>
+                    <td style={{ padding: '12px 10px', color: '#8b949e', fontSize: 11 }}>
+                      {(u.permissions || []).slice(0, 4).join(', ') || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

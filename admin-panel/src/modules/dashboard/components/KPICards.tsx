@@ -1,90 +1,82 @@
-﻿import React from 'react';
+import React, { useState } from 'react';
 
 export interface KPICardProps {
   label: string;
   value: string | number;
-  sub?: string;
+  subtext?: string;
   color?: string;
   icon?: string;
+  trend?: string;
   onClick?: () => void;
 }
 
 export const KPICard: React.FC<KPICardProps> = ({
   label,
   value,
-  sub,
-  color = '#d97706',
-  icon = '📊',
+  subtext,
+  color = '#1f6feb',
+  icon,
+  trend,
   onClick,
 }) => {
+  const [hover, setHover] = useState(false);
+
   return (
     <div
       onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
-        backgroundColor: '#161b22',
-        border: '1px solid #30363d',
-        borderRadius: '12px',
+        backgroundColor: hover ? '#21262d' : '#161b22',
+        borderColor: hover ? color : '#30363d',
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderRadius: '8px',
         padding: '16px',
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 0.2s ease-in-out',
-        display: 'flex',
-        flexDirection: 'column',
-        justify: 'space-between',
-        position: 'relative',
-        overflow: 'hidden',
+        transition: 'all 0.2s ease',
       }}
+      className="flex flex-col justify-between shadow-sm"
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <span style={{ fontSize: '13px', color: '#8b949e', fontWeight: 500 }}>{label}</span>
-        <div
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            backgroundColor: ${color}22,
-            color: color,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-          }}
-        >
-          {icon}
-        </div>
-      </div>
-
-      <div>
-        <div style={{ fontSize: '22px', fontWeight: 700, color: '#f0f6fc', marginBottom: '4px' }}>
-          {value}
-        </div>
-        {sub && (
-          <div style={{ fontSize: '11px', color: '#8b949e', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>{sub}</span>
-          </div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-[#8b949e] font-medium">{label}</span>
+        {icon && (
+          <span
+            className="text-sm p-1.5 rounded"
+            style={{
+              backgroundColor: `${color}22`,
+              color: color,
+            }}
+          >
+            {icon}
+          </span>
         )}
       </div>
+
+      <div className="text-2xl font-bold text-white tracking-tight my-1">
+        {value}
+      </div>
+
+      {(subtext || trend) && (
+        <div className="flex items-center gap-2 text-xs mt-2">
+          {trend && (
+            <span className="text-[#3fb950] font-semibold">{trend}</span>
+          )}
+          {subtext && <span className="text-[#8b949e]">{subtext}</span>}
+        </div>
+      )}
     </div>
   );
 };
 
 export interface KPIGridProps {
-  cards: KPICardProps[];
+  children: React.ReactNode;
 }
 
-export const KPIGrid: React.FC<KPIGridProps> = ({ cards }) => {
+export const KPIGrid: React.FC<KPIGridProps> = ({ children }) => {
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-        gap: '14px',
-        marginBottom: '24px',
-      }}
-      className="kpi-grid-container"
-    >
-      {cards.map((card, index) => (
-        <KPICard key={index} {...card} />
-      ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      {children}
     </div>
   );
 };

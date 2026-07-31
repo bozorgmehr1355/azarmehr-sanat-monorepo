@@ -1,17 +1,10 @@
-﻿import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import "./styles/tokens.css";
+﻿// admin-panel/src/index.tsx
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import './index.css';
 
-const rootElement = document.getElementById("root");
-
-if (rootElement) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-} else {
-  console.error("Root element #root not found in index.html");
+const root = document.getElementById('root');
+if (root) {
+  createRoot(root).render(<App />);
 }
