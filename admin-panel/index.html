@@ -299,6 +299,19 @@
     }
   }
 </style>
+<style id="kpi-fix-style">
+  .kpi-cards-container {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    margin-bottom: 24px !important;
+  }
+  @media (min-width: 1024px) {
+    .kpi-cards-container {
+      grid-template-columns: repeat(3, 1fr) !important;
+    }
+  }
+</style>
 </head>
 <body>
 <div id="root"></div>
@@ -695,7 +708,7 @@ function JalaliPicker({ value, onChange, placeholder="انتخاب تاریخ" }
             <button onClick={prevM} style={{ background:"none", border:"none", cursor:"pointer", color:C.text, fontSize:18, lineHeight:1, padding:"0 4px" }}>›</button>
           </div>
           {/* روزهای هفته */}
-          <div className="kpi-section-grid">
+          <div className="kpi-cards-container">
             {J_WEEKDAYS.map(d=><div key={d} style={{ textAlign:"center", fontSize:10, color:C.textDim, padding:"3px 0", fontWeight:700 }}>{d}</div>)}
           </div>
           {/* روزها */}
