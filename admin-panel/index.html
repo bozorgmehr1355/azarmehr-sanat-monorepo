@@ -172,6 +172,63 @@
     .ui-container { max-width: var(--ui-container-max-width); margin:0 auto; width:100%; }
     main.ui-container { max-width: var(--content-max-w); }
 </style>
+<style id="figma-kpi-styles">
+  .kpi-grid-responsive {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    margin-bottom: 24px !important;
+  }
+  @media (min-width: 768px) {
+    .kpi-grid-responsive {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 16px !important;
+    }
+  }
+
+  /* کارت فیگما */
+  .figma-kpi-card {
+    background-color: #18181b !important;
+    border: 1px solid #27272a !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    min-height: 110px !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+  }
+  .figma-kpi-top {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+  .figma-kpi-value {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    font-family: 'IRANSansX', 'Roboto', sans-serif !important;
+    line-height: 1 !important;
+  }
+  .figma-kpi-bottom {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    margin-top: 14px !important;
+    width: 100% !important;
+  }
+  .figma-kpi-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #f4f4f5 !important;
+  }
+  .figma-kpi-sub {
+    font-size: 11px !important;
+    color: #71717a !important;
+  }
+</style>
 </head>
 <body>
 <div id="root"></div>
