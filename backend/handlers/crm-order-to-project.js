@@ -108,11 +108,17 @@ module.exports = async (req, res) => {
 
     // ── گاردهای تکراری (idempotency) ─────────────────────────────────────────
     // ۱) آیا قبلاً مراحل کاری برای این سفارش ساخته شده؟
-    const { data: existingTasks } = await supabase
+    const { data: existingTasks, error: tasksCheckError } = await supabase
       .from('crm_order_tasks')
       .select('id')
       .eq('order_id', parsedId)
       .limit(1);
+
+    if (tasksCheckError) {
+      return res.status(500).json({
+        error: `خطا در بررسی مراحل کاری قبلی: ${tasksCheckError.message}`
+      });
+    }
 
     if (existingTasks && existingTasks.length > 0) {
       return res.status(409).json({
@@ -122,11 +128,17 @@ module.exports = async (req, res) => {
     }
 
     // ۲) آیا قبلاً پروژه‌ای برای این سفارش ساخته شده؟
-    const { data: existingProject } = await supabase
+    const { data: existingProject, error: projectCheckError } = await supabase
       .from('projects')
       .select('id')
       .eq('order_id', parsedId)
       .limit(1);
+
+    if (projectCheckError) {
+      return res.status(500).json({
+        error: `خطا در بررسی پروژه قبلی: ${projectCheckError.message}`
+      });
+    }
 
     if (existingProject && existingProject.length > 0) {
       return res.status(409).json({
