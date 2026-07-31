@@ -229,6 +229,63 @@
     color: #71717a !important;
   }
 </style>
+<style id="figma-layout-system">
+  /* CSS Grid متوازن: ۲ ستون موبایل / ۳ ستون دسکتاپ */
+  .kpi-grid-container {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    margin-bottom: 24px !important;
+  }
+  @media (min-width: 768px) {
+    .kpi-grid-container {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 16px !important;
+    }
+  }
+
+  /* استایل دقیق کارت طبق طرح فیگما */
+  .figma-kpi-card {
+    background: #18181b !important;
+    border: 1px solid #27272a !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    min-height: 110px !important;
+    box-sizing: border-box !important;
+  }
+  .figma-kpi-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+  .figma-kpi-value {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    font-family: 'IRANSansX', sans-serif !important;
+    line-height: 1 !important;
+  }
+  .figma-kpi-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    margin-top: 16px !important;
+    width: 100% !important;
+  }
+  .figma-kpi-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #f4f4f5 !important;
+  }
+  .figma-kpi-sub {
+    font-size: 11px !important;
+    color: #71717a !important;
+  }
+</style>
 </head>
 <body>
 <div id="root"></div>
@@ -625,11 +682,11 @@ function JalaliPicker({ value, onChange, placeholder="انتخاب تاریخ" }
             <button onClick={prevM} style={{ background:"none", border:"none", cursor:"pointer", color:C.text, fontSize:18, lineHeight:1, padding:"0 4px" }}>›</button>
           </div>
           {/* روزهای هفته */}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", marginBottom:4 }}>
+          <div className="kpi-grid-container">
             {J_WEEKDAYS.map(d=><div key={d} style={{ textAlign:"center", fontSize:10, color:C.textDim, padding:"3px 0", fontWeight:700 }}>{d}</div>)}
           </div>
           {/* روزها */}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:1 }}>
+          <div className="kpi-grid-container">
             {Array.from({length:skip}).map((_,i)=><div key={`s${i}`}/>)}
             {Array.from({length:days}).map((_,i)=>{
               const jd=i+1;
@@ -1140,7 +1197,7 @@ function ProformaNotifyModal({ invoice, order, customer, onClose, showToast }) {
         {msg}
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
+      <div className="kpi-grid-container">
         {cleanPhone ? (
           <button onClick={sendWhatsApp} style={{
             padding:"12px 8px", borderRadius:10, border:"none", cursor:"pointer",
@@ -1360,7 +1417,7 @@ function Dashboard({ me, showToast, onNavigate, isMobile }) {
         <p style={{ fontSize:12, color:C.textDim }}>خوش آمدید، {me.name}</p>
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns: window.innerWidth < 600 ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap:14, marginBottom:24 }}>
+      <div className="kpi-grid-container">
         <KPICard label="مشتریان عمده" value={fa(stats.customers)} icon="building" color={C.info}    onClick={() => onNavigate("crm")} />
         <KPICard label="کل سفارشات"   value={fa(stats.orders)}    icon="cart"     color={C.purple}  onClick={() => onNavigate("orders")} />
         <KPICard label="درآمد ثبت‌شده" value={shortCur(stats.revenue)} sub="از فاکتورهای رسمی" icon="wallet" color={C.success} onClick={() => onNavigate("financial")} />
@@ -1369,7 +1426,7 @@ function Dashboard({ me, showToast, onNavigate, isMobile }) {
         <KPICard label="مرجوعی در انتظار" value={fa(claims.filter(c=>c.status==="pending").length)} sub="نیاز به بررسی" icon="shield" color="#EF4444" onClick={() => onNavigate("guarantee")} />
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap:16, marginBottom:20 }}>
+      <div className="kpi-grid-container">
         <div style={{...cardStyle, padding:20 }}>
           <p style={{ fontSize:13, fontWeight:600, color:C.text, marginBottom:16 }}>فروش ۶ ماه اخیر</p>
           <div style={{ height:200 }}>
@@ -1778,7 +1835,7 @@ function FinancialModule({ me, showToast }) {
       </div>
 
       {/* ─── کارت‌های خلاصه ─── */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10, marginBottom:16 }}>
+      <div className="kpi-grid-container">
         <div style={{ background:C.surface, border:"1px solid "+C.border, borderRadius:10, padding:"10px 14px" }}>
           <p style={{ fontSize:10, color:C.textDim, marginBottom:4 }}>فیلترشده</p>
           <p style={{ fontSize:18, fontWeight:700, color:C.primary }}>{fa(filteredRows.length)} مشتری</p>
@@ -1932,7 +1989,7 @@ function CustomerForm({ customer, onSave, onCancel, showToast }) {
       {form.legal_type==="individual" ? inp("national_id","کد ملی") : (
         <>{inp("company_national_id","شناسه ملی شرکت")}{inp("economic_code","کد اقتصادی")}{inp("ceo_name","نام مدیرعامل")}</>
       )}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+      <div className="kpi-grid-container">
         {inp("phone","تلفن *")} {inp("email","ایمیل")}
         {inp("whatsapp","واتساپ")} {inp("eitaa_id","ایتا")}
         {inp("province","استان")} {inp("city","شهر")}
@@ -1940,7 +1997,7 @@ function CustomerForm({ customer, onSave, onCancel, showToast }) {
       <Fld label="آدرس کامل">
         <textarea style={{ ...iStyle, resize:"none" }} rows={2} value={form.address||""} onChange={e=>upd("address",e.target.value)} />
       </Fld>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+      <div className="kpi-grid-container">
         <Fld label="سطح مشتری">
           <select style={{ ...iStyle, cursor:"pointer" }} value={form.grade} onChange={e=>upd("grade",e.target.value)}>
             <option value="standard">معمولی</option><option value="silver">نقره‌ای</option>
@@ -1986,7 +2043,7 @@ function CustomerForm({ customer, onSave, onCancel, showToast }) {
       </div>
       <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:14, marginTop:6 }}>
         <p style={{ fontSize:11, color:C.textMuted, marginBottom:10, fontWeight:600 }}>دسترسی پورتال مشتری</p>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+        <div className="kpi-grid-container">
           {inp("portal_username","نام کاربری پورتال")} {inp("portal_password","رمز پورتال",{type:"text"})}
         </div>
         <label style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer", fontSize:13, color:C.text }}>
@@ -2504,7 +2561,7 @@ function OrderDetail({ order, customer, me, showToast, onUpdate, onClose, onCust
                       ))}</div>
                     </Fld>
                     {payMethod==="check" && (
-                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+                      <div className="kpi-grid-container">
                         <Fld label="شماره چک *"><input style={iStyle} value={checkNum} onChange={e=>setCheckNum(e.target.value)} /></Fld>
                         <Fld label="بانک"><input style={iStyle} value={checkBank} onChange={e=>setCheckBank(e.target.value)} /></Fld>
                         <Fld label="سررسید"><JalaliPicker value={checkDate} onChange={setCheckDate} placeholder="..." /></Fld>
@@ -3017,7 +3074,7 @@ function MarketingModule({ me, showToast }) {
       {/* ── TAB: STATS ── */}
       {tab==="stats" && (
         <div style={{ display:"grid", gap:16 }}>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:12 }}>
+          <div className="kpi-grid-container">
             <KPICard label="کل تماس‌ها" value={fa(totalLogs)} icon="trend" color={C.primary} />
             <KPICard label="این ماه" value={fa(thisMonth)} icon="chart" color={C.info} />
             <KPICard label="مشتریان فعال" value={fa(customers.length)} icon="users" color={C.success} />
@@ -3067,7 +3124,7 @@ function MarketingModule({ me, showToast }) {
               {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </Fld>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          <div className="kpi-grid-container">
             <Fld label="کانال ارتباطی *">
               <select style={{ ...iStyle, cursor:"pointer" }} value={form.channel} onChange={e=>setForm(f=>({...f,channel:e.target.value}))}>
                 {COMM_CHANNELS.map(ch => <option key={ch.key} value={ch.key}>{ch.label}</option>)}
@@ -3105,7 +3162,7 @@ function OrderSummaryCards({ filtered }) {
   const unpaid    = filtered.filter(o=>["pending_payment","contract_pending","registered","stock_check"].includes(o.order_status)).length;
   const delivered = filtered.filter(o=>o.order_status==="delivered").length;
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:16 }}>
+    <div className="kpi-grid-container">
       <div style={{ background:C.surface, borderBottom:`2px solid ${C.primary}44`, padding:"12px 16px" }}>
         <p style={{ fontSize:9, color:C.textDim, letterSpacing:"0.3px", marginBottom:4 }}>فیلتر شده</p>
         <p style={{ fontSize:22, fontWeight:700, color:C.text, lineHeight:1.2 }}>{fa(filtered.length)}</p>
@@ -3343,7 +3400,7 @@ function OrdersModule({ me, showToast }) {
                     <span style={{ fontSize:13, fontWeight:700, color:C.text }}>#{fa(o.id)} — {cust?.name||o.customer_name||"—"}</span>
                     <Tag status={o.order_status} />
                   </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px 14px", marginBottom:10 }}>
+                  <div className="kpi-grid-container">
                     <div><span style={{ fontSize:10, color:C.textDim }}>تاریخ</span><div style={{ fontSize:12, color:C.text }}>{o.created_at ? new Date(o.created_at).toLocaleDateString("fa-IR") : "—"}</div></div>
                     <div><span style={{ fontSize:10, color:C.textDim }}>نوع</span><div style={{ fontSize:12 }}><span style={{ padding:"2px 8px", borderRadius:5, background:o.order_type==="custom"?C.indigoDim:C.cyanDim, color:o.order_type==="custom"?C.indigo:C.cyan, fontSize:11 }}>{o.order_type==="custom"?"سفارشی":"انبار"}</span></div></div>
                     <div><span style={{ fontSize:10, color:C.textDim }}>مبلغ</span><div style={{ fontSize:13, fontWeight:700, color:C.primary }}>{shortCur(o.total_amount)}</div></div>
@@ -3459,7 +3516,7 @@ function NewOrderModal({ customers, showToast, onClose, onSaved }) {
 
   return (
     <Modal title="ثبت سفارش جدید" onClose={onClose} maxWidth={600}>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+      <div className="kpi-grid-container">
         <Fld label="مشتری *">
           <select style={{ ...iStyle, cursor:"pointer" }} value={form.customer_id} onChange={function(e){setForm(function(f){return Object.assign({},f,{customer_id:e.target.value});});}}>
             <option value="">انتخاب کنید...</option>
@@ -3491,7 +3548,7 @@ function NewOrderModal({ customers, showToast, onClose, onSaved }) {
         <div style={{ display:"grid", gap:8 }}>
           {items.map(function(it, idx) {
             return (
-              <div key={idx} style={{ display:"grid", gridTemplateColumns:"2fr 130px 120px auto", gap:8, alignItems:"center", background:C.surfaceAlt, borderRadius:8, padding:"8px 10px" }}>
+              <div key={idx} className="kpi-grid-container">
                 <select style={{ ...iStyle, fontSize:12 }} value={it.product_id} onChange={function(e){ updateItem(idx,"product_id",e.target.value); }}>
                   <option value="">انتخاب محصول...</option>
                   {products.map(function(p){ return <option key={p.id} value={p.id}>{p.name}</option>; })}
@@ -3556,7 +3613,7 @@ function TierDiscountTable({ isAdmin }) {
           </div>
         )}
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 2fr 1fr" }}>
+      <div className="kpi-grid-container">
         {cols.map(function(h){
           return (
             <div key={h} style={{ padding:"10px 16px", fontSize:11, color:C.textMuted, fontWeight:700, borderBottom:"1px solid "+C.border }}>{h}</div>
@@ -3566,12 +3623,7 @@ function TierDiscountTable({ isAdmin }) {
       {PRICE_TIERS.map(function(t,i) {
         var d = editing ? draft[i] : tiers[i];
         return (
-          <div key={i} style={{
-            display:"grid", gridTemplateColumns:"2fr 1fr 2fr 1fr",
-            background: i%2===0 ? C.surface : C.surfaceAlt,
-            borderBottom: i<PRICE_TIERS.length-1 ? "1px solid "+C.border : "none",
-            alignItems:"center"
-          }}>
+          <div key={i} className="kpi-grid-container">
             <div style={{ padding:"11px 16px", fontSize:13, fontWeight:600, color:C.text }}>{t.label}</div>
             <div style={{ padding:"8px 16px" }}>
               {editing && i > 0 ? (
@@ -3804,7 +3856,7 @@ function ProductEditModal({ product, onClose, onSaved, showToast }) {
         <div style={{ background:C.danger+"22", border:`1px solid ${C.danger}44`, borderRadius:8, padding:"10px 14px", marginBottom:16, color:C.danger, fontSize:13, textAlign:"center" }}>{error}</div>
       )}
       <h4 style={{ fontSize:14, color:C.primary, marginBottom:12, fontWeight:600 }}>📋 مشخصات اصلی</h4>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
+      <div className="kpi-grid-container">
         <F label="کد محصول" field="code" />
         <F label="نام محصول" field="name" />
         <F label="دسته‌بندی" field="category" />
@@ -3828,7 +3880,7 @@ function ProductEditModal({ product, onClose, onSaved, showToast }) {
         </div>
       )}
       <h4 style={{ fontSize:14, color:C.primary, marginBottom:12, fontWeight:600 }}>📊 موجودی و گارانتی</h4>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
+      <div className="kpi-grid-container">
         <F label="موجودی" field="stock" type="number" />
         <F label="گارانتی (روز)" field="guarantee_days" type="number" />
         <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
@@ -3847,7 +3899,7 @@ function ProductEditModal({ product, onClose, onSaved, showToast }) {
         </div>
       </div>
       <h4 style={{ fontSize:14, color:C.primary, marginBottom:12, fontWeight:600 }}>💰 قیمت‌ها (ریال)</h4>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
+      <div className="kpi-grid-container">
         <F label="قیمت پایه" field="base_price" type="number" isPrice />
         <F label="🟢 معمولی (Standard)" field="price_standard" type="number" isPrice />
         <F label="🔵 نقره‌ای (Silver)" field="price_silver" type="number" isPrice />
@@ -4025,7 +4077,7 @@ function RuleEditModal({ rule, onClose, onSaved, showToast }) {
       {error && (
         <div style={{ background:C.danger+"22", border:`1px solid ${C.danger}44`, borderRadius:8, padding:"10px 14px", marginBottom:16, color:C.danger, fontSize:13, textAlign:"center" }}>{error}</div>
       )}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+      <div className="kpi-grid-container">
         <Fld2 label="نوع قانون">
           <select value={form.condition_type} onChange={e=>handleChange("condition_type",e.target.value)} style={iStyle}>
             <option value="">انتخاب کنید...</option>
@@ -4238,7 +4290,7 @@ function AccessModule({ me, showToast }) {
       </div>
 
       {/* آمار نقش‌ها */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:24 }}>
+      <div className="kpi-grid-container">
         {[["super_admin","مدیر ارشد",C.primary],["admin","ادمین",C.info],["viewer","مشاهده‌گر",C.textDim]].map(([role,label,color])=>(
           <div key={role} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:12, padding:16 }}>
             <div style={{ fontSize:11, color:C.textDim, marginBottom:6 }}>{label}</div>
@@ -4357,7 +4409,7 @@ function AccessModule({ me, showToast }) {
           <Fld label="نام کامل *">
             <input style={iStyle} value={form.name||""} onChange={e=>setForm(f=>({...f,name:e.target.value}))} />
           </Fld>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          <div className="kpi-grid-container">
             <Fld label="نام کاربری *">
               <input style={iStyle} value={form.username||""} onChange={e=>setForm(f=>({...f,username:e.target.value}))} autoComplete="off" />
             </Fld>
@@ -4751,7 +4803,7 @@ function ReportsModule({ me, showToast }) {
       {/* ─── فیلترها ─── */}
       <div style={{ ...cardStyle, padding:16, marginBottom:16 }}>
         <p style={{ fontSize:12, fontWeight:700, color:C.textMuted, marginBottom:12 }}>🔍 فیلترها</p>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:10, alignItems:"end" }}>
+        <div className="kpi-grid-container">
           <div>
             <label style={{ fontSize:11, color:C.textDim, display:"block", marginBottom:4 }}>از تاریخ</label>
             <JalaliPicker value={dateFrom} onChange={setDateFrom} placeholder="از تاریخ" />
@@ -4788,7 +4840,7 @@ function ReportsModule({ me, showToast }) {
       </div>
 
       {/* ─── کارت‌های خلاصه ─── */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:12, marginBottom:16 }}>
+      <div className="kpi-grid-container">
         <KPICard label="تعداد سفارشات"  value={fa(filtered.length)}   icon="cart"     color={C.primary}  />
         <KPICard label="مجموع فروش"     value={shortCur(totalRevenue)} icon="wallet"   color={C.success}  />
         <KPICard label="میانگین سفارش"  value={shortCur(avgOrder)}     icon="trend"    color={C.info}     />
@@ -5147,7 +5199,7 @@ function GuaranteeModule({ me, showToast }) {
       {tab==="internal" && (<div>
 
       {/* کارت‌های خلاصه */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10, marginBottom:16 }}>
+      <div className="kpi-grid-container">
         {Object.entries(CLAIM_STATUS).map(function(entry) {
           var k=entry[0]; var v=entry[1];
           var cnt = claims.filter(function(c){return c.status===k;}).length;
@@ -5223,7 +5275,7 @@ function GuaranteeModule({ me, showToast }) {
       {/* مودال ثبت درخواست */}
       {form && (
         <Modal title="ثبت درخواست مرجوعی" onClose={function(){setForm(null);}} maxWidth={520}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          <div className="kpi-grid-container">
             <Fld label="مشتری *">
               <select style={{ ...iStyle, cursor:"pointer" }} value={form.customer_id} onChange={function(e){setForm(function(f){return Object.assign({},f,{customer_id:e.target.value,order_id:""});});}}>
                 <option value="">انتخاب کنید...</option>
@@ -5251,7 +5303,7 @@ function GuaranteeModule({ me, showToast }) {
               {CLAIM_REASONS.map(function(r){ return <option key={r.key} value={r.key}>{r.label}</option>; })}
             </select>
           </Fld>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          <div className="kpi-grid-container">
             <Fld label="تاریخ تحویل محصول">
               <JalaliPicker value={form.delivery_date||""} onChange={function(v){setForm(function(f){return Object.assign({},f,{delivery_date:v});});}} placeholder="تاریخ تحویل" />
             </Fld>
@@ -5526,7 +5578,7 @@ function SupportTicketsModule({ me, showToast }) {
       </div>
 
       {/* Summary cards */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))", gap:8, marginBottom:14 }}>
+      <div className="kpi-grid-container">
         {[['all','همه'],['open','باز'],['in_progress','در حال بررسی'],['resolved','حل شده'],['closed','بسته شده']].map(function(en){
           var k=en[0]; var l=en[1]; var st=STATUS_MAP[k];
           var cnt=k==='all'?tickets.length:tickets.filter(function(t){return t.status===k;}).length;
@@ -8723,13 +8775,7 @@ function OrderSummaryCards({ filtered }) {
   const unpaid    = filtered.filter(o=>["pending_payment","contract_pending","registered","stock_check"].includes(o.order_status)).length;
   const delivered = filtered.filter(o=>o.order_status==="delivered").length;
   return (
-    <div style={{ 
-      display:"grid", 
-      gridTemplateColumns:"repeat(3,1fr)", 
-      gap:16, 
-      marginBottom:20,
-      marginTop:4
-    }}>
+    <div className="kpi-grid-container">
       {/* Main metric - شاید کل */}
       <div style={{ 
         background:C.surface,
@@ -8880,7 +8926,7 @@ function OrdersModule({ me, showToast }) {
     const totalAmount = customerOrders.reduce(function(s,o) { return s + Number(o.total_amount||0); }, 0);
     return (
       <Modal title={c.name || "جزئیات مشتری"} onClose={() => setCustomerDetail(null)} maxWidth={640}>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+        <div className="kpi-grid-container">
           <Fld label="شناسه"><span style={{ fontSize:13, color:C.text }}>{c.id}</span></Fld>
           <Fld label="تلفن"><span style={{ fontSize:13, color:C.text }}>{c.phone ? fa(c.phone) : "—"}</span></Fld>
           <Fld label="شرکت"><span style={{ fontSize:13, color:C.text }}>{c.company || "—"}</span></Fld>
@@ -9060,12 +9106,7 @@ return (
                     </div>
                     <Tag status={o.order_status} />
                   </div>
-                  <div style={{ 
-                    display:"grid", 
-                    gridTemplateColumns:"1fr 1fr", 
-                    gap:"10px 16px", 
-                    marginBottom:14
-                  }}>
+                  <div className="kpi-grid-container">
                     <div>
                       <p style={{ fontSize:10, color:C.textDim, marginBottom:4 }}>تاریخ</p>
                       <p style={{ fontSize:12, fontWeight:600, color:C.text }}>{o.created_at ? new Date(o.created_at).toLocaleDateString("fa-IR") : "—"}</p>
@@ -9202,7 +9243,7 @@ function NewOrderModal({ customers, showToast, onClose, onSaved }) {
 
   return (
     <Modal title="ثبت سفارش جدید" onClose={onClose} maxWidth={600}>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+      <div className="kpi-grid-container">
         <Fld label="مشتری *">
           <select style={{ ...iStyle, cursor:"pointer" }} value={form.customer_id} onChange={function(e){setForm(function(f){return Object.assign({},f,{customer_id:e.target.value});});}}>
             <option value="">انتخاب کنید...</option>
@@ -9234,7 +9275,7 @@ function NewOrderModal({ customers, showToast, onClose, onSaved }) {
         <div style={{ display:"grid", gap:8 }}>
           {items.map(function(it, idx) {
             return (
-              <div key={idx} style={{ display:"grid", gridTemplateColumns:"2fr 80px 120px auto", gap:8, alignItems:"center", background:C.surfaceAlt, borderRadius:8, padding:"8px 10px" }}>
+              <div key={idx} className="kpi-grid-container">
                 <select style={{ ...iStyle, fontSize:12 }} value={it.product_id} onChange={function(e){ updateItem(idx,"product_id",e.target.value); }}>
                   <option value="">انتخاب محصول...</option>
                   {products.map(function(p){ return <option key={p.id} value={p.id}>{p.name}</option>; })}
