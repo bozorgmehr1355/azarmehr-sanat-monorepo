@@ -1,18 +1,15 @@
 # Service Health Matrix
 
-> آخرین به‌روزرسانی: ۱۴۰۵/۰۴/۲۶ — بر اساس evidence verified notifications + PROJECT_EXECUTION_BASELINE
+> آخرین به‌روزرسانی: ۱۴۰۵/۰۵/۰۹ — بر اساس smoke test فاز ۱ + فعال‌سازی RLS + گیت‌های preflight
 >
-> محدوده این به‌روزرسانی: فقط ۵ سرویس
-> (`wholesale-portal/`، `admin-panel/`، `messenger-app/`، `backend/`، `whatsapp-broadcast-api/`).
+> در این به‌روزرسانی، شواهد **محلی** جدید ثبت شد: فاز ۱ (تسک/شواهد/صورتجلسه/موتور AI) با
+> smoke test ۱۶ سناریو روی استک محلی (server.js + Supabase local) تأیید شد و RLS روی
+> جداول فاز ۱ فعال گردید. **هیچ deploy یا تست production جدیدی انجام نشد** — وضعیت deploy همه سرویس‌ها همچنان UNKNOWN است.
 >
-> در مراحل ۱–۹ هیچ **deploy**، **migration**، **install**، یا **تست runtime production** انجام نشد.
-> بنابراین طبق `AGENTS.md` (بخش پیش از commit/deploy → مرحله ۳):
-> «اگر سرویسی قابل تست نیست → وضعیت **UNKNOWN** ثبت شود، نه OK».
+> طبق `AGENTS.md` (مرحله ۳ پیش از commit/deploy): «اگر سرویسی قابل تست نیست → وضعیت UNKNOWN ثبت شود، نه OK».
 >
-> - وضعیت‌های runtime / deploy / DB-live همگی **UNKNOWN** یا **PARTIAL** هستند.
-> - endpoint ممنوعه `azarmehr-backend-main.vercel.app` در هیچ کد فعالی یافت نشد
->   (فقط در متن rule مستندات و legacy `*.bak-deeplink` — STEP 7/8).
-> - هیچ `API_BASE` جدیدی در کد فعال backend hardcode نشد (STEP 8/PROJECT_MAP).
+> - وضعیت‌های runtime/deploy در production همچنان **UNKNOWN** هستند.
+> - فاز ۱ (backend) تنها در استک **محلی** verified است.
 
 ---
 
@@ -31,7 +28,7 @@
 
 | سرویس | SoT | Static | Runtime | Deploy | DB/Migration | Git/Gov | Forbidden EP | Hard API_BASE | Verdict |
 |-------|-----|--------|---------|--------|--------------|---------|--------------|---------------|---------|
-| **backend/** | backend/ | ✅ PASS | ⚠️ UNKNOWN/BLOCKED | ⚠️ UNKNOWN | ⚠️ migration pending | untracked (??) | ✅ تمیز | ✅ تمیز | ⚠️ PARTIAL |
+| **backend/** | backend/ | ✅ PASS | ✅ local smoke (فاز ۱) | ⚠️ UNKNOWN | ✅ RLS enabled (mig 00000-00003) | فاز ۱ committed | ✅ تمیز | ✅ تمیز | ⚠️ PARTIAL |
 | **admin-panel/** | admin-panel/index.html | ✅ موجود | ⚠️ UNKNOWN | ⚠️ UNKNOWN | proxy + anon | nested .git | ✅ تمیز | ✅ resolver | ⚠️ UNKNOWN |
 | **messenger-app/** | components/index.jsx | ✅ pipeline | ⚠️ UNKNOWN | ⚠️ UNKNOWN | وابسته backend | untracked (??) | ✅ تمیز | ✅ resolver | ⚠️ UNKNOWN |
 | **wholesale-portal/** | wholesale-portal/index.html | ✅ موجود | ⚠️ UNKNOWN | ⚠️ UNKNOWN | anon + backend | untracked (??) | ✅ تمیز* | ✅ resolver | ⚠️ UNKNOWN |
@@ -45,24 +42,23 @@
 
 ### ۱) backend/
 
-- **Source of truth path:** `backend/` (`handlers/*.js` + `api/index.js` + `server.js` + `handlers/_lib.js`/`_audit.js`)
-- **Production/active path status:** Vercel → `backend/api/index.js`؛ Render → `backend/server.js`. هر دو همه handlerها را mount می‌کنند (STEP 1/2/8).
-- **Legacy/deprecated ambiguity:** ندارد (طبق PROJECT_MAP همه handler فعالند).
-- **Last verified evidence:** STEP 8 (`node -c` روی ۵۲ handler + entrypoints → PASS)؛ STEP 1/2 (route `/api/notifications` mounted + شاخه POST اضافه شد).
+- **Source of truth path:** `backend/` (`handlers/*.js` + `api/index.js` + `server.js` + `handlers/_lib.js`/`_audit.js` + `services/*.js`)
+- **Production/active path status:** Vercel → `backend/api/index.js`؛ Render → `backend/server.js`. هر دو مسیر فاز ۱ (tasks/meeting-minutes/ai-agent) را mount می‌کنند (۱۴۰۵/۰۵/۰۹).
+- **Legacy/deprecated ambiguity:** `handlers/meetings.js` و `handlers/ai-drafts.js` legacy دست‌نخورده‌اند؛ `/api/meetings` دیگر به legacy مونت نیست.
+- **Last verified evidence:** smoke test فاز ۱ → **۱۶ ✅ / ۰ ❌** (۱۴۰۵/۰۵/۰۹)؛ `node -c` همه فایل‌ها ✅؛ preflight هر دو گیت ✅.
 - **Static code health:** ✅ PASS (node -c همه فایل‌های واقعی).
-- **Runtime health:** ⚠️ UNKNOWN/BLOCKED — `backend/node_modules` غایب؛ env/auth نامشخص؛ هیچ HTTP runtime اجرا نشد (STEP 3/6/8).
-- **Deploy health:** ⚠️ UNKNOWN/PARTIAL — deploy توسط من انجام نشد؛ ادعای قبلی «✅ OK / 38 route» توسط مراحل ۱–۹ تأیید نشد.
-- **DB/migration dependency:** جدول `notifications` موجود است و VERIFIED — POST 201 / GET 200 روی production. migration ساخته شد (`supabase/create-notifications-table.sql`) اما **اجرا نشد زیرا جدول از قبل وجود داشت**.
-- **Env/auth dependency:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_KEY`, `JWT_SECRET` (`handlers/_lib.js:5-7`) — وضعیت UNKNOWN (مقدار بررسی نشد، طبق strict mode).
-- **Git/governance status:** `backend/` در ریشه **untracked (??)** — commit نشده (STEP 7/8/9).
-- **Forbidden endpoint status:** ✅ تمیز — grep backend برای `azarmehr-backend-main.vercel.app` / `vercel.app` / `API_BASE` → No files (STEP 8).
-- **Hardcoded API_BASE status:** ✅ تمیز — هیچ `API_BASE` جدید در backend active code (STEP 8).
+- **Runtime health:** ✅ **local verified** — `server.js` روی پورت محلی اجرا شد؛ تسک/شواهد/صورت‌جلسه/موتور AI/Auth gate/405 همه تأیید شدند. (production هنوز تست نشده → Deploy ⚠️ UNKNOWN)
+- **Deploy health:** ⚠️ UNKNOWN — deploy در این مرحله انجام نشد.
+- **DB/migration dependency:** مایگریشن‌های فاز ۱ (`20260731000000` تا `20260731000003`) روی دیتابیس **محلی** اعمال و verified شدند؛ RLS روی هر ۵ جدول فاز ۱ فعال است.
+- **Env/auth dependency:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_KEY`, `JWT_SECRET` (`handlers/_lib.js`) — موجود در `.env` محلی.
+- **Git/governance status:** فایل‌های فاز ۱ + مستندات در commit این تاریخ ثبت شدند؛ تغییرات پیشین (crm-* و...) همچنان modified/untracked هستند.
+- **Forbidden endpoint status:** ✅ تمیز — grep backend برای `azarmehr-backend-main.vercel.app` / `vercel.app` / `API_BASE` → No files.
+- **Hardcoded API_BASE status:** ✅ تمیز — هیچ `API_BASE` جدید در backend active code.
 - **Open blockers:**
-  1. `node_modules` غایب → preflight/runtime غیرممکن.
-  2. env/auth نامشخص.
-  3. `backend/package.json` فاقد `check:preflight` (فقط در root وجود دارد).
-- **Current health verdict:** ⚠️ PARTIAL
-- **Next required gate:** `npm install` + `npm run check:preflight` + smoke test production.
+  1. deploy production تست نشده (UNKNOWN).
+  2. هیچ مصرف‌کننده UI هنوز روت‌های فاز ۱ را صدا نمی‌زند.
+- **Current health verdict:** ⚠️ PARTIAL — backend محلی verified؛ production/deploy UNKNOWN.
+- **Next required gate:** deploy + تست production + اتصال UI به روت‌های فاز ۱.
 
 ### ۲) admin-panel/
 
@@ -142,17 +138,49 @@
 
 | گیت | وضعیت | توضیح |
 |-----|-------|-------|
-| DB Source-of-Truth Gate (`node scripts/check-db-source-of-truth.js`) | ⚠️ UNKNOWN | در مراحل ۱–۹ اجرا نشد (`node_modules` غایب؛ strict mode اجازه `npm install` نداد). ادعای قبلی «✅ OK» توسط من تأیید نشد. |
-| Regression Safety Gate (`node scripts/check-regression-safety.js`) | ⚠️ UNKNOWN | مشابه بالا؛ اجرا نشد. |
+| DB Source-of-Truth Gate (`node scripts/check-db-source-of-truth.js`) | ✅ PASS | ۷۷/۷۷ پاس (۱۴۰۵/۰۵/۰۹) — بدون hardcoded postgres URL، بدون env ممنوعه، بدون `.env` tracked |
+| Regression Safety Gate (`node scripts/check-regression-safety.js`) | ✅ PASS | ۱۳/۱۳ پاس (۱۴۰۵/۰۵/۰۹) — بدون secret، مستندات الزامی موجود، بدون نقض SoT |
 
 ---
 
-## بلوکرهای باز (پس از STEP 0 — Resync)
+## فاز ۱ — تسک/شواهد/صورت‌جلسه/موتور AI + RLS (۱۴۰۵/۰۵/۰۹)
 
-1. **node_modules غایب** در backend → preflight/runtime غیرممکن.
-2. **env/auth نامشخص** (بررسی نشد، طبق strict mode).
-3. **Governance/Git fragmentation:** nested `.git` (admin-panel)؛ ~۲۹ مسیر untracked؛ `backend/` untracked.
-4. **Deploy health** همه سرویس‌ها تست نشد → UNKNOWN.
+### شواهد محلی (local stack)
+
+| مورد | وضعیت | شاهد |
+|------|-------|------|
+| روت‌های فاز ۱ (tasks/meetings/ai-agent) | ✅ | smoke test: `node backend/test-tasks-meetings-ai-smoke.js` → **۱۶ ✅ / ۰ ❌** |
+| گیت احراز هویت | ✅ | GET بدون توکن → 401 |
+| وضعیت‌ها و شواهد تسک | ✅ | PENDING_ACK ← … ← PENDING_REVIEW (بدون شاهد → 400) |
+| تبدیل اکشن‌آیتم به تسک | ✅ | 201 |
+| موتور AI (DRAFT ← APPROVED/REJECTED) | ✅ | approve تکراری → 400؛ reject با دلیل → 200 |
+| زیرمسیر legacy تحت هندلر جدید | ✅ | 405 |
+| سینتکس | ✅ | `node -c` همه فایل‌ها |
+| مایگریشن‌ها | ✅ | 00000–00003 روی دیتابیس محلی اعمال شد |
+
+### RLS — جداول فاز ۱
+
+| جدول | RLS | وضعیت دسترسی |
+|------|-----|--------------|
+| `tasks` | ✅ فعال | deny-all — فقط `service_role` (BYPASSRLS) |
+| `task_evidences` | ✅ فعال | deny-all |
+| `meeting_minutes` | ✅ فعال | deny-all |
+| `audit_logs` | ✅ فعال | deny-all |
+| `ai_drafts` | ✅ فعال | deny-all |
+
+- اثبات: anon بدون گرنت → 42501؛ anon با گرنت آزمایشی → `[]` (فیلتر RLS)؛ سرویس‌رول → کار می‌کند.
+- مایگریشن: `supabase/migrations/20260731000003_enable_rls_phase1.sql` (اعمال‌شده روی دیتابیس محلی).
+- ⚠️ مایگریشن‌های فاز ۱ هنوز در **production** اعمال نشده‌اند.
+
+---
+
+## بلوکرهای باز (۱۴۰۵/۰۵/۰۹)
+
+1. **deploy production** همه سرویس‌ها تست نشده → UNKNOWN.
+2. **مایگریشن‌های فاز ۱** در production اعمال نشده (00000–00003 فقط روی دیتابیس محلی).
+3. **اتصال UI** به روت‌های فاز ۱ انجام نشده (هیچ مصرف‌کننده‌ای در ریپو).
+4. **Governance/Git fragmentation:** تغییرات پیشین backend (crm-* و...) همچنان modified/untracked؛ nested `.git` (admin-panel).
+5. **دسترسی مستقیم کلاینت** به جداول فاز ۱ در آینده نیازمند تعریف policy + گرنت حداقلی است.
 
 > ✅ **Notifications دیگر blocker نیست** — POST 201 / GET 200 در staging و production verified. جدول موجود است. بدون migration. بدون تغییر کد.
 
@@ -171,4 +199,5 @@ STEP 7: AI Copilot MVP (knowledge policy, approval flow, human-in-the-loop)
 ```
 
 > هیچ موردی در این به‌روزرسانی به‌عنوان «system is healthy / OK» تأیید نشده است.
-> تمام وضعیت‌های deploy/runtime/DB-live بر اساس شواهد ایستا (static) هستند و بقیه UNKNOWN است.
+> شواهد این به‌روزرسانی: فاز ۱ و RLS فقط در استک **محلی** verified هستند.
+> تمام وضعیت‌های deploy و production همچنان **UNKNOWN** است.

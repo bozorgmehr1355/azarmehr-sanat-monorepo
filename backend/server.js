@@ -107,15 +107,18 @@ const handlers = {
   qaMatch:                 require('./handlers/qa-match'),
   whatsappRules:           require('./handlers/whatsapp-rules'),
   auditLogs:               require('./handlers/audit-logs'),
-  meetings:                require('./handlers/meetings'),
+  tasks:                   require('./handlers/tasks'),
+  meetingMinutes:          require('./handlers/meeting-minutes'),
   meetingActionItems:      require('./handlers/meeting-action-items'),
   aiDrafts:                require('./handlers/ai-drafts'),
+  aiAgent:                 require('./handlers/ai-agent'),
   customerAgent:           require('./handlers/customer-agent'),
   reports:                 require('./handlers/reports'),
   performanceReports:      require('./handlers/performance-reports'),
   publicWarrantyRequest:   require('./handlers/public-warranty-request'),
   health:                   require('./handlers/health'),
   leads:                    require('./handlers/leads'),
+  leadToProforma:           require('./handlers/lead-to-proforma'),
   growthDecide:             require('./handlers/growth-decide'),
   growthDrafts:             require('./handlers/growth-drafts'),
   messageOrchestrator:      require('./handlers/message-orchestrator').handler,
@@ -169,13 +172,16 @@ mount('/api/debug',                      handlers.debug);
 mount('/api/qa-match',                   handlers.qaMatch);
 mount('/api/whatsapp-rules',             handlers.whatsappRules);
 mount('/api/audit-logs',                  handlers.auditLogs);
-mount('/api/meetings',                    handlers.meetings);
+mount('/api/tasks',                       handlers.tasks);
+mount('/api/meetings',                    handlers.meetingMinutes);
 mount('/api/meeting-action-items',        handlers.meetingActionItems);
 mount('/api/ai-drafts',                   handlers.aiDrafts);
+mount('/api/ai-agent',                    handlers.aiAgent);
 mount('/api/customer-agent',              handlers.customerAgent);
 mount('/api/reports/performance/calculate', handlers.performanceReports);
 mount('/api/reports',                     handlers.reports);
 mount('/api/public-warranty-request',     handlers.publicWarrantyRequest);
+mount('/api/lead-to-proforma',           handlers.leadToProforma);
 mount('/api/growth/decide',              handlers.growthDecide);
 mount('/api/growth/drafts',              handlers.growthDrafts);
 mount('/api/message-orchestrator',       handlers.messageOrchestrator);
