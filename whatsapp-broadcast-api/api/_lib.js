@@ -57,6 +57,58 @@ function requireAdmin(req) {
   return requireRole(req, ['super_admin', 'admin']);
 }
 
+async function requireAuthOrAdmin(req) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) {
+    const err = new Error('┘ä╪╖┘ü╪º┘ï ┘ê╪º╪▒╪» ╪┤┘ê█î╪»');
+    err.status = 401;
+    throw err;
+  }
+  const token = auth.substring(7);
+  
+  // First try: WhatsApp API's own JWT_SECRET
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded;
+  } catch (e) {
+    // Fallback: Will be handled by async bridge
+  }
+  
+  // Auth Bridge: verify token with admin backend
+  // This is async - we need to handle it differently
+  const ADMIN_API_BASE = process.env.ADMIN_API_BASE || 'https://azarmehr-backend.vercel.app';
+  return verifyTokenWithAdminBridge(token, ADMIN_API_BASE);
+}
+
+async function verifyTokenWithAdminBridge(token, adminApiBase) {
+  try {
+    const response = await fetch(`${adminApiBase}/api/users/me`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Admin bridge verification failed: ${response.status}`);
+    }
+    
+    const userData = await response.json();
+    // Convert admin user format to expected format
+    return {
+      id: userData.id,
+      username: userData.username,
+      system_role: userData.system_role || 'admin',
+      name: userData.name || userData.full_name
+    };
+  } catch (e) {
+    const err = new Error('╪¬┘ê┌⌐┘å ┘å╪º┘à╪╣╪¬╪¿╪▒ ╪º╪│╪¬');
+    err.status = 401;
+    throw err;
+  }
+}
+
 function requireSuperAdmin(req) {
   return requireRole(req, ['super_admin']);
 }
@@ -194,6 +246,7 @@ module.exports = {
   requireRole,
   requireAdmin,
   requireSuperAdmin,
+  requireAuthOrAdmin,
   // UltraMsg
   ULTRAMSG_INSTANCE,
   ULTRAMSG_TOKEN,

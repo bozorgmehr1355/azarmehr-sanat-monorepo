@@ -1,0 +1,15 @@
+{
+  "name": "پنل مدیریت آذرمهر",
+  "short_name": "پنل مدیریت",
+  "description": "پنل مدیریت آذرمهر صنعت",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "prefer_related_applications": false,
+  "background_color": "#0F0F0F",
+  "theme_color": "#D4880E",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": []
+}

@@ -57,6 +57,28 @@ handlers, API contracts, DB schema, migrations, webhook security, or env/secrets
 - Never hardcode a token value inline when a token exists; deprecate the inline copy
   when the app migrates.
 
+## Official Design System reference
+
+`DESIGN_SYSTEM.md` (project root) is the official source of truth for shared frontend
+design tokens and UI rules. All frontend apps and all UI work (Phase 1+) must reference it.
+
+**Scope of DESIGN_SYSTEM.md:**
+- Shared color palette (charcoal/neutral-gray surfaces, gold accent, no brown)
+- Typography (IRANSans primary, Persian-first, no decorative Latin fonts)
+- Radius and shadow tokens
+- Base component guidance (cards, inputs, buttons, badges)
+- RTL, responsive, and accessibility rules
+- Forbidden palette (old brown/warm values)
+- Implementation policy (no component library, no new deps, no app refactor unless approved)
+
+**Relation to ui/tokens.css and ui/tokens.js:**
+- `ui/tokens.css` and `ui/tokens.js` are the **implementation files** that carry the
+  token values at runtime.
+- DESIGN_SYSTEM.md is the **authoritative document** those files must mirror.
+- Token values in `ui/tokens.css` and `ui/tokens.js` that conflict with DESIGN_SYSTEM.md
+  must be corrected to match.
+- DESIGN_SYSTEM.md does not replace or supersede the `ui/` token files; it governs them.
+
 ## Accessibility baseline
 
 Minimum bar for all future UI (Phase 1+). Phase 0 itself adds no UI, so this is the

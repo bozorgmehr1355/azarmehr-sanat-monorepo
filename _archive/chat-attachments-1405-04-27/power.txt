@@ -1,0 +1,644 @@
+PS F:\azarmehr-sanat-monorepo\backend> $root = "F:\azarmehr-sanat-monorepo"
+>> $backend = Join-Path $root "backend"
+>> $git = "C:\Program Files\Git\bin\git.exe"
+>>
+>> Set-Location $root
+>>
+>> Write-Host "=== PROJECT MAP ==="
+>> Get-Content .\docs\PROJECT_MAP.md -TotalCount 220
+>>
+>> Write-Host "`n=== DEVELOPMENT RULES ==="
+>> Get-Content .\docs\DEVELOPMENT_RULES.md -TotalCount 260
+>>
+>> Set-Location $backend
+>>
+>> Write-Host "`n=== BACKEND REPO CONFIRM ==="
+>> & $git rev-parse --show-toplevel
+>> & $git branch --show-current
+>>
+>> Write-Host "`n=== STAGED FILES SHOULD BE EMPTY ==="
+>> & $git diff --cached --name-only
+>>
+>> Write-Host "`n=== MODIFIED DIFF STAT ==="
+>> & $git diff --stat
+>>
+>> Write-Host "`n=== UNTRACKED FILES WITH SIZE ==="
+>> $untracked = & $git ls-files --others --exclude-standard
+>> foreach ($f in $untracked) {
+>>   if (Test-Path $f) {
+>>     $item = Get-Item $f
+>>     "{0}`t{1} bytes" -f $f, $item.Length
+>>   }
+>> }
+>>
+>> Write-Host "`n=== DIFF CHECK ==="
+>> & $git diff --check
+>>
+>> Write-Host "`n=== .gitignore DIFF ==="
+>> & $git diff -- .gitignore
+>>
+>> Write-Host "`n=== ROUTE/MOUNT DIFF: server.js ==="
+>> & $git diff -- server.js
+>>
+>> Write-Host "`n=== ROUTE/MOUNT DIFF: api/index.js ==="
+>> & $git diff -- api/index.js
+>>
+=== PROJECT MAP ===
+# Project Map
+
+> Ù†Ù‚Ø´Ù‡ Ø±Ø³Ù…ÛŒ Ùˆ Ù‚Ø§Ø¨Ù„ Ø§Ø³ØªÙ†Ø§Ø¯ Ù…Ù†Ø§Ø¨Ø¹ (source-of-truth) Ù…ÙˆÙ†ÙˆØ±Ù¾Ùˆ Ø¢Ø°Ø±Ù…Ù‡Ø± ØµÙ†Ø¹Øª.
+> Ø§ÛŒÙ† ÙØ§ÛŒÙ„ ØªÙˆØ³Ø· `docs/PROJECT_TASK_EVIDENCE_AI_MVP_PLAN.md` (Ø¨Ø®Ø´ Û²ØŒ Ø®Ø· Û²Û·) Ø¨Ù‡â€ŒØ¹Ù†ÙˆØ§Ù† Ø³Ù†Ø¯ Ø§Ù„Ø²Ø§Ù…ÛŒÙ
+> Ù¾ÛŒØ´ Ø§Ø² Ù‡Ø± Ù¾ÛŒØ§Ø¯Ù‡â€ŒØ³Ø§Ø²ÛŒ Ù…Ø¹Ø±ÙÛŒ Ø´Ø¯Ù‡ Ø§Ø³Øª. Ù‡Ø± Ø§Ø¯Ø¹Ø§ÛŒ Ù…Ø±Ø¨ÙˆØ· Ø¨Ù‡ status ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ Ø§Ø² Ú©Ø¯ØŒ `package.json`ØŒ
+> `vercel.json`ØŒ importÙ‡Ø§ Ùˆ route mounting ØªØ£ÛŒÛŒØ¯ Ø´Ø¯Ù‡ Ø§Ø³Øª â€” Ø¨Ø¯ÙˆÙ† Ø­Ø¯Ø³.
+
+> Ù‚ÙˆØ§Ù†ÛŒÙ† Ø³Ø®Øªâ€ŒÚ¯ÛŒØ±Ø§Ù†Ù‡: Ù‡ÛŒÚ† Ù…Ù†Ø·Ù‚ application Ø¯Ø± Ø§ÛŒÙ† ØªØ³Ú© ØªØºÛŒÛŒØ± Ù†ÛŒØ§ÙØªÙ‡ Ø§Ø³Øª. ÙÙ‚Ø· Ø§ÛŒÙ† ÙØ§ÛŒÙ„ Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯.
+> Ù‡ÛŒÚ† secret/token/credential Ø¯Ø±Ø¬ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª. URL Ù…Ù…Ù†ÙˆØ¹Ù‡ `azarmehr-backend-main.vercel.app` Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.
+
+---
+
+## Purpose
+
+Ø§ÛŒÙ† Ø³Ù†Ø¯ Ù…Ø±Ø¬Ø¹ ÙˆØ§Ø­Ø¯ Ø¨Ø±Ø§ÛŒ ØªØ¹ÛŒÛŒÙ† Ù…ÙˆØ§Ø±Ø¯ Ø²ÛŒØ± Ø§Ø³Øª:
+- **source-of-truth** Ù‡Ø± app/service (Ú©Ø¯Ø§Ù… ÙØ§ÛŒÙ„ ÙˆØ§Ù‚Ø¹ÛŒ Ù…Ù†Ø¨Ø¹ Ø§Ø³Øª).
+- **production entry point** Ùˆ Ù†Ø­ÙˆÙ‡Ù” deploy.
+- **generated/build artifacts** (Ú©Ù‡ Ù†Ø¨Ø§ÛŒØ¯ Ø¯Ø³ØªÛŒ ÙˆÛŒØ±Ø§ÛŒØ´ Ø´ÙˆÙ†Ø¯).
+- **legacy / deprecated / orphan / unknown** ÙØ§ÛŒÙ„â€ŒÙ‡Ø§.
+- Ø§Ø±ØªØ¨Ø§Ø· frontendÙ‡Ø§ Ø¨Ø§ backend Ùˆ Ø¬Ø¯Ø§ÙˆÙ„ Supabase.
+- Ù…Ø­Ù„ Ø¯Ù‚ÛŒÙ‚ Ù…Ø§Ú˜ÙˆÙ„ **Ú©Ù†ØªØ±Ù„ Ù¾Ø±ÙˆÚ˜Ù‡** Ùˆ **Ø§Ø±Ø²ÛŒØ§Ø¨ÛŒ Ø¹Ù…Ù„Ú©Ø±Ø¯**.
+- ÙˆØ¶Ø¹ÛŒØª endpointÙ‡Ø§ Ùˆ Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯Ù‡Ø§ÛŒ Ù…Ù‡Ù… (Ø¨Ø±Ø§ÛŒ Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ø±Ú¯Ø±Ø³ÛŒÙˆÙ†).
+
+Ù‡Ù…â€ŒØ±Ø§Ø³ØªØ§ Ø¨Ø§ `docs/DEVELOPMENT_RULES.md` (Ø¨Ø®Ø´ Û±: Supabase ÙÙ‚Ø· Ù…Ù†Ø¨Ø¹ Ø¯Ø§Ø¯Ù‡Ø› Ø¨Ø®Ø´ Û²: Ù¾ÛŒØ´â€ŒØ¨ÛŒÙ†ÛŒ Ø±Ú¯Ø±Ø³ÛŒÙˆÙ† Ø¨ÛŒÙ†â€ŒØ³Ø±ÙˆÛŒØ³ÛŒ).
+
+---
+
+## Repository Applications
+
+| App/Service | Purpose | Status | Source of Truth | Production Entry | Build Output | Deployment Target | API Dependency |
+|---|---|---|---|---|---|---|---|
+| `backend/` | API Ù…Ø±Ú©Ø²ÛŒ (CRMØŒ Ú©Ø§Ø±Ø¨Ø±Ø§Ù†ØŒ Ù¾Ø±ÙˆÚ˜Ù‡ØŒ ÙˆØ¸ÛŒÙÙ‡ØŒ Ø¬Ù„Ø³Ù‡ØŒ Ú¯Ø²Ø§Ø±Ø´ØŒ WhatsApp) | PRODUCTION | `backend/handlers/*.js` + `backend/api/index.js` + `backend/server.js` + `_lib.js`/`_audit.js` | Vercel â†’ `backend/api/index.js`Ø› Ù…Ø­Ù„ÛŒ/Render â†’ `backend/server.js` | â€” (Node) | Vercel serverless (`api/index.js`)Ø› Render (`server.js`) | Supabase (service-role) |
+| `admin-panel/` | Ù¾Ù†Ù„ Ù…Ø¯ÛŒØ±ÛŒØª Ø¯Ø§Ø®Ù„ÛŒ (SPA ØªÚ©â€ŒÙØ§ÛŒÙ„Ù‡) | PRODUCTION | `admin-panel/index.html` (Ø®ÙˆØ¯Ù ÙØ§ÛŒÙ„) | `admin-panel/index.html` | â€” (build Ù†Ø¯Ø§Ø±Ø¯) | Vercel static | `backend` (`/api`) |
+| `messenger-app/` | Ù¾ÛŒØ§Ù…â€ŒØ±Ø³Ø§Ù† Ø¯Ø§Ø®Ù„ÛŒ (SPA) | PRODUCTION | `messenger-app/components/index.jsx` (Ø·Ø¨Ù‚ DEVELOPMENT_RULES Â§Û³) | `messenger-app/index.html` â† `bundle.min.js` | `bundle.min.js` (GENERATED) | Vercel static (`outputDirectory:"."`) | `backend` (`/api`) |
+| `wholesale-portal/` | Ù¾ÙˆØ±ØªØ§Ù„ Ù…Ø´ØªØ±ÛŒØ§Ù† Ø¹Ù…Ø¯Ù‡â€ŒÙØ±ÙˆØ´ (static ØªÚ©â€ŒÙØ§ÛŒÙ„Ù‡) | PRODUCTION (static) | `wholesale-portal/index.html` | `wholesale-portal/index.html` | â€” | Vercel static (`outputDirectory:"."`) | `backend` (hardcoded) + Supabase anon |
+| `whatsapp-broadcast-api/` | Ø±Ø¨Ø§Øª WhatsApp (UltraMsg â†’ Vercel â†’ Supabase) | PRODUCTION (webhook) | `whatsapp-broadcast-api/api/webhook.js` | Vercel `api/webhook.js` | â€” | Vercel serverless | UltraMsgØŒ SupabaseØŒ admin-panel (ghost) |
+
+---
+
+## Production URLs
+
+ÙÙ‚Ø· URLÙ‡Ø§ÛŒÛŒ Ú©Ù‡ Ø¯Ø± Ú©Ø¯/Ù¾ÛŒÚ©Ø±Ø¨Ù†Ø¯ÛŒ Ø±ÛŒÙ¾Ùˆ ØªØ£ÛŒÛŒØ¯ Ø´Ø¯Ù‡â€ŒØ§Ù†Ø¯ Ø¢ÙˆØ±Ø¯Ù‡ Ø´Ø¯Ù‡â€ŒØ§Ù†Ø¯. URL Ù…Ù…Ù†ÙˆØ¹Ù‡ Ø¯Ø±Ø¬ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.
+
+- **Backend:** `https://azarmehr-backend.vercel.app` â€” ØªØ£ÛŒÛŒØ¯ Ø´Ø¯Ù‡ Ø¯Ø± `wholesale-portal/index.html:152` (Ù…Ù‚Ø¯Ø§Ø± `API_BASE`) Ùˆ `messenger-app/package.json` (`VITE_API_BASE_URL`).
+- **Retail (Ø³Ø§ÛŒØª Ø´Ø±Ú©ØªØŒ Ø·Ø¨Ù‚ AGENTS.md):** `https://scorpiongroup.ir` â€” Ú©Ø§Ù†Ø§Ù„ ÙØ±ÙˆØ´ Ø®Ø±Ø¯Ù‡Ø› app Ø¯Ø± Ø§ÛŒÙ† Ø±ÛŒÙ¾Ùˆ Ù†ÛŒØ³Øª.
+- **Wholesale Portal:** UNKNOWN â€” Ù‡ÛŒÚ† URL Ø§Ø³ØªÙ‚Ø±Ø§Ø±Ù ØªØ£ÛŒÛŒØ¯Ø´Ø¯Ù‡â€ŒØ§ÛŒ Ø¯Ø± Ø±ÛŒÙ¾Ùˆ Ù†ÛŒØ³ØªØ› `index.html` Ù…Ù†Ø¨Ø¹ static Ø§Ø³Øª.
+- **Messenger:** UNKNOWN â€” Ù‡ÛŒÚ† URL Ø§Ø³ØªÙ‚Ø±Ø§Ø±Ù ØªØ£ÛŒÛŒØ¯Ø´Ø¯Ù‡â€ŒØ§ÛŒ Ø¯Ø± Ø±ÛŒÙ¾Ùˆ Ù†ÛŒØ³Øª.
+
+> âš ï¸ Ù‡Ø´Ø¯Ø§Ø±: `azarmehr-backend-main.vercel.app` Ø·Ø¨Ù‚ AGENTS.md Ùˆ MVP-plan Ù…Ù…Ù†ÙˆØ¹ Ø§Ø³ØªØ› Ø¯Ø± Ø§ÛŒÙ† Ø³Ù†Ø¯ Ø¯Ø±Ø¬ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.
+> âš ï¸ Ù‡ÛŒÚ† secret/ØªÙˆÚ©Ù†/credential Ø¯Ø± Ø§ÛŒÙ† Ø³Ù†Ø¯ ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ø¯.
+
+---
+
+## Source-of-Truth Rules
+
+### backend/
+- **Source:** `backend/handlers/*.js` (Ù‡Ø± ÙØ§ÛŒÙ„ `module.exports = (req,res)=>{}`)ØŒ `backend/api/index.js` (ÙˆØ±ÙˆØ¯ÛŒ Vercel)ØŒ `backend/server.js` (ÙˆØ±ÙˆØ¯ÛŒ Render)ØŒ `backend/handlers/_lib.js` (auth/RBAC)ØŒ `backend/handlers/_audit.js` (audit).
+- **Generated:** Ù†Ø¯Ø§Ø±Ø¯.
+- **Legacy:** Ù†Ø¯Ø§Ø±Ø¯ (Ù‡Ù…Ù‡ handlerÙ‡Ø§ ÙØ¹Ø§Ù„Ù†Ø¯).
+- **ØªØºÛŒÛŒØ± Ù†Ø¯Ù‡:** ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ÛŒ generated ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ù†Ø¯Ø› Ø¯Ø± ØµÙˆØ±Øª Ø§ÙØ²ÙˆØ¯Ù†ØŒ Ø¯Ø± `.gitignore` Ø¨ÛŒÙØªÙ†Ø¯.
+
+### admin-panel/
+- **Source:** `admin-panel/index.html` (ØªÚ©â€ŒÙØ§ÛŒÙ„Ù‡Ø› Ø´Ø§Ù…Ù„ Babel/React Ø¯Ø±ÙˆÙ†â€ŒØ®Ø·ÛŒ Ú©Ù‡ Ø¯Ø± Ù…Ø±ÙˆØ±Ú¯Ø± Ú©Ø§Ù…Ù¾Ø§ÛŒÙ„ Ù…ÛŒâ€ŒØ´ÙˆØ¯).
+- **Generated:** Ù†Ø¯Ø§Ø±Ø¯ (build Ù†Ø¯Ø§Ø±Ø¯).
+- **Legacy:** Ù†Ø¯Ø§Ø±Ø¯.
+- **ØªØºÛŒÛŒØ± Ù†Ø¯Ù‡:** Ø®ÙˆØ¯Ù `index.html` Ù…Ù†Ø¨Ø¹ Ø§Ø³ØªØ› Ù¾Ø³ Ø§Ø² Ù‡Ø± ØªØºÛŒÛŒØ± ÙÙ‚Ø· refresh Ù…Ø±ÙˆØ±Ú¯Ø± Ù„Ø§Ø²Ù… Ø§Ø³Øª.
+
+### messenger-app/
+- **Source:** `messenger-app/components/index.jsx` (SoT Ù‚Ø·Ø¹ÛŒ Ø·Ø¨Ù‚ DEVELOPMENT_RULES Â§Û³).
+- **Entry/Build:** `messenger-app/app.jsx` (ÙˆØ±ÙˆØ¯ÛŒ browserify) â†’ `npm run build:min` (browserify+babelify+envify) â†’ `messenger-app/bundle.min.js`Ø› `index.html` Ø¢Ù† Ø±Ø§ Ù„ÙˆØ¯ Ù…ÛŒâ€ŒÚ©Ù†Ø¯.
+- **Generated (Ø¯Ø³Øª Ù†Ø²Ù†):** `bundle.min.js`ØŒ Ùˆ Ù‡Ù…Ú†Ù†ÛŒÙ† `bundle.js` / `bundle.dev.js` / `bundle.tmp.js` (Ø¯Ø± Ø±ÛŒØ´Ù‡ØŒ Ø±ÙˆÛŒ Vercel Ø¹Ù…ÙˆÙ…ÛŒ Ø³Ø±Ùˆ Ù…ÛŒâ€ŒØ´ÙˆÙ†Ø¯). ÙÙ‚Ø· Ø¨Ø§ `npm run build:min` Ø¨Ø§Ø²ØªÙˆÙ„ÛŒØ¯ Ø´ÙˆÙ†Ø¯.
+- **Legacy / Dead code:** `messenger-app/modules/*` (Admin.jsx, Chat.jsx, CRM.jsx, â€¦) â€” Ú©Ø¯ Ù…ÙØ±Ø¯Ù‡ØŒ Ø¯Ø± Ø²Ù†Ø¬ÛŒØ±Ù‡ build Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆÙ†Ø¯.
+  - **Unknown (ÙˆÛŒØ±Ø§ÛŒØ´ Ù†Ø´ÙˆÙ†Ø¯):** `messenger-app/_verify_permissions.js`ØŒ `add_rls_policy.js`ØŒ `_server.js` â€” Ø§Ø¨Ø²Ø§Ø±ÛŒ/utilityØ› Ø§Ú©Ù†ÙˆÙ† Ø¨Ø§ `.vercelignore` Ø§Ø² deploy Ø¹Ù…ÙˆÙ…ÛŒ Vercel Ø®Ø§Ø±Ø¬ Ø´Ø¯Ù†Ø¯ (Ø¯Ø± Ø±ÛŒØ´Ù‡Ù” local Ø¨Ø§Ù‚ÛŒâ€ŒØ§Ù†Ø¯).
+
+### wholesale-portal/
+- **Source:** `wholesale-portal/index.html`.
+- **Generated:** Ù†Ø¯Ø§Ø±Ø¯.
+- **Legacy / Deprecated:** `dashboard.html` (LEGACY duplicate)ØŒ `wholesale-dashboard.jsx` (ORPHANØŒ Ù„ÙˆØ¯ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯)ØŒ ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ÛŒ `*.bak` / `*.backup-*` / `*.bak-deeplink` / `*.backup-vanilla` / `dashboard.html.bak` (Ø¨Ú©Ø§Ù¾).
+- **Unknown / publicly-served debug:** `test.html`ØŒ `simple-test.html`ØŒ `test_syntax.js`ØŒ `debug_check.js`ØŒ `debug_check2.js`ØŒ `check_local.js`ØŒ `check_end.js`ØŒ `check_deploy.js` â€” Ú†ÙˆÙ† deploy static Ø¨Ø§ `outputDirectory:"."` Ø§Ø³ØªØŒ Ù‡Ù…Ú¯ÛŒ Ø¹Ù…ÙˆÙ…ÛŒ Ø³Ø±Ùˆ Ù…ÛŒâ€ŒØ´ÙˆÙ†Ø¯ (security follow-up).
+
+### whatsapp-broadcast-api/
+- **Source:** `whatsapp-broadcast-api/api/webhook.js` (ØªÙ†Ù‡Ø§ endpoint Ø²Ù†Ø¯Ù‡).
+- **Generated:** Ù†Ø¯Ø§Ø±Ø¯.
+  - **Legacy:** `vercel.json` Ù…Ø³ÛŒØ±Ù‡Ø§ÛŒ admin ØªØ¨Ù„ÛŒØº Ù…ÛŒâ€ŒÚ©Ø±Ø¯ Ú©Ù‡ Ù¾ÛŒØ§Ø¯Ù‡â€ŒØ³Ø§Ø²ÛŒ Ù†Ø¯Ø§Ø´ØªÙ†Ø¯ (ghost routes) â€” Ø¯Ø± P1.1.2-A Ø§ÛŒÙ† Ù…Ø³ÛŒØ±Ù‡Ø§ÛŒ ghost Ø­Ø°Ù Ø´Ø¯Ù†Ø¯ Ùˆ ÙÙ‚Ø· `/api/webhook` Ø¨Ø§Ù‚ÛŒ Ù…Ø§Ù†Ø¯.
+
+---
+
+## Admin Panel
+
+- **architecture:** ØªÚ©â€ŒÙØ§ÛŒÙ„Ù‡ (`index.html`)Ø› React + Babel Ø¯Ø±ÙˆÙ†â€ŒØ®Ø·ÛŒØ› Ø¨Ø¯ÙˆÙ† bundler.
+- **entry point:** `admin-panel/index.html`.
+- **API resolution:** ØªØ§Ø¨Ø¹ `resolveApiBase()` (Ø®Ø· Û±Û°Û¶â€“Û±Û²Û¸) Ø¨Ù‡ ØªØ±ØªÛŒØ¨ Ø¨Ø±Ø±Ø³ÛŒ Ù…ÛŒâ€ŒÚ©Ù†Ø¯:
+  `window.AZARMEHR_API_BASE` â†’ Ù¾Ø§Ø±Ø§Ù…ØªØ± `?apiBase=` â†’ `localStorage.AZARMEHR_API_BASE` â†’ ÙØ§Ù„â€ŒØ¨Ú© `/api`.
+  ØªØ§Ø¨Ø¹ `api(method, path, body)` (Ø®Ø· Û±Û¶Û·â€“Û±Û¹Û·) Ø¢Ø¯Ø±Ø³ Ø±Ø§ Ù…ÛŒâ€ŒØ³Ø§Ø²Ø¯: `${BASE}/${path}` Ùˆ Ù¾ÛŒØ´ÙˆÙ†Ø¯ `/api/` Ø±Ø§ Ø­Ø°Ù Ù…ÛŒâ€ŒÚ©Ù†Ø¯.
+- **modules:** `AccessModule` (Ù…Ø¯ÛŒØ±ÛŒØª Ú©Ø§Ø±Ø¨Ø±Ø§Ù†)ØŒ `ReportsModule` (Ø®Ø· Û´Û²ÛµÛ° â€” Ø§Ø±Ø²ÛŒØ§Ø¨ÛŒ Ø¹Ù…Ù„Ú©Ø±Ø¯)ØŒ
+  Ú¯Ø±Ø¯Ø´ Ú©Ø§Ø± Ø³ÙØ§Ø±Ø´â†’Ù¾Ø±ÙˆÚ˜Ù‡ `convertToProject` (Ø®Ø· Û±Û·Û¶Û´)ØŒ Ù¾Ù†Ù„ Ù¾Ø±ÙˆÚ˜Ù‡â€ŒÙ‡Ø§/ÙˆØ¸Ø§ÛŒÙ.
+- **known constraints:**
+  - ØªØºÛŒÛŒØ± Ø¯Ø± `index.html` Ù…Ø³ØªÙ‚ÛŒÙ…Ø§Ù‹ Ø§Ø¹Ù…Ø§Ù„ Ù…ÛŒâ€ŒØ´ÙˆØ¯Ø› build Ù†Ø¯Ø§Ø±Ø¯.
+  - SoT Ù‡Ù…Ø§Ù† `index.html` Ø§Ø³Øª.
+  - ÙˆÛŒØ±Ø§ÛŒØ´ Ø±Ù…Ø² Ú©Ø§Ø±Ø¨Ø± Ø¯Ø± Ø­Ø§Ù„Øª edit Ø§Ú©Ù†ÙˆÙ† Ø§Ø² Ù…Ø³ÛŒØ± Ù…Ø¬Ø§Ø² `POST users/:id/reset-password` Ø¹Ø¨ÙˆØ± Ù…ÛŒâ€ŒÚ©Ù†Ø¯ (Ù‡Ù…â€ŒØ±Ø§Ø³ØªØ§ Ø¨Ø§ hardening Ø§Ø®ÛŒØ± Ø¯Ø± `backend/handlers/users.js`).
+  - ÙÛŒÙ„Ø¯ `active` Ø¯Ø± Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯ backend Ù…ÙˆØ¬ÙˆØ¯ Ù†ÛŒØ³Øª (toggle Ø¯Ø± UI ØµØ±ÙØ§Ù‹ Ù†Ù…Ø§ÛŒØ´ÛŒ Ø§Ø³Øª â€” Ø¬Ø³ØªØ§Ø± Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯).
+
+---
+
+## Messenger App
+
+- **source/build pipeline:** `components/index.jsx` (SoT) â† ÙˆØ±ÙˆØ¯ÛŒ `app.jsx` (browserify) â†’
+  `npm run build:min` (browserify + babelify + envify) â†’ `bundle.min.js` â†’ `index.html` Ù„ÙˆØ¯ Ù…ÛŒâ€ŒÚ©Ù†Ø¯.
+- **generated artifacts:** `bundle.min.js` (GENERATED â€” Ø¯Ø³Øª Ù†Ø²Ù†Ø› ÙÙ‚Ø· Ø¨Ø§ build Ø¨Ø§Ø²ØªÙˆÙ„ÛŒØ¯ Ø´ÙˆØ¯)Ø›
+  Ù‡Ù…Ú†Ù†ÛŒÙ† `bundle.js` / `bundle.dev.js` / `bundle.tmp.js` Ø¯Ø± Ø±ÛŒØ´Ù‡ â€” Ø®Ø±ÙˆØ¬ÛŒâ€ŒÙ‡Ø§ÛŒ buildØ› Ø§Ú©Ù†ÙˆÙ† Ø¨Ø§ `.vercelignore` Ø§Ø² deploy Ø¹Ù…ÙˆÙ…ÛŒ Ø®Ø§Ø±Ø¬ Ø´Ø¯Ù†Ø¯ (ÙÙ‚Ø· `bundle.min.js` Ø¯Ø± production Ù„ÙˆØ¯ Ù…ÛŒâ€ŒØ´ÙˆØ¯).
+- **public output directory:** `vercel.json` â†’ `outputDirectory:"."` ÛŒØ¹Ù†ÛŒ **Ú©Ù„ Ù¾ÙˆØ´Ù‡** Ø§Ø³ØªØ§ØªÛŒÚ© Ùˆ Ø¹Ù…ÙˆÙ…ÛŒ Ø³Ø±Ùˆ Ù…ÛŒâ€ŒØ´ÙˆØ¯.
+- **archived debug pages:** `test-login.html` Ùˆ `inject.html` (ØµÙØ­Ø§Øª auth-bypass) Ø¨Ù‡
+  `messenger-app/_security_archive/*.bak` Ù…Ù†ØªÙ‚Ù„ Ùˆ Ø¨Ø§ `.vercelignore` Ø§Ø² deploy Ø®Ø§Ø±Ø¬ Ø´Ø¯Ù†Ø¯
+  (Ø¯Ø³ØªØ±Ø³ÛŒ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø³ØªÙ‡ Ø´Ø¯ â€” Ø¬Ø³ØªØ§Ø± Security Follow-ups).
+- **security follow-ups:** `_verify_permissions.js`ØŒ `add_rls_policy.js`ØŒ `_server.js` Ùˆ ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ÛŒ bundle
+  ØºÛŒØ±ÙÙ…ÛŒÙ† â€” Ø§Ú©Ù†ÙˆÙ† Ø¨Ø§ `.vercelignore` Ø§Ø² deploy Ø¹Ù…ÙˆÙ…ÛŒ Vercel Ø®Ø§Ø±Ø¬ Ø´Ø¯Ù†Ø¯ (ØªØ³Ú© cleanupØ› Ù‡Ù…Ú†Ù†Ø§Ù† Ø¯Ø± Ø±ÛŒØ´Ù‡Ù” local Ø¨Ø§Ù‚ÛŒâ€ŒØ§Ù†Ø¯).
+
+---
+
+## Backend
+
+  - **local entry:** `backend/server.js` (Express Ø±ÙˆÛŒ RenderØ› `app.listen`). Û´Û¶ handler Ø±Ø§ mount Ù…ÛŒâ€ŒÚ©Ù†Ø¯.
+- **Vercel entry:** `backend/api/index.js` (ØªØ§Ø¨Ø¹ serverless ÙˆØ§Ø­Ø¯ Ú©Ù‡ Ù‡Ù…Ù‡ handlerÙ‡Ø§ Ø±Ø§ Ø¯Ø§Ø®Ù„ÛŒ route Ù…ÛŒâ€ŒÚ©Ù†Ø¯). Û´Û¶ handler Ø±Ø§ mount Ù…ÛŒâ€ŒÚ©Ù†Ø¯.
+- **shared handlers:** `backend/handlers/*.js` â€” Ù‡Ø± ÙØ§ÛŒÙ„ `module.exports = async (req,res)=>{}`.
+- **auth/RBAC:** `backend/handlers/_lib.js` â†’ `requireAuth`ØŒ `requireRole(allowedRoles)`ØŒ
+  `requireAdmin` (Ù…Ø¬Ø§Ø²: `super_admin`,`admin`)ØŒ `requireSuperAdmin` (ÙÙ‚Ø· `super_admin`).
+  JWT Ø¨Ø§ `jsonwebtoken` Ùˆ Ù…ØªØºÛŒØ± `JWT_SECRET`.
+- **route mounting:**
+  - `server.js`: ØªØ§Ø¨Ø¹ `mount(basePath, handler)` (Ø®Ø· Û´Û¸â€“ÛµÛ±) â†’ `app.all(base)` + `app.all(base/*)`.
+  - `api/index.js`: Ø¢Ø±Ø§ÛŒÙ‡ `routes` (Ø®Ø· Û³Û³â€“Û¸Û°) + `app.all(route)` + `app.all(route/*)`.
+- **route parity (Ø­Ù„ Ø´Ø¯ â€” ØªØ³Ú© alignment):** Ù‚Ø¨Ù„Ø§Ù‹ `api/index.js` (Vercel) Û¶ Ù…Ø³ÛŒØ± Ø¯Ø§Ø´Øª Ú©Ù‡ Ø¯Ø± `server.js` (Render)
+  mount Ù†Ø´Ø¯Ù‡ Ø¨ÙˆØ¯Ù†Ø¯Ø› Ø§Ú©Ù†ÙˆÙ† Ù‡Ø± Û¶ ØªØ§ (`/api/portal-login-retail`ØŒ `/api/roles`ØŒ `/api/role-permissions`ØŒ
+  `/api/groups`ØŒ `/api/crm-draft-orders`ØŒ `/api/whatsapp-rules`) Ø¯Ø± Ù‡Ø± Ø¯Ùˆ entrypoint mount Ø´Ø¯Ù‡â€ŒØ§Ù†Ø¯ â†’ parity Ø¨Ø±Ù‚Ø±Ø§Ø± Ø§Ø³Øª.
+  ØªÙØ§ÙˆØª Ø¬Ø²Ø¦ÛŒ Ø¨Ø§Ù‚ÛŒâ€ŒÙ…Ø§Ù†Ø¯Ù‡: catch-all Ø¯Ø± `api/index.js` (`app.all('*')`) Ù„ÛŒØ³Øª routeÙ‡Ø§ Ø±Ø§ Ø¨Ø±Ù…ÛŒâ€ŒÚ¯Ø±Ø¯Ø§Ù†Ø¯Ø› Ø¯Ø± `server.js` ÙÙ‚Ø· Ø±ÛŒØ´Ù‡ (`app.all('/')`).
+
+---
+
+## Wholesale Portal
+
+- **entry/source:** `wholesale-portal/index.html` (static ØªÚ©â€ŒÙØ§ÛŒÙ„Ù‡Ø› `package.json` Ù†Ø¯Ø§Ø±Ø¯Ø› build Ù†Ø¯Ø§Ø±Ø¯).
+- **API configuration:** `API_BASE` Ø§Ú©Ù†ÙˆÙ† Ø§Ø² resolver Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù…ÛŒâ€ŒÚ©Ù†Ø¯ (ØªØ³Ú© cleanup): Ø§ÙˆÙ„ÙˆÛŒØª
+  `?apiBase=` â†’ `window.AZARMEHR_API_BASE` â†’ `localStorage.AZARMEHR_API_BASE` â†’ ÙØ§Ù„â€ŒØ¨Ú© Ù‡Ù…Ø§Ù†
+  `"https://azarmehr-backend.vercel.app/api"` (`index.html:152`). Ù‡ÛŒÚ† URL Ø¬Ø¯ÛŒØ¯ hardcode Ù†Ø´Ø¯Ø› Ø±ÙØªØ§Ø±
+  production ØªØºÛŒÛŒØ± Ù†Ú©Ø±Ø¯. `WHATSAPP_API_BASE` Ù†ÛŒØ² Ù‡Ù…ÛŒÙ† Ø§Ù„Ú¯Ùˆ Ø±Ø§ Ø¯Ø§Ø±Ø¯.
+  Ù‡Ù…Ú†Ù†Ø§Ù† Ú©Ù„Ø§ÛŒÙ†Øª Ù…Ø³ØªÙ‚ÛŒÙ… Supabase Ø¨Ø§ anon key Ø¯Ø± Ù…Ø±ÙˆØ±Ú¯Ø± (`SUPABASE_URL`/`SB` Ø®Ø· Û±Û³Û·Û°/Û²Û´Û¸Û³Ø› Ù†ÙˆØ´ØªÙ† Ø¯Ø±
+  `notifications`/`customers` Ø¨Ø§ anon key) â€” security follow-up (Ø§ÙØ´Ø§ÛŒ anon key + Ù†ÙˆØ´ØªÙ† Ø³Ù…Øª Ú©Ù„Ø§ÛŒÙ†Øª).
+- **Supabase dependency:** Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ø³ØªÙ‚ÛŒÙ… Ù…Ø±ÙˆØ±Ú¯Ø± Ø¨Ù‡ Supabase (anon) Ø¨Ø±Ø§ÛŒ notifications Ùˆ sync Ù…Ø´ØªØ±ÛŒ
+  (Ø®Ø· Û±Û³Û·Û°â€“Û±Û´Û°Û¸ Ùˆ Û²Û´Û¸Û³â€“Û²ÛµÛ°Û¸). Ù¾ÛŒØ´Ù†Ù‡Ø§Ø¯ follow-up: Ø§Ù†ØªÙ‚Ø§Ù„ Ù†ÙˆØ´ØªÙ† Ø¨Ù‡ backend proxy
+  (`/api/notifications`) + Ø¨Ø§Ø²Ø¨ÛŒÙ†ÛŒ RLS + Ú†Ø±Ø®Ø´ anon key Ø¯Ø± ØµÙˆØ±Øª Ø§ÙØ´Ø§.
+- **missing backend route:** ÙØ±Ø§Ù†Øªâ€ŒØ§Ù†Ø¯ `${API_BASE}/public-warranty-request` ÙØ±Ø§Ø®ÙˆØ§Ù†ÛŒ Ù…ÛŒâ€ŒÚ©Ù†Ø¯ Ø§Ù…Ø§ Ù‡ÛŒÚ†
+  handlerÛŒ Ø¯Ø± backend Ø¨Ø±Ø§ÛŒ Ø¢Ù† ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ø¯ (grep ÛŒØ§ÙØª Ù†Ø´Ø¯) â€” follow-up (Ø§Ø­ØªÙ…Ø§Ù„Ø§Ù‹ Û´Û°Û´).
+- **forbidden URL note:** `azarmehr-backend-main.vercel.app` ÙÙ‚Ø· Ø¯Ø± ÙØ§ÛŒÙ„ legacy `index.html.bak-deeplink`
+  (Ø®Ø· Û´Û·) Ø¯ÛŒØ¯Ù‡ Ø´Ø¯ØŒ Ù†Ù‡ Ø¯Ø± `index.html` ØªÙˆÙ„ÛŒØ¯Ø› Ø·Ø¨Ù‚ Ù‚ÙˆØ§Ù†ÛŒÙ† Ø¯Ø³Øªâ€ŒÙ†Ø®ÙˆØ±Ø¯Ù‡ Ø¨Ø§Ù‚ÛŒ Ù…Ø§Ù†Ø¯.
+- **production status:** PRODUCTION (static deployØ› `index.html` ÙˆØ±ÙˆØ¯ÛŒ ÙØ¹Ø§Ù„).
+  Ù†Ú©ØªÙ‡: Ø¨Ù‡â€ŒØ¯Ù„ÛŒÙ„ `outputDirectory:"."`ØŒ ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ÛŒ debug/test/backup Ù†ÛŒØ² Ø¹Ù…ÙˆÙ…ÛŒ Ø³Ø±Ùˆ Ù…ÛŒâ€ŒØ´ÙˆÙ†Ø¯.
+
+---
+
+## WhatsApp Broadcast API
+
+- **implemented endpoints:** `POST/GET /api/webhook` (UltraMsg webhookØ› `whatsapp-broadcast-api/api/webhook.js`
+  ØªÙ†Ù‡Ø§ endpoint Ø²Ù†Ø¯Ù‡ Ø§Ø³Øª).
+- **advertised but missing:** `vercel.json` Ù…Ø³ÛŒØ±Ù‡Ø§ÛŒ admin (Ù…Ø«Ù„ UI Ù…Ø¯ÛŒØ±ÛŒØª WhatsApp Ù¾Ù†Ù„ Ø§Ø¯Ù…ÛŒÙ†) Ø±Ø§ ØªØ¨Ù„ÛŒØº
+  Ù…ÛŒâ€ŒÚ©Ù†Ø¯ Ú©Ù‡ Ù¾ÛŒØ§Ø¯Ù‡â€ŒØ³Ø§Ø²ÛŒ Ù†Ø¯Ø§Ø±Ù†Ø¯ â†’ UI Ù…Ø¯ÛŒØ±ÛŒØª WhatsApp Ø¯Ø± admin-panel **Û´Û°Û´/BROKEN** Ø§Ø³Øª (ghost routes).
+- **webhook security status:** Ø¯Ø± D0 ØªØ£ÛŒÛŒØ¯ Ø´Ø¯ Ú©Ù‡ Ù‡ÛŒÚ† ØªØ£ÛŒÛŒØ¯ Ø§Ù…Ø¶Ø§ÛŒ ÙˆØ±ÙˆØ¯ÛŒ Ø¯Ø± `webhook.js`/`_lib.js` ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ø¯ (ABSENT). Ø¯Ø± P0 (Û±Û´Û°Ûµ/Û°Û´/Û²Û³) ÛŒÚ© **shared-secret gate** Ø§ÙØ²ÙˆØ¯Ù‡ Ø´Ø¯: Ù‡Ø¯Ø± `X-Webhook-Secret` Ø¨Ø§ `ULTRAMSG_WEBHOOK_SECRET` (Ù…Ù‚Ø§ÛŒØ³Ù‡Ù” constant-time Ø¯Ø± `_webhook-security.js`) Ø¨Ø±Ø±Ø³ÛŒ Ù…ÛŒâ€ŒØ´ÙˆØ¯Ø› POST Ù¾ÛŒØ´ Ø§Ø² Ù¾Ø±Ø¯Ø§Ø²Ø´ Ø§Ø­Ø±Ø§Ø² Ù…ÛŒâ€ŒØ´ÙˆØ¯ Ùˆ fail-closed Ø§Ø³Øª. Ø¬Ø²Ø¦ÛŒØ§Øª Ø¯Ø± `docs/OMNICHANNEL_AI_AGENT_BLUEPRINT.md` Â§Û±Û¶.
+  - **ghost routes:** Û±Û² Ù…Ø³ÛŒØ± ØªØ¨Ù„ÛŒØºâ€ŒØ´Ø¯Ù‡ Ø¯Ø± `vercel.json` ÙØ§Ù‚Ø¯ ÙØ§ÛŒÙ„ Ù…Ù‚ØµØ¯Ù†Ø¯ (Ø¬Ø³ØªØ§Ø± Contract Gaps / Security Follow-ups). Ø¯Ø± P1.1.2-A Ø­Ø°Ù Ø´Ø¯Ù†Ø¯ (ÙÙ‚Ø· Ù…Ø³ÛŒØ± `/api/webhook` Ø¯Ø± vercel.json Ø¨Ø§Ù‚ÛŒ Ù…Ø§Ù†Ø¯).
+
+---
+
+## Project Control Module
+
+Ù…Ø§Ú˜ÙˆÙ„ Ù…Ø¯ÛŒØ±ÛŒØª Ù¾Ø±ÙˆÚ˜Ù‡ØŒ ÙˆØ¸Ø§ÛŒÙØŒ Ù…Ø³ØªÙ†Ø¯Ø§Øª Ùˆ Ø§Ø±Ø²ÛŒØ§Ø¨ÛŒ Ø¹Ù…Ù„Ú©Ø±Ø¯ (Ù†Ø§Ù… ÙØ§Ø±Ø³ÛŒ Ø§Ø² MVP-planØŒ Ø®Ø· Û·Û°).
+
+### frontend source
+- **admin-panel (Ù…Ø¯ÛŒØ±ÛŒØª â€” SoT frontend Ø§ØµÙ„ÛŒ):** ØªØ§Ø¨Ø¹ `convertToProject` (Ø®Ø· Û±Û·Û¶Û´) Ø³ÙØ§Ø±Ø´ Ø±Ø§ Ø¨Ù‡ Ù¾Ø±ÙˆÚ˜Ù‡
+  ØªØ¨Ø¯ÛŒÙ„ Ú©Ø±Ø¯Ù‡ Ùˆ Û¸ ÙˆØ¸ÛŒÙÙ‡Ù” B2B Ù…ÛŒâ€ŒØ³Ø§Ø²Ø¯Ø› Ù…Ø³ØªÙ‚ÛŒÙ…Ø§Ù‹ `POST /api/projects` (Ø®Ø· Û±Û·Û¶Û·ØŒ Ø¨Ø§ `API_BASE`) Ùˆ
+  `POST /api/project-tasks` (Ø®Ø· Û±Û·Û¸Û±) ÙØ±Ø§Ø®ÙˆØ§Ù†ÛŒ Ù…ÛŒâ€ŒÚ©Ù†Ø¯. Ù¾Ù†Ù„ Ù¾Ø±ÙˆÚ˜Ù‡â€ŒÙ‡Ø§/ÙˆØ¸Ø§ÛŒÙ Ù†ÛŒØ² Ø¯Ø± Ù‡Ù…ÛŒÙ† ÙØ§ÛŒÙ„ Ø§Ø³Øª.
+  - **Ø±ÙØ¹ Ø¨Ø§Ú¯ (ØªØ³Ú© hardening/completion):** Ø®Ø· Û±Û·Û¸Û± Ø§Ø¨ØªØ¯Ø§ Ù…ØªØºÛŒØ± Ø®Ø§Ø±Ø¬â€ŒØ§Ø²â€ŒØ¯Ø³ØªØ±Ø³ `BASE` Ø±Ø§
+    Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù…ÛŒâ€ŒÚ©Ø±Ø¯ (`BASE` ÙÙ‚Ø· Ø¯Ø± ØªØ§Ø¨Ø¹ `api()` Ù…Ø­Ù„ÛŒ Ø§Ø³Øª â†’ `ReferenceError` Ù‡Ù†Ú¯Ø§Ù… Ø³Ø§Ø®Øª ÙˆØ¸Ø§ÛŒÙ)Ø›
+    Ø¨Ù‡ `API_BASE` Ø§ØµÙ„Ø§Ø­ Ø´Ø¯ ØªØ§ Ø¨Ø§ Ù¾Ø³Øª Ù¾Ø±ÙˆÚ˜Ù‡ (Ø®Ø· Û±Û·Û¶Û·) Ù‡Ù…â€ŒØ±Ø§Ø³ØªØ§ Ø¨Ø§Ø´Ø¯. ÙÛŒÙ„Ø¯Ù‡Ø§ÛŒ Ø§Ø±Ø³Ø§Ù„ÛŒ
+    (`manager_id`, `assigned_to`, `priority`, `project_id`, `title`, `description`) Ø¨Ø§ schema
+    Ø¨Ú©â€ŒØ§Ù†Ø¯ ØªØ·Ø§Ø¨Ù‚ Ø¯Ø§Ø±Ù†Ø¯Ø› `WORKFLOW_USERS` Ù…Ù‚Ø¯Ø§Ø± UUID Ù…Ø¹ØªØ¨Ø± Ø¯Ø§Ø±Ø¯ (ØªØ·Ø§Ø¨Ù‚ Ø¨Ø§ FK Ø§Ø² Ù†ÙˆØ¹ uuid).
+- **messenger-app (Ù†Ù…Ø§ÛŒ Ú©Ø§Ø±Ù…Ù†Ø¯ÛŒ):** ØªØ¨â€ŒÙ‡Ø§ÛŒ `projects`/`tasks` (components/index.jsx Ø®Ø· Û±Û´Û¹Û±ØŒ Û±Û·Û·Û°)
+  Ø§Ø² **state Ù…Ø­Ù„ÛŒ** (Ù…Ù‚Ø¯Ø§Ø±Ø¯Ù‡ÛŒ Ø§ÙˆÙ„ÛŒÙ‡ Ø¨Ø§ `INIT_PROJECTS` Ø¯Ø± app.jsx Ø®Ø· Û²Û¶Û·) Ùˆ Ø¢Ø±Ø§ÛŒÙ‡Ù” hardcoded `USERS`
+  (app.jsx Ø®Ø· Û²Ûµâ€“Û³Û¸ØŒ id ØµØ­ÛŒØ­ Ø¹Ø¯Ø¯ÛŒ Ù†Ù‡ UUID) Ø±Ù†Ø¯Ø± Ù…ÛŒâ€ŒØ´ÙˆÙ†Ø¯ â†’ Ø¨Ù‡â€ŒÙ†Ø¸Ø± Ù…ÛŒâ€ŒØ±Ø³Ø¯ Ù†Ù…Ø§ÛŒ **Ù…Ø­Ù„ÛŒ/Ø¯Ù…Ùˆ** Ø¨Ø§Ø´Ø¯ØŒ
+  Ù†Ù‡ Ù…ØªØµÙ„ Ø¨Ù‡ ÙØ±ÙˆØ´Ú¯Ø§Ù‡ Ø²Ù†Ø¯Ù‡Ù” backend. ÙˆØ¶Ø¹ÛŒØª: **UNKNOWN / EXPERIMENTAL integration** (ØªØ£ÛŒÛŒØ¯ Ù„Ø§Ø²Ù…).
+
+### backend source
+| Handler | Table | Ù†Ú©ØªÙ‡ |
+|---|---|---|
+| `backend/handlers/projects.js` | `projects` | GET/POST/PUT/DELETEØ› RBAC: GET `requireAuth`ØŒ POST/PUT `requireAdmin`ØŒ DELETE `requireSuperAdmin`Ø› audit log |
+| `backend/handlers/project-tasks.js` | `project_tasks` | Ú†Ø±Ø®Ù‡Ù” ÙˆØ¶Ø¹ÛŒØª Ú©Ø§Ù…Ù„ `TRANSITIONS`Ø› Ø²ÛŒØ±Ù…Ø³ÛŒØ±Ù‡Ø§: `seen/acknowledge/start/submit/review/progress/blockers/cancel/archive/clarify`Ø› Ø¬Ø¯Ø§ÙˆÙ„ ÙØ±Ø²Ù†Ø¯: `task_status_history`, `task_attachments`, `task_progress_updates`, `task_blockers` |
+| `backend/handlers/project-members.js` | `project_members` | GET `requireAuth`ØŒ POST `requireAdmin`ØŒ DELETE `requireSuperAdmin` |
+| `backend/handlers/meetings.js` | `meetings` | GET `requireAuth`ØŒ POST/PUT `requireAdmin`Ø› Ø²ÛŒØ±Ù…Ø³ÛŒØ± `action-items` |
+| `backend/handlers/meeting-action-items.js` | `meeting_action_items` | `convert-to-task` â†’ Ø³Ø§Ø®Øª `project_tasks`Ø› PUT `requireAdmin` |
+
+### database source
+- `supabase/create-projects-tasks.sql` â†’ `projects`, `project_members`, `project_tasks`, `task_status_history`, `task_attachments`
+- `supabase/create-meetings-ai-audit.sql` â†’ `meetings`, `meeting_action_items`, `ai_drafts`, `audit_logs`
+- `supabase/create-task-progress-blockers.sql` â†’ `task_progress_updates`, `task_blockers`
+- `supabase/fix-project-tasks-status-lifecycle.sql` â†’ Ø§ÙØ²ÙˆØ¯Ù† Ø³ØªÙˆÙ† `completed_at` (idempotent) + Ø§ØµÙ„Ø§Ø­ Ú†Ø±Ø®Ù‡Ù” ÙˆØ¶Ø¹ÛŒØª
+- `supabase/rbac-tables.sql` / `run-all-in-dashboard.sql` â†’ `user_roles`, `role_permissions`
+- `supabase/groups-tables.sql` â†’ `groups`, `group_members`
+
+### lifecycle / status model
+- `project-tasks.js` Ø®Ø· Û¶â€“Û²Û· (SSOT Ø¹Ø¯Ø¯ÛŒ):
+  - `TERMINAL_STATUSES = ['APPROVED','REJECTED','CANCELLED','ARCHIVED']`
+  - `SUCCESSFULLY_COMPLETED_STATUSES = ['APPROVED']`
+  - `FINAL_WITH_COMPLETED_AT = ['APPROVED','REJECTED','ARCHIVED']`
+  - `TRANSITIONS` map Ú©Ø§Ù…Ù„ (ASSIGNEDâ†’â€¦â†’ARCHIVED)
+  - ÙˆØ¶Ø¹ÛŒØª Ø§ÙˆÙ„ÛŒÙ‡ Ù‡Ù†Ú¯Ø§Ù… create: `ASSIGNED`
+  - `ARCHIVED` ÙˆØ¶Ø¹ÛŒØª Ù¾Ø§ÛŒØ§Ù†ÛŒ (terminal) Ø§Ø³Øª.
+
+### RBAC / RLS / audit
+- **RBAC:** GET `requireAuth`Ø› create/update `requireAdmin`Ø› delete `requireSuperAdmin`Ø›
+  cancel/archive/review `requireAdmin`Ø› ØªØºÛŒÛŒØ± ÙˆØ¶Ø¹ÛŒØª `requireAuth` (Ø¨Ø±Ø®ÛŒ admin).
+- **RLS:** `supabase/rls-policies.sql` â†’ RLS ÙØ¹Ø§Ù„ Ø±ÙˆÛŒ `projects, project_members, project_tasks,
+  task_status_history, task_attachments, task_progress_updates, task_blockers, meetings,
+  meeting_action_items, ai_drafts, audit_logs`. Ø³ÛŒØ§Ø³Øªâ€ŒÙ‡Ø§ Ø§Ø² `auth.jwt() ->> 'system_role'` Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù…ÛŒâ€ŒÚ©Ù†Ù†Ø¯.
+  - **GAP (Û³ Ø¬Ø¯ÙˆÙ„):** `task_progress_updates`ØŒ `task_blockers` Ùˆ `meeting_action_items` RLS ÙØ¹Ø§Ù„
+
+=== DEVELOPMENT RULES ===
+# Development Rules
+
+> ØªÚ©Ù…ÛŒÙ„ÛŒ Ø¨Ø± AGENTS.md â€” Ù‚ÙˆØ§Ø¹Ø¯ ØªÙˆØ³Ø¹Ù‡ Ùˆ Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ø±Ú¯Ø±Ø³ÛŒÙˆÙ†
+
+---
+
+## Ø¨Ø®Ø´ Û± â€” Ø§ØªØµØ§Ù„ Ø¨Ù‡ Ø¯ÛŒØªØ§Ø¨ÛŒØ³
+
+### Ù…Ù†Ø¨Ø¹ Ø¯Ø§Ø¯Ù‡
+
+ØªÙ†Ù‡Ø§ Ù…Ù†Ø¨Ø¹ Ø¯Ø§Ø¯Ù‡ **Supabase** Ø§Ø³Øª Ø§Ø² Ø·Ø±ÛŒÙ‚ Supabase JS Client.
+Ù‡ÛŒÚ† handler Ø§ÛŒ Ù†Ø¨Ø§ÛŒØ¯ Ù…Ø³ØªÙ‚ÛŒÙ…Ø§Ù‹ Ø¨Ù‡ PostgreSQL ÙˆØµÙ„ Ø´ÙˆØ¯.
+
+### Ù…ØªØºÛŒØ±Ù‡Ø§ÛŒ Ù…Ø¬Ø§Ø² Ø¯Ø± Runtime
+
+âœ… Ù…Ø¬Ø§Ø²:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_KEY` (ÙÙ‚Ø· Ø¨Ù‡ Ø¹Ù†ÙˆØ§Ù† fallback)
+
+ðŸš« Ù…Ù…Ù†ÙˆØ¹ Ø¯Ø± runtime:
+- `DATABASE_URL`
+- `POSTGRES_URL`
+- `SUPABASE_POSTGRES_URL`
+
+### Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ø³ØªÙ‚ÛŒÙ… PostgreSQL
+
+- ÙÙ‚Ø· Ø¯Ø± Ø§Ø³Ú©Ø±ÛŒÙ¾Øªâ€ŒÙ‡Ø§ÛŒ Ø§Ø¨Ø²Ø§Ø±ÛŒ (migration, debug, import)
+- Ø§Ø¬Ø¨Ø§Ø±ÛŒ: Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² `process.env.X` â€” Ù‡Ø±Ú¯Ø² hardcoded
+- Ø§Ø¬Ø¨Ø§Ø±ÛŒ: ÙØ§ÛŒÙ„ `.env` Ù…ØªÙ†Ø§Ø¸Ø± gitignored Ø¨Ø§Ø´Ø¯
+
+### Ú©Ø§Ù†Ú©Ø´Ù† Ø§Ø³ØªØ±ÛŒÙ†Ú¯
+
+- Ù‡Ø±Ú¯Ø² Ø¯Ø± ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ÛŒ tracked Ù‚Ø±Ø§Ø± Ù†Ú¯ÛŒØ±Ø¯
+- ÙÙ‚Ø· Ø¯Ø± `.env` (gitignored) ÛŒØ§ Vercel runtime Environment Variables
+- `docs/DATABASE_SOURCE_OF_TRUTH.md` Ù…Ø±Ø¬Ø¹ Ù…Ø¹Ù…Ø§Ø±ÛŒ Ø§Ø³Øª
+
+---
+
+## Ø¨Ø®Ø´ Û² â€” Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ø±Ú¯Ø±Ø³ÛŒÙˆÙ† Ø¨ÛŒÙ†â€ŒØ³Ø±ÙˆÛŒØ³ÛŒ
+
+### Ù‚ÙˆØ§Ø¹Ø¯ ØªØºÛŒÛŒØ±
+
+1. **ØªØºÛŒÛŒØ± Ø¯Ø± backend** â†’ Ø­ØªÙ…Ø§Ù‹ `npm run check:preflight` + syntax check backend + Ø¨Ø±Ø±Ø³ÛŒ downstream services
+2. **ØªØºÛŒÛŒØ± Ø¯Ø± whatsapp-broadcast-api** â†’ Ø­ØªÙ…Ø§Ù‹ webhook GET smoke test + Ø¨Ø±Ø±Ø³ÛŒ intent pipeline
+3. **ØªØºÛŒÛŒØ± Ø¯Ø± wholesale-portal / admin-panel / messenger-app** â†’ Ø¨Ø±Ø±Ø³ÛŒ backend dependency
+4. **ØªØºÛŒÛŒØ± Ø¯Ø± docs/ ÛŒØ§ AGENTS.md ÛŒØ§ package.json** â†’ Ø¨Ø±Ø±Ø³ÛŒ consistency Ù‡Ù…Ù‡ Ù…Ø³ØªÙ†Ø¯Ø§Øª
+
+### Ù‚ÙˆØ§Ù†ÛŒÙ† ØªØ£ÛŒÛŒØ¯ Ø³Ù„Ø§Ù…Øª
+
+1. Ù‡Ø±Ú¯Ø² "system is healthy" Ø±Ø§ ØªØ£ÛŒÛŒØ¯ Ù†Ú©Ù† Ù…Ú¯Ø± Ø§ÛŒÙ†Ú©Ù‡ `docs/SERVICE_HEALTH_MATRIX.md` Ø¬Ø§Ø±ÛŒ ØªØ£ÛŒÛŒØ¯ Ú©Ù†Ø¯
+2. Ø§Ú¯Ø± Ø³Ø±ÙˆÛŒØ³ÛŒ Ù‚Ø§Ø¨Ù„ ØªØ³Øª Ù†ÛŒØ³Øª â†’ ÙˆØ¶Ø¹ÛŒØª **UNKNOWN** Ø«Ø¨Øª Ø´ÙˆØ¯ØŒ Ù†Ù‡ OK
+3. Ø§Ú¯Ø± Ø³Ø±ÙˆÛŒØ³ÛŒ BROKEN Ø§Ø³Øª â†’ Ø§Ø¨ØªØ¯Ø§ Ø±ÙØ¹ Ø´ÙˆØ¯ØŒ Ø³Ù¾Ø³ commit/deploy
+
+### ØªØ±ØªÛŒØ¨ Ø§Ø¬Ø¨Ø§Ø±ÛŒ Ù‚Ø¨Ù„ Ø§Ø² commit/deploy
+
+```bash
+# 1. Ú¯ÛŒØª Ø¯ÛŒØªØ§Ø¨ÛŒØ³
+npm run check:db-source
+
+# 2. Ú¯ÛŒØª Ø±Ú¯Ø±Ø³ÛŒÙˆÙ†
+npm run check:regression-safety
+
+# 3. Ù‡Ø± Ø¯Ùˆ Ù‡Ù…â€ŒØ²Ù…Ø§Ù†
+npm run check:preflight
+
+# 4. Ø³Ø±ÙˆÛŒØ³â€ŒÙ‡Ø§ÛŒ ØªØºÛŒÛŒØ±Ú©Ø±Ø¯Ù‡ Ø±Ø§ smoke ØªØ³Øª Ú©Ù†
+
+# 5. (Ù‡Ù…ÛŒØ´Ù‡) npm run validate:products  # Ø¯Ø± P1.1.2-A Ø¨Ø§Ø²ÛŒØ§Ø¨ÛŒ Ø´Ø¯ (structural no-op Ø§Ú¯Ø± catalog Ù…Ø­Ù„ÛŒ Ù†Ø¨Ø§Ø´Ø¯)
+```
+
+### Ù…Ù…Ù†ÙˆØ¹ÛŒØªâ€ŒÙ‡Ø§
+
+- Ù‡Ø±Ú¯Ø² Ø³Ø±ÙˆÛŒØ³ÛŒ Ø±Ø§ Ø¨Ø¯ÙˆÙ† Ø¹Ø¨ÙˆØ± Ø§Ø² preflight gate deploy Ù†Ú©Ù†
+- Ù‡Ø±Ú¯Ø² hardcoded connection string ÛŒØ§ secret Ø±Ø§ Ø¯Ø± ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ÛŒ tracked Ù‚Ø±Ø§Ø± Ù†Ø¯Ù‡
+- Ù‡Ø±Ú¯Ø² runtime logic Ø±Ø§ Ø¨Ø¯ÙˆÙ† Ø¨Ø±Ø±Ø³ÛŒ downstream services ØªØºÛŒÛŒØ± Ù†Ø¯Ù‡
+- Ù‡Ø±Ú¯Ø² ÙˆØ¶Ø¹ÛŒØª OK Ø±Ø§ Ø¨Ø±Ø§ÛŒ Ø³Ø±ÙˆÛŒØ³ÛŒ Ø«Ø¨Øª Ù†Ú©Ù† Ù…Ú¯Ø± Ø§ÛŒÙ†Ú©Ù‡ ÙˆØ§Ù‚Ø¹Ø§Ù‹ ØªØ³Øª Ø´Ø¯Ù‡ Ø¨Ø§Ø´Ø¯
+
+---
+
+## Ø¨Ø®Ø´ Û³ â€” Messenger App Build Pipeline
+
+### Ù…Ù†Ø¨Ø¹ ÙˆØ§Ù‚Ø¹ÛŒ UI
+
+ØªÙ†Ù‡Ø§ ÙØ§ÛŒÙ„ source Ù…Ø¹ØªØ¨Ø± Ø¨Ø±Ø§ÛŒ UI Ù¾ÛŒØ§Ù…â€ŒØ±Ø³Ø§Ù† Ø¯Ø§Ø®Ù„ÛŒ:
+
+```
+messenger-app/components/index.jsx
+```
+
+### pipeline Ø³Ø§Ø®Øª
+
+```
+components/index.jsx
+        â†“ (Browserify + Babelify)
+  npm run build:min
+        â†“
+  messenger-app/bundle.min.js
+        â†“
+  index.html Ù„ÙˆØ¯ Ù…ÛŒâ€ŒÚ©Ù†Ø¯ â† <script src="bundle.min.js">
+```
+
+### Ù‚ÙˆØ§Ù†ÛŒÙ†
+
+1. **build Ø§Ù„Ø²Ø§Ù…ÛŒ Ø§Ø³Øª** â€” `index.html` Ù…Ø³ØªÙ‚ÛŒÙ…Ø§Ù‹ `bundle.min.js` Ø±Ø§ Ù„ÙˆØ¯ Ù…ÛŒâ€ŒÚ©Ù†Ø¯ØŒ Ù†Ù‡ ÙØ§ÛŒÙ„ JSX Ø±Ø§. Ù¾Ø³ Ø§Ø² Ù‡Ø± ØªØºÛŒÛŒØ± Ø¯Ø± `components/index.jsx`:
+   ```bash
+   cd messenger-app
+   npm run build:min
+   ```
+2. **cache Ù…Ø±ÙˆØ±Ú¯Ø±** â€” `bundle.min.js` Ø¨Ø¯ÙˆÙ† query string Ù„ÙˆØ¯ Ù…ÛŒâ€ŒØ´ÙˆØ¯. Ø¨Ø±Ø§ÛŒ Ø¯ÛŒØ¯Ù† ØªØºÛŒÛŒØ±Ø§Øª Ø¨Ø¹Ø¯ Ø§Ø² build:
+   - `Ctrl + F5` (Hard Refresh) ÛŒØ§
+   - DevTools â†’ Network â†’ ØªÛŒÚ© `Disable cache`
+3. **Ø¯Ø§ÛŒØ±Ú©ØªÙˆØ±ÛŒ `modules/` Ú©Ø¯ Ù…ÙØ±Ø¯Ù‡ Ø§Ø³Øª** â€” ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ÛŒ `modules/Admin.jsx`ØŒ `modules/Chat.jsx`ØŒ `modules/CRM.jsx` Ùˆ Ø¨Ù‚ÛŒÙ‡ Ø¯Ø± Ø²Ù†Ø¬ÛŒØ±Ù‡ build Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆÙ†Ø¯. ÙˆÛŒØ±Ø§ÛŒØ´ Ø¯Ø± Ø§ÛŒÙ† ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ **Ù‡ÛŒÚ† Ø§Ø«Ø±ÛŒ Ø¯Ø± Ø®Ø±ÙˆØ¬ÛŒ Ù†Ø¯Ø§Ø±Ø¯**.
+4. **production ÙÙ‚Ø· Ø¨Ø§ deploy ØµØ±ÛŒØ­** â€” ØªØºÛŒÛŒØ±Ø§Øª local ØªØ§ Ø²Ù…Ø§Ù†ÛŒ Ú©Ù‡ `vercel --prod` Ø§Ø¬Ø±Ø§ Ù†Ø´ÙˆØ¯ Ø¯Ø± production Ø¯ÛŒØ¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯.
+5. **ØªØºÛŒÛŒØ± Ø¯Ø± messenger-app** â† Ø¨Ø±Ø±Ø³ÛŒ backend dependency (Ø·Ø¨Ù‚ Ø¨Ø®Ø´ Û²ØŒ Ø¨Ù†Ø¯ Û³).
+
+---
+
+## AZARMEHR EXECUTION LOCK - ACTIVE PLAN
+
+Ø§ÛŒÙ† Ø³Ù†Ø¯ **ØªÙ†Ù‡Ø§ Ø¨Ø±Ù†Ø§Ù…Ù‡Ù” Ø§Ø¬Ø±Ø§ÛŒÛŒ Ù…Ø¬Ø§Ø²** Ù¾Ø±ÙˆÚ˜Ù‡ Ø§Ø² Ø§ÛŒÙ† Ù„Ø­Ø¸Ù‡ Ø¨Ù‡ Ø¨Ø¹Ø¯ Ø§Ø³Øª. Ù‡Ø± Ø§Ù‚Ø¯Ø§Ù… Ø¨Ø¹Ø¯ÛŒ ÙÙ‚Ø· Ø§Ø² Ø±ÙˆÛŒ Ø§ÛŒÙ† Ø³Ù†Ø¯ Ø§Ù†Ø¬Ø§Ù… Ù…ÛŒâ€ŒØ´ÙˆØ¯. Ù‡Ø± Ù¾ÛŒØ´Ù†Ù‡Ø§Ø¯ Ø®Ø§Ø±Ø¬ Ø§Ø² Ø§ÛŒÙ† Ø³Ù†Ø¯ Ø¨Ø§ Ø¹Ø¨Ø§Ø±Øª **Â«OUT OF EXECUTION LOCK - NOT ALLOWEDÂ»** Ø±Ø¯ Ù…ÛŒâ€ŒØ´ÙˆØ¯.
+
+### A) EXECUTION LOCK VERDICT
+
+- **ÙˆØ¶Ø¹ÛŒØª:** PARTIAL / UNKNOWN â€” Ø·Ø¨Ù‚ `PROJECT_MAP.md` Ùˆ `DEVELOPMENT_RULES.md` (Ø¢Ø®Ø±ÛŒÙ† Ø¨Ø§Ø²Ø¨ÛŒÙ†ÛŒ Û±Û´Û°Ûµ/Û°Û´/Û²Û³)Ø› Ù¾Ø±ÙˆÚ˜Ù‡ operational Ù†ÛŒØ³Øª.
+- **Ú†Ù‡Ø§Ø± blocker:** Û±) Notifications Ù†Ø§Ù‚Øµ â€” `POST` Ù¾ÛŒØ§Ø¯Ù‡â€ŒÙ†Ø´Ø¯Ù‡ (Û´Û°Ûµ Ø¯Ø± `notifications.js:32`) + Ø¬Ø¯ÙˆÙ„ `notifications` Ù‡ÛŒÚ†â€ŒÚ¯Ø§Ù‡ migrate Ù†Ø´Ø¯Ù‡ (glob `supabase/*notif*` Ø®Ø§Ù„ÛŒ). Û²) MigrationÙ‡Ø§ Ø±ÙˆÛŒ Ø¯ÛŒØªØ§Ø¨ÛŒØ³ Ø²Ù†Ø¯Ù‡ Ø§Ø¬Ø±Ø§ Ù†Ø´Ø¯Ù‡â€ŒØ§Ù†Ø¯. Û³) Deploy health ØªØ£ÛŒÛŒØ¯ Ù†Ø´Ø¯Ù‡ (URLÙ‡Ø§ÛŒ wholesale/messenger UNKNOWN). Û´) Governance/Git fragmentation (nested `.git`ØŒ Û²Û¹ untrackedØŒ Û¸ commit Ù¾ÛŒØ´ Ø§Ø² originØŒ refs Ø§Ø´ØªØ¨Ø§Ù‡ AGENTS.md).
+- **OperationalØŸ** Ø®ÛŒØ± â€” PARTIAL/UNKNOWN.
+- **Ø§ÙˆÙ„ÛŒÙ† target Ø§Ø¬Ø¨Ø§Ø±ÛŒ:** `backend` (notifications).
+- **Ú†Ø±Ø§ Ø§ÙˆÙ„:** Ø·Ø¨Ù‚ Ù‚Ø§Ù†ÙˆÙ† Â«Admin Panel endpoint Ø±Ø§ ØµØ¯Ø§ Ù…ÛŒâ€ŒØ²Ù†Ø¯ ÙˆÙ„ÛŒ backend handler [Ø¨Ø±Ø§ÛŒ POST] Ù†Ø¯Ø§Ø±Ø¯ â†’ FIX Ø§ÙˆÙ„ÙˆÛŒØªÂ»Ø› Ø®Ø·Ø§ÛŒ Û´Û°Ûµ Ù…Ø³ØªÙ‚ÛŒÙ…Ø§Ù‹ Ù‚Ø§Ø¨Ù„ Ø¨Ø§Ø²ØªÙˆÙ„ÛŒØ¯ Ø§Ø³Øª (`admin-panel/index.html:1795` â†’ Û´Û°Ûµ Ø¯Ø± `notifications.js:32`).
+- **Ù…Ù…Ù†ÙˆØ¹ ÙØ¹Ù„Ø§Ù‹:** deploy/push/commit/stageØŒ Ø§Ø¬Ø±Ø§ÛŒ migrationØŒ Ø³Ø§Ø®Øª ÙØ§ÛŒÙ„ Ù…Ø³ØªÙ†Ø¯ Ø¬Ø¯ÛŒØ¯ØŒ refactorØŒ ØªØºÛŒÛŒØ± messenger/whatsappØŒ UI redesign.
+- **Ø®Ø§Ø±Ø¬ Ø§Ø² scope:** meeting UIØŒ performance UIØŒ messenger-appØŒ whatsappØŒ wholesale deployØŒ git cleanup.
+
+### B) HARD EXECUTION LAW â€” Ø§Ù„Ø²Ø§Ù…â€ŒØ¢ÙˆØ±
+
+Û±) **One target only** â€” Ø¯Ø± Ù‡Ø± Ù„Ø­Ø¸Ù‡ ÙÙ‚Ø· ÛŒÚ©ÛŒ: `admin-panel` / `backend` / `supabase` / `messenger-app` / `wholesale-portal` / `whatsapp-broadcast-api` / `docs/governance`.
+Û²) **One output only** â€” Ù‡Ø± Ù…Ø±Ø­Ù„Ù‡ ÙÙ‚Ø· ÛŒÚ©ÛŒ: `REPORT` / `FIX` / `TEST`.
+Û³) **No branching** â€” ØªØ§ Ù…Ø±Ø­Ù„Ù‡Ù” Ø¬Ø§Ø±ÛŒ PASS Ù†Ø´Ø¯Ù‡: Ø³Ø±Ø§Øº target Ø¯ÛŒÚ¯Ø± Ù†Ø±ÙˆØŒ issue Ø¬Ø¯ÛŒØ¯ Ù†Ø³Ø§Ø²ØŒ UI Ø¬Ø¯ÛŒØ¯ Ø·Ø±Ø§Ø­ÛŒ Ù†Ú©Ù†ØŒ refactor Ù†Ú©Ù†ØŒ docs Ø¬Ø¯ÛŒØ¯ Ù†Ø³Ø§Ø²ØŒ deploy Ù†Ú©Ù†ØŒ migration Ø§Ø¬Ø±Ø§ Ù†Ú©Ù†ØŒ ØªØ³Øª ØºÛŒØ±Ù…Ø±ØªØ¨Ø· Ù†Ø²Ù†.
+Û´) **No docs sprawl** â€” Ù‡ÛŒÚ† ÙØ§ÛŒÙ„ Ù…Ø³ØªÙ†Ø¯ Ø¬Ø¯ÛŒØ¯ Ø³Ø§Ø®ØªÙ‡ Ù†Ø´ÙˆØ¯Ø› Ú¯Ø²Ø§Ø±Ø´ ÙÙ‚Ø· Ø¯Ø± Ø®Ø±ÙˆØ¬ÛŒ Ú†Øª. ØªØºÛŒÛŒØ± Ù…Ø³ØªÙ†Ø¯ ÙÙ‚Ø· Ø¨Ù‡â€ŒØ¹Ù†ÙˆØ§Ù† FIX Ø¬Ø¯Ø§Ú¯Ø§Ù†Ù‡ Ùˆ Ø¨Ø§ Ø§Ø¬Ø§Ø²Ù‡Ù” Ù…Ø§Ù„Ú©.
+Ûµ) **No fix without evidence** â€” Ù‡Ø± FIX Ù¾ÛŒØ´â€ŒØ²Ù…ÛŒÙ†Ù‡ Ø¯Ø§Ø±Ø¯: file path + line number + route/API + expected + actual + risk.
+Û¶) **No migration without migration plan** â€” ØªØ±ØªÛŒØ¨ ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ + DROP/ALTER Ø®Ø·Ø±Ù†Ø§Ú© + rollback/backup + Ø§Ø¬Ø§Ø²Ù‡Ù” Ù…Ø§Ù„Ú© + staging/prod Ù…Ø´Ø®Øµ.
+Û·) **No deploy without gates** â€” `npm run check:preflight` Ù¾Ø§Ø³ + smoke Ù‡Ù…Ø§Ù† Ø³Ø±ÙˆÛŒØ³ Ù¾Ø§Ø³ + target Ù…Ø´Ø®Øµ + Ø§Ø¬Ø§Ø²Ù‡Ù” Ù…Ø§Ù„Ú©.
+Û¸) **No secret exposure** â€” Ù‡ÛŒÚ† secret/token/env/cookie/JWT/header Ú†Ø§Ù¾ Ù†Ø´ÙˆØ¯Ø› ÙÙ‚Ø· `SECRET_PRESENT` ÛŒØ§ `SECRET_MISSING` Ø¨Ø¯ÙˆÙ† Ù…Ù‚Ø¯Ø§Ø±.
+Û¹) **Forbidden endpoint** â€” Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² `azarmehr-backend-main.vercel.app` Ù…Ù…Ù†ÙˆØ¹.
+Û±Û°) **No hardcoded API_BASE** â€” Ù‡ÛŒÚ† `API_BASE` Ø¬Ø¯ÛŒØ¯ hardcode Ù†Ø´ÙˆØ¯.
+Û±Û±) **Legacy protection** â€” Ø±ÙˆÛŒ legacy/deprecated ØªØºÛŒÛŒØ± Ù†Ø¯Ù‡ Ù…Ú¯Ø± Ù…Ø§Ù„Ú© ØµØ±ÛŒØ­Ø§Ù‹ ØªØ£ÛŒÛŒØ¯ Ú©Ù†Ø¯.
+
+### C) SINGLE EXECUTION QUEUE
+
+ØµÙ ÙˆØ§Ø­Ø¯ Ùˆ Ø§Ù„Ø²Ø§Ù…â€ŒØ¢ÙˆØ± (Û±Û° Ù…Ø±Ø­Ù„Ù‡). **ÙÙ‚Ø· STEP 1 Ø¯Ø± Ø­Ø§Ù„ Ø­Ø§Ø¶Ø± UNLOCKED / Ù‚Ø§Ø¨Ù„ Ø§Ø¬Ø±Ø§Ø³Øª.** Ù…Ø±Ø§Ø­Ù„ Û² ØªØ§ Û±Û° ØªØ§ Ø²Ù…Ø§Ù† PASS Ø´Ø¯Ù† Ù¾ÛŒØ´â€ŒÙ†ÛŒØ§Ø²Ù‡Ø§ÛŒØ´Ø§Ù† **LOCKED** Ù‡Ø³ØªÙ†Ø¯.
+
+**STEP 1** â€” REPORT / backend
+- Goal: Ø«Ø¨Øª evidence Ø¯Ù‚ÛŒÙ‚ Ø´Ú©Ø§Ù notifications (POSTâ†’Û´Û°Ûµ + Ù†Ø¨ÙˆØ¯ Ø¬Ø¯ÙˆÙ„/Ù…ÛŒÚ¯Ø±ÛŒØ´Ù†)
+- Why now: Ø¨Ø§Ù„Ø§ØªØ±ÛŒÙ† Ø§ÙˆÙ„ÙˆÛŒØª Ø·Ø¨Ù‚ Ù‚Ø§Ù†ÙˆÙ† Â«Admin Panel endpoint Ø±Ø§ ØµØ¯Ø§ Ù…ÛŒâ€ŒØ²Ù†Ø¯ ÙˆÙ„ÛŒ backend handler [Ø¨Ø±Ø§ÛŒ POST] Ù†Ø¯Ø§Ø±Ø¯Â»Ø› Ù…Ø³ØªÙ‚ÛŒÙ…Ø§Ù‹ Ù‚Ø§Ø¨Ù„ Ø¨Ø§Ø²ØªÙˆÙ„ÛŒØ¯
+- Scope: ÙÙ‚Ø· `notifications.js` + route mounting + ÙØ±Ø§Ø®ÙˆØ§Ù† admin-panel + inventory Ù…ÛŒÚ¯Ø±ÛŒØ´Ù†â€ŒÙ‡Ø§ÛŒ supabase
+- Files to read: `backend/handlers/notifications.js`, `backend/api/index.js` (Ø®Ø· Û¶Û³), `backend/server.js` (Ø®Ø· Û¸Û¸/Û±Û³Û¸), `admin-panel/index.html` (Ø®Ø· Û±Û·Û¹Ûµ), `supabase/*` (glob)
+- Files to change: Ù‡ÛŒÚ†â€ŒÚ©Ø¯Ø§Ù… (REPORT)
+- Commands allowed: read/grep/globØ› `node -c backend/handlers/notifications.js`Ø› Ø¨Ø§Ø²Ø®ÙˆØ§Ù†ÛŒ Ø®Ø·ÙˆØ·
+- Commands forbidden: edit/write/migration/deploy/git
+- Exit criteria: Û´Û°Ûµ Ø¨Ø±Ø§ÛŒ POST ØªØ£ÛŒÛŒØ¯ Ø´Ø¯Ø› Ù†Ø¨ÙˆØ¯ migration Ø¬Ø¯ÙˆÙ„ notifications Ù…Ø³ØªÙ†Ø¯ Ø´Ø¯
+- Smoke test: Ø¨Ø§Ø²Ø®ÙˆØ§Ù†ÛŒ Ø®Ø· Û³Û² `notifications.js` + Ø®Ø· Û±Û·Û¹Ûµ `index.html`
+- Stop condition: Ø§Ú¯Ø± Ù…Ø´Ø®Øµ Ø´Ø¯ handler Ø§ØµÙ„Ø§Ù‹ mount Ù†Ø´Ø¯Ù‡ â†’ Ø§ÙˆÙ„ÙˆÛŒØªâ€ŒØ¨Ù†Ø¯ÛŒ ØªØ¬Ø¯ÛŒØ¯ Ù…ÛŒâ€ŒØ´ÙˆØ¯
+- Next step only if: Û´Û°Ûµ ØªØ£ÛŒÛŒØ¯ Ø´Ø¯ Ùˆ Ø¬Ø¯ÙˆÙ„ `notifications` Ø¯Ø± Ù‡ÛŒÚ† migration ÛŒØ§ÙØª Ù†Ø´Ø¯
+
+**STEP 2** â€” FIX / backend
+- Goal: Ù¾ÛŒØ§Ø¯Ù‡â€ŒØ³Ø§Ø²ÛŒ Ø´Ø§Ø®Ù‡Ù” `POST` Ø¯Ø± `notifications.js` (Ø§ÛŒØ¬Ø§Ø¯ Ø±Ú©ÙˆØ±Ø¯ Ø§Ø¹Ù„Ø§Ù†) Ø¨Ø§ RBAC
+- Why now: STEP 1 REPORT Ø´Ø¯ Ùˆ Û´Û°Ûµ ØªØ£ÛŒÛŒØ¯ Ø´Ø¯
+- Scope: ÙÙ‚Ø· ØªØ§Ø¨Ø¹ handler (Ø§ÙØ²ÙˆØ¯Ù† `req.method==='POST'`)
+- Files to read: `backend/handlers/notifications.js`
+- Files to change: `backend/handlers/notifications.js` (ÙÙ‚Ø· Ø§ÙØ²ÙˆØ¯Ù† POST branch)
+- Commands allowed: edit ÙØ§ÛŒÙ„Ø› `node -c backend/handlers/notifications.js`Ø› `node -c backend/server.js backend/api/index.js`
+- Commands forbidden: migrationØ› deployØ› ØªØºÛŒÛŒØ± ÙØ§ÛŒÙ„ Ø¯ÛŒÚ¯Ø±Ø› ØªØºÛŒÛŒØ± route mounting
+- Exit criteria: POST branch Ø§Ø¶Ø§ÙÙ‡ Ø´Ø¯Ø› node -c passedØ› GET/PATCH Ø¨ÛŒâ€ŒØªØºÛŒÛŒØ±
+- Smoke test: curl POST Ù…Ø­Ù„ÛŒ â†’ Ø§Ù†ØªØ¸Ø§Ø± Ù†Ø¨ÙˆØ¯ Û´Û°Ûµ (Ø§Ø­ØªÙ…Ø§Ù„ ÛµÛ°Û° Ø¨Ù‡â€ŒØ®Ø§Ø·Ø± Ù†Ø¨ÙˆØ¯ Ø¬Ø¯ÙˆÙ„ â†’ Ø´ÙˆØ§Ù‡Ø¯ STEP 3)
+- Stop condition: Ø§Ú¯Ø± Ù†ÛŒØ§Ø² Ø¨Ù‡ ØªØºÛŒÛŒØ± schema/users Ø¨ÙˆØ¯ â†’ ØªÙˆÙ‚Ù Ùˆ Ú¯Ø²Ø§Ø±Ø´
+- Next step only if: Ú©Ø¯ POST Ù†ÙˆØ´ØªÙ‡ Ø´Ø¯ Ùˆ syntax OK
+
+**STEP 3** â€” TEST / backend
+- Goal: Ø¨Ø§Ø²ØªÙˆÙ„ÛŒØ¯ Ø¯Ø±Ø®ÙˆØ§Ø³Øª admin-panel Ùˆ ØªØ£ÛŒÛŒØ¯ Ø±ÙØ¹ Û´Û°ÛµØ› Ø¢Ø´Ú©Ø§Ø± Ú©Ø±Ø¯Ù† ÙˆØ§Ø¨Ø³ØªÚ¯ÛŒ Ø¬Ø¯ÙˆÙ„
+- Why now: STEP 2 FIX Ø§Ù†Ø¬Ø§Ù… Ø´Ø¯
+- Scope: ÙÙ‚Ø· endpoint notifications (POST/GET/PATCH)
+- Files to read: `backend/handlers/notifications.js`
+- Files to change: Ù‡ÛŒÚ†â€ŒÚ©Ø¯Ø§Ù…
+- Commands allowed: curl POST/GET/PATCH Ù…Ø­Ù„ÛŒ Ø¨Ø§ ØªÙˆÚ©Ù†Ø› `npm run check:preflight`
+- Commands forbidden: deployØ› migrationØ› edit
+- Exit criteria: Û´Û°Ûµ Ø¯ÛŒÚ¯Ø± Ø¨Ø§Ø²Ù†Ù…ÛŒâ€ŒÚ¯Ø±Ø¯Ø¯Ø› Ø§Ú¯Ø± ÛµÛ°Û° Ø¨Ù‡â€ŒØ¯Ù„ÛŒÙ„ Ù†Ø¨ÙˆØ¯ Ø¬Ø¯ÙˆÙ„ â†’ Ø«Ø¨Øª Ø¨Ù‡â€ŒØ¹Ù†ÙˆØ§Ù† evidence STEP 4
+- Smoke test: POST `/api/notifications` Ø¨Ø§ ØªÙˆÚ©Ù† â†’ Û²Û°Û±/Û²Û°Û° ÛŒØ§ ÛµÛ°Û° Ø¨Ø§ Ù¾ÛŒØ§Ù… Â«relation notifications does not existÂ»
+- Stop condition: Ø§Ú¯Ø± Ø®Ø·Ø§ÛŒ ØºÛŒØ±Ù…Ù†ØªØ¸Ø±Ù‡ (Ù…Ø«Ù„Ø§Ù‹ auth) â†’ ØªÙˆÙ‚Ù
+- Next step only if: Û´Û°Ûµ Ø±ÙØ¹ Ø´Ø¯ (Ø­ØªÛŒ Ø§Ú¯Ø± ÛµÛ°Û° Ø¬Ø¯ÙˆÙ„ Ø¯ÛŒØ¯Ù‡ Ø´Ø¯)
+
+**STEP 4** â€” REPORT / supabase
+- Goal: inventory migration Ù„Ø§Ø²Ù… Ø¨Ø±Ø§ÛŒ Ø¬Ø¯ÙˆÙ„ `notifications` + Ø§Ø±Ø²ÛŒØ§Ø¨ÛŒ DROP risk + ØªØ¹ÛŒÛŒÙ† staging/prod
+- Why now: STEP 3 Ù†Ø´Ø§Ù† Ø¯Ø§Ø¯ Ø¬Ø¯ÙˆÙ„ `notifications` ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ø¯
+- Scope: `supabase/*.sql`Ø› ÙÙ‚Ø· Ø¨Ø±Ø±Ø³ÛŒ/Ø´Ù†Ø§Ø³Ø§ÛŒÛŒ (Ø§Ø¬Ø±Ø§ Ù†Ù‡)
+- Files to read: `supabase/` ØªÙ…Ø§Ù… `.sql` (grep notifications)Ø› `docs/DB_MIGRATION_READINESS.md`
+- Files to change: Ù‡ÛŒÚ†â€ŒÚ©Ø¯Ø§Ù…
+- Commands allowed: read/grep/glob
+- Commands forbidden: Ø§Ø¬Ø±Ø§ÛŒ SQLØ› psqlØ› Ù‡Ø± Ù†ÙˆØ´ØªÙ† Ø±ÙˆÛŒ Ø¯ÛŒØªØ§Ø¨ÛŒØ³
+- Exit criteria: Ù…Ø´Ø®Øµ Ø´Ø¯ Ú©Ø¯Ø§Ù… ÙØ§ÛŒÙ„ Ø¬Ø¯ÙˆÙ„ Ø±Ø§ Ù…ÛŒâ€ŒØ³Ø§Ø²Ø¯Ø› ØªØ±ØªÛŒØ¨Ø› DROP/ALTER Ø®Ø·Ø±Ù†Ø§Ú© Ø«Ø¨Øª Ø´Ø¯Ø› Ù†ÛŒØ§Ø² Ø¨Ù‡ owner approval Ø«Ø¨Øª Ø´Ø¯
+- Smoke test: â€” (REPORT)
+- Stop condition: Ø§Ú¯Ø± migration Ø¨Ø§ DROP Ø®Ø·Ø±Ù†Ø§Ú© ÛŒØ§ÙØª Ø´Ø¯ â†’ Ù‚Ø¨Ù„ Ø§Ø² Ø§Ø¬Ø±Ø§ Ø­ØªÙ…Ø§Ù‹ REPORT Ú©Ø§Ù…Ù„ + ØªØ§ÛŒÛŒØ¯ Ù…Ø§Ù„Ú©
+- Next step only if: Ø·Ø±Ø­ migration + rollback/backup ØªØ£ÛŒÛŒØ¯ Ø´Ø¯ Ùˆ Ù…Ø§Ù„Ú© Ø§Ø¬Ø§Ø²Ù‡ Ø¯Ø§Ø¯
+
+**STEP 5** â€” FIX / supabase
+- Goal: Ø§Ø¬Ø±Ø§ÛŒ migration Ø³Ø§Ø®Øª Ø¬Ø¯ÙˆÙ„ `notifications` + RLS (Ø¨Ø§ ØªØ§ÛŒÛŒØ¯ Ù…Ø§Ù„Ú©ØŒ Ø¨Ø§ plan Ø¨Ú©Ø§Ù¾/Ø¨Ø§Ø²Ú¯Ø´ØªØŒ Ø±ÙˆÛŒ staging ÛŒØ§ prod Ù…Ø´Ø®Øµ)
+- Why now: STEP 4 ØªØ§ÛŒÛŒØ¯ Ú©Ø±Ø¯ Ùˆ Ù…Ø§Ù„Ú© Ø§Ø¬Ø§Ø²Ù‡ Ø¯Ø§Ø¯
+- Scope: ÙÙ‚Ø· Ø¯Ø³ØªÙˆØ± Ø³Ø§Ø®Øª Ø¬Ø¯ÙˆÙ„ `notifications` + RLS
+- Files to read: ÙØ§ÛŒÙ„ migration Ø§Ù†ØªØ®Ø§Ø¨ÛŒ
+- Files to change: (Ø§Ø¬Ø±Ø§ Ø±ÙˆÛŒ DB)Ø› Ø¯Ø± ØµÙˆØ±Øª Ù†ÛŒØ§Ø² ÙØ§ÛŒÙ„ migration Ø¬Ø¯ÛŒØ¯ (Ø¨Ø§ ØªØ§ÛŒÛŒØ¯ Ù…Ø§Ù„Ú©)
+- Commands allowed: Ø§Ø¬Ø±Ø§ÛŒ SQL Ø±ÙˆÛŒ target Ù…Ø´Ø®Øµ Ø·Ø¨Ù‚ plan
+- Commands forbidden: DROP/ALTER Ø¨Ø¯ÙˆÙ† ØªØ§ÛŒÛŒØ¯Ø› Ø§Ø¬Ø±Ø§ Ø±ÙˆÛŒ prod Ø¨Ø¯ÙˆÙ† ØªØ§ÛŒÛŒØ¯ ØµØ±ÛŒØ­
+- Exit criteria: Ø¬Ø¯ÙˆÙ„ `notifications` + RLS Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯Ø› Ù†ÙˆØ´ØªÙ† ØªØ³Øª Ø´Ø¯
+- Smoke test: INSERT/SELECT ØªØ³ØªÛŒ Ø±ÙˆÛŒ Ø¬Ø¯ÙˆÙ„
+- Stop condition: Ø§Ú¯Ø± Ø§Ø¬Ø±Ø§ Ø´Ú©Ø³Øª â†’ Ø¨Ø§Ø²Ú¯Ø´Øª Ø¨Ù‡ Ø¨Ú©Ø§Ù¾ØŒ ØªÙˆÙ‚Ù
+- Next step only if: Ø¬Ø¯ÙˆÙ„ Ø³Ø§Ø®ØªÙ‡ Ø´Ø¯ Ùˆ Ù‚Ø§Ø¨Ù„ Ù†ÙˆØ´ØªÙ† Ø§Ø³Øª
+
+**STEP 6** â€” TEST / backend
+- Goal: ØªØ³Øª end-to-end notifications (POST/GET/PATCH) Ø±ÙˆÛŒ Ø¯ÛŒØªØ§Ø¨ÛŒØ³ Ø²Ù†Ø¯Ù‡
+- Why now: Ø¬Ø¯ÙˆÙ„ Ø³Ø§Ø®ØªÙ‡ Ø´Ø¯
+- Scope: ÙÙ‚Ø· notifications endpoint
+- Files to read: `backend/handlers/notifications.js`
+- Files to change: Ù‡ÛŒÚ†â€ŒÚ©Ø¯Ø§Ù…
+- Commands allowed: curl POST/GET/PATCH Ø¨Ø§ ØªÙˆÚ©Ù†Ø› preflight
+- Commands forbidden: deployØ› migrationØ› edit
+- Exit criteria: POST â†’ Û²Û°Û±ØŒ GET â†’ Ù„ÛŒØ³ØªØŒ PATCH â†’ read=true
+- Smoke test: Ú†Ø±Ø®Ù‡ Ú©Ø§Ù…Ù„ Ø§Ø¹Ù„Ø§Ù†
+- Stop condition: Ø§Ú¯Ø± Ù‡Ù†ÙˆØ² Ø®Ø·Ø§ â†’ ØªÙˆÙ‚Ù Ùˆ Ú¯Ø²Ø§Ø±Ø´
+- Next step only if: Ù‡Ø± Ø³Ù‡ Ù…ØªØ¯ Û²xx
+
+**STEP 7** â€” REPORT / docs/governance
+- Goal: Ø§Ø±Ø²ÛŒØ§Ø¨ÛŒ deploy health + ØªÚ©Ù‡â€ŒØªÚ©Ù‡ Ø¨ÙˆØ¯Ù† Git (nested `.git`ØŒ Û²Û¹ untrackedØŒ Û¸ aheadØŒ refs Ø§Ø´ØªØ¨Ø§Ù‡ AGENTS.md)
+- Why now: blocker Û³ Ùˆ Û´ Ù‡Ù†ÙˆØ² Ø¨Ø§Ø² Ø§Ø³Øª
+- Scope: `SERVICE_HEALTH_MATRIX.md` (stale)Ø› git statusØ› refs AGENTS.md
+- Files to read: `docs/SERVICE_HEALTH_MATRIX.md`Ø› git statusØ› `AGENTS.md` (Basteh.txt/fale.txt refs)
+- Files to change: Ù‡ÛŒÚ†â€ŒÚ©Ø¯Ø§Ù…
+- Commands allowed: read/grep/globØ› git status (Ø¨Ø§ binary Ù…Ø³ÛŒØ± Ú©Ø§Ù…Ù„)
+- Commands forbidden: commit/push/deploy/edit
+- Exit criteria: ÙˆØ¶Ø¹ÛŒØª health Ù‡Ø± Ø³Ø±ÙˆÛŒØ³ Ø«Ø¨Øª Ø´Ø¯ (OK/UNKNOWN/BROKEN)Ø› Ú¯Ø²ÛŒÙ†Ù‡â€ŒÙ‡Ø§ÛŒ Ø±ÙØ¹ fragmentation Ù…Ø³ØªÙ†Ø¯ Ø´Ø¯
+- Smoke test: â€” (REPORT)
+- Stop condition: â€”
+- Next step only if: Ù…Ø§Ù„Ú© Ø§Ø¬Ø§Ø²Ù‡ Ø§Ø¯Ø§Ù…Ù‡ Ø¨Ù‡ ØªØ³Øª/Ø±ÙØ¹ Ø¯Ø§Ø¯
+
+**STEP 8** â€” TEST / backend
+- Goal: Ø§Ø¬Ø±Ø§ÛŒ preflight + node -c + smoke Ø±ÙˆÛŒ Ø³Ø±ÙˆÛŒØ³ ØªØºÛŒÛŒØ±ÛŒØ§ÙØªÙ‡ Ø¨Ø±Ø§ÛŒ ØªØ§ÛŒÛŒØ¯ deploy-readiness
+- Why now: Ù‚Ø¨Ù„ Ø§Ø² Ù‡Ø± deploy (Ù…Ù…Ù†ÙˆØ¹ ØªØ§ ØªØ§ÛŒÛŒØ¯ Ù…Ø§Ù„Ú©)
+- Scope: backend preflight
+- Files to read: `package.json` scripts
+- Files to change: Ù‡ÛŒÚ†â€ŒÚ©Ø¯Ø§Ù…
+- Commands allowed: `npm run check:preflight`Ø› `node -c backend/server.js backend/api/index.js`Ø› `npm run check:db-source`Ø› `npm run check:regression-safety`
+- Commands forbidden: deployØ› pushØ› commit
+- Exit criteria: Ù‡Ù…Ù‡ gateÙ‡Ø§ passed
+- Smoke test: preflight output green
+- Stop condition: Ù‡Ø± gate Ù‚Ø±Ù…Ø² â†’ ØªÙˆÙ‚Ù Ùˆ Ø±ÙØ¹
+- Next step only if: preflight passed Ùˆ Ù…Ø§Ù„Ú© Ø§Ø¬Ø§Ø²Ù‡ deploy Ø¯Ø§Ø¯ (deploy Ø®Ø§Ø±Ø¬ Ø§Ø² Ø§ÛŒÙ† Ù‚Ø¯Ù… Ø§Ø³Øª)
+
+**STEP 9** â€” FIX / docs/governance
+- Goal: Ø±ÙØ¹ fragmentation (ØªØµÙ…ÛŒÙ… nested `.git`Ø› Ø§ØµÙ„Ø§Ø­ refs Ø§Ø´ØªØ¨Ø§Ù‡ AGENTS.md: `Basteh.txt`â†’`retail-scenario-basteh.txt`, `fale.txt`â†’`wholesale-scenario-fale.txt`) â€” Ø¨Ø§ ØªØ§ÛŒÛŒØ¯ Ù…Ø§Ù„Ú©
+- Why now: blocker Û´
+- Scope: ÙÙ‚Ø· AGENTS.md (refs) + Ù…Ø³ØªÙ†Ø¯Ø§Øª governanceØ› Ø¯Ø³Øªâ€ŒÙ†Ø²Ø¯Ù† Ø¨Ù‡ nested `.git` Ø¨Ø¯ÙˆÙ† ØªØ§ÛŒÛŒØ¯
+- Files to read: `AGENTS.md`Ø› `docs/retail-scenario-basteh.txt`Ø› `docs/wholesale-scenario-fale.txt`
+- Files to change: `AGENTS.md` (ÙÙ‚Ø· Ø§ØµÙ„Ø§Ø­ Ù†Ø§Ù… ÙØ§ÛŒÙ„ Ø¯Ø± Ø§Ø±Ø¬Ø§Ø¹) â€” Ø¨Ø§ ØªØ§ÛŒÛŒØ¯ Ù…Ø§Ù„Ú©
+
+=== BACKEND REPO CONFIRM ===
+F:/azarmehr-sanat-monorepo/backend
+main
+
+=== STAGED FILES SHOULD BE EMPTY ===
+
+=== MODIFIED DIFF STAT ===
+warning: in the working copy of 'handlers/crm-customers.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'handlers/project-tasks.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server.js', LF will be replaced by CRLF the next time Git touches it
+ .gitignore                |   1 +
+ api/index.js              |  18 +-
+ handlers/crm-customers.js |  26 +-
+ handlers/login.js         |  67 ++++-
+ handlers/notifications.js |  35 ++-
+ handlers/project-tasks.js | 635 ++++++++++++++++++++++++++++++++++++++++------
+ handlers/projects.js      |  33 +++
+ handlers/users.js         | 130 +++++++++-
+ server.js                 |  38 ++-
+ 9 files changed, 873 insertions(+), 110 deletions(-)
+
+=== UNTRACKED FILES WITH SIZE ===
+_run_migration.js       1932 bytes
+_run_rbac_migration.js  2689 bytes
+auth-fix-verify.js      15184 bytes
+dev-server.err  2529 bytes
+handlers/_audit.js      2462 bytes
+handlers/ai-drafts.js   6962 bytes
+handlers/audit-logs.js  1791 bytes
+handlers/crm-draft-orders.js    5707 bytes
+handlers/groups.js      4385 bytes
+handlers/meeting-action-items.js        4929 bytes
+handlers/meetings.js    7316 bytes
+handlers/performance-reports.js 5630 bytes
+handlers/portal-login-retail.js 2715 bytes
+handlers/reports.js     30913 bytes
+handlers/rolePermissions.js     3889 bytes
+handlers/roles.js       2533 bytes
+handlers/whatsapp-rules.js      4361 bytes
+smoke-test-nonadmin-auth.js     18012 bytes
+smoke-test.js   21841 bytes
+
+=== DIFF CHECK ===
+warning: in the working copy of 'handlers/crm-customers.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'handlers/project-tasks.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server.js', LF will be replaced by CRLF the next time Git touches it
+handlers/project-tasks.js:322: trailing whitespace.
++  const updatePayload = {
+handlers/project-tasks.js:323: trailing whitespace.
++    status: newStatus,
+handlers/project-tasks.js:324: trailing whitespace.
++    updated_at: new Date().toISOString()
+handlers/project-tasks.js:454: trailing whitespace.
++  const completedAt = FINAL_WITH_COMPLETED_AT.includes(decision)
+handlers/project-tasks.js:455: trailing whitespace.
++    ? new Date().toISOString()
+handlers/project-tasks.js:460: trailing whitespace.
++    .update({
+handlers/project-tasks.js:461: trailing whitespace.
++      status: decision,
+
+=== .gitignore DIFF ===
+diff --git a/.gitignore b/.gitignore
+index dec8aa7..a112d2b 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -21,3 +21,4 @@ Thumbs.db
+
+ # Backup directory (reversible move of old api/ handlers)
+ api/._backup_handlers/
++.env*
+
+=== ROUTE/MOUNT DIFF: server.js ===
+warning: in the working copy of 'server.js', LF will be replaced by CRLF the next time Git touches it
+diff --git a/server.js b/server.js
+index dbf0db5..961141c 100644
+--- a/server.js
++++ b/server.js
+@@ -60,7 +60,10 @@ const handlers = {
+   login:                   require('./handlers/login'),
+   portalLogin:             require('./handlers/portal-login'),
+   portalRegister:          require('./handlers/portal-register'),
++  portalLoginRetail:       require('./handlers/portal-login-retail'),
+   users:                   require('./handlers/users'),
++  roles:                   require('./handlers/roles'),
++  rolePermissions:         require('./handlers/rolePermissions'),
+   crmCustomers:            require('./handlers/crm-customers'),
+   crmOrders:               require('./handlers/crm-orders'),
+   crmOrderItems:           require('./handlers/crm-order-items'),
+@@ -75,7 +78,8 @@ const handlers = {
+   crmProformaIssue:        require('./handlers/crm-proforma-issue'),
+   crmProformaApprove:      require('./handlers/crm-proforma-approve'),
+   crmInvoices:             require('./handlers/crm-invoices'),
+-  crmGuaranteeClaims:      require('./handlers/crm-guarantee-claims'),
++  crmGuaranteeClaims:       require('./handlers/crm-guarantee-claims'),
++  crmDraftOrders:           require('./handlers/crm-draft-orders'),
+   projects:                require('./handlers/projects'),
+   projectTasks:            require('./handlers/project-tasks'),
+   projectMembers:          require('./handlers/project-members'),
+@@ -88,17 +92,28 @@ const handlers = {
+   products:                require('./handlers/products'),
+   scorpionCustomers:       require('./handlers/scorpion-customers'),
+   orgChart:                require('./handlers/org-chart'),
++  groups:                  require('./handlers/groups'),
+   portalRegistrationRequests: require('./handlers/portal-registration-requests'),
+   setup:                   require('./handlers/setup'),
+   debug:                   require('./handlers/debug'),
+   qaMatch:                 require('./handlers/qa-match'),
++  whatsappRules:           require('./handlers/whatsapp-rules'),
++  auditLogs:               require('./handlers/audit-logs'),
++  meetings:                require('./handlers/meetings'),
++  meetingActionItems:      require('./handlers/meeting-action-items'),
++  aiDrafts:                require('./handlers/ai-drafts'),
+:
+

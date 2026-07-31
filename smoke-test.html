@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head><body>
+<h3>WhatsApp Inbox Smoke Test</h3>
+<div id="result">Running tests...</div>
+<script>
+const apiBase = 'https://whatsapp-broadcast-bedlsa7mj-ams-group.vercel.app';
+const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI3MmY1NGYwLTMzNjQtNDFlMS1iNTg3LWM2NDIzNDU1ZDcwYiIsInVzZXJuYW1lIjoiYm96b3JnbWVociIsInN5c3RlbV9yb2xlIjoic3VwZXJfYWRtaW4iLCJwZXJtaXNzaW9ucyI6WyJvcmdfY2hhcnQ6dmlldyIsIm9yZ19jaGFydDplZGl0IiwiYWRtaW5fcGFuZWw6dmlldyIsInVzZXJzOm1hbmFnZSIsInNldHRpbmdzOm1hbmFnZSIsInBlcm1pc3Npb25zOm1hbmFnZSIsImNoYXQ6dmlldyIsInBheW1lbnRzOnZpZXciLCJjcm06dmlldyJdLCJpYXQiOjE3ODQzNTc4MjUsImV4cCI6MTc4NDk2MjYyNX0.0bFV_AjPoloRN2XxC6ivuoUOzQFwapx1upWdgIrvhJ8';
+
+async function run() {
+  let html = '';
+  try {
+    const unauthRes = await fetch(apiBase + '/api/whatsapp-inbox?limit=1&offset=0');
+    html += '<p>UNAUTH status: ' + unauthRes.status + '</p>';
+
+    const authRes = await fetch(apiBase + '/api/whatsapp-inbox?limit=5&offset=0', {
+      headers: { 'Authorization': 'Bearer ' + jwt }
+    });
+    const authData = await authRes.json();
+    html += '<p>AUTH status: ' + authRes.status + '</p>';
+    html += '<p>has_data: ' + (authData.data !== undefined) + '</p>';
+    html += '<p>has_count: ' + (authData.count !== undefined) + '</p>';
+    html += '<p>count_value: ' + authData.count + '</p>';
+    html += '<p>data_items: ' + (authData.data ? authData.data.length : 0) + '</p>';
+    html += '<p>raw_payload_in_response: ' + JSON.stringify(authData).includes('raw_payload') + '</p>';
+
+    const pageRes = await fetch(apiBase + '/api/whatsapp-inbox?limit=500&offset=-10', {
+      headers: { 'Authorization': 'Bearer ' + jwt }
+    });
+    const pageData = await pageRes.json();
+    html += '<p>PAGINATION status: ' + pageRes.status + '</p>';
+    html += '<p>pagination_has_data: ' + (pageData.data !== undefined) + '</p>';
+    html += '<p>pagination_has_count: ' + (pageData.count !== undefined) + '</p>';
+
+    const whRes = await fetch(apiBase + '/api/webhook');
+    const whText = await whRes.text();
+    html += '<p>WEBHOOK status: ' + whRes.status + '</p>';
+    html += '<p>webhook_body_start: ' + whText.substring(0, 80) + '</p>';
+
+    html += '<h2 style="color:green">ALL TESTS COMPLETE</h2>';
+  } catch(e) {
+    html += '<p style="color:red">ERROR: ' + e.message + '</p>';
+  }
+  document.getElementById('result').innerHTML = html;
+}
+run();
+</script>
+</body></html>

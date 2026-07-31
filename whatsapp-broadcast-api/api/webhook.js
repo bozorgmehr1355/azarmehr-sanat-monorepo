@@ -58,6 +58,36 @@ const PRICE_QUERY_FALLBACK_REPLY = `برای اطلاع از قیمت‌ها، �
 // ─── Wholesale Price Protection ─────────────────────────────────────────────
 const WHOLESALE_PORTAL_REPLY = `همکار گرامی، برای مشاهده قیمت‌های عمده و ثبت سفارشات همکاری لطفا به پرتال عمده‌فروشی ما مراجعه فرمایید:\nhttps://wholesale-portal-azure.vercel.app`;
 
+// ─── Message Orchestrator (Central Business Logic) ──────────────────────────
+const ORCHESTRATOR_URL = process.env.ORCHESTRATOR_URL || 'http://localhost:3000/api/message-orchestrator';
+const ORCHESTRATOR_TIMEOUT_MS = Number(process.env.ORCHESTRATOR_TIMEOUT_MS) || 10000;
+
+/**
+ * ارسال پیام نرمال‌شده به orchestrator مرکزی و دریافت ResponseModel
+ * در صورت خطا (timeout / network) → null (fallback به legacy)
+ */
+async function callOrchestrator(normalizedRequest) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), ORCHESTRATOR_TIMEOUT_MS);
+
+    const response = await fetch(ORCHESTRATOR_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(normalizedRequest),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (data && data.text) return data;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Escalation Context (Phase 2) ──────────────────────────────────────────
 const ESCALATION_WINDOW_MINUTES = 30;
 const USE_PHASE2_CONTEXT = process.env.USE_PHASE2_CONTEXT === 'true' || USE_PHASE1_ROUTER;
@@ -1550,43 +1580,7 @@ module.exports = async function handler(req, res) {
           replyText = catalogReply;
         }
       }
-      // ── ۳b. ESCALATION — AI پاسخ اولیه بده + نیاز انسان ─────────
-      else if (intent === 'ESCALATION') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('ESCALATION');
-        replyType = ai.replyType || 'escalation';
-        needsHuman = true;
-      }
-
-      // ── ۳aa. DISSATISFACTION — AI با empathy + ارجاع به پشتیبانی
-      else if (intent === 'DISSATISFACTION') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('DISSATISFACTION');
-        replyType = ai.replyType || 'dissatisfaction';
-        needsHuman = true;
-        // ثبت درخواست در گارانتی برای پیگیری
-        saveWarrantyReturn({
-          customer_phone: cleanPhone,
-          customer_name: '',
-          reason: 'نارضایتی مشتری — نیاز به پیگیری',
-        }).catch(err => console.error('[Webhook] خطا در ثبت گارانتی:', err?.message));
-      }
-
-      // ── ۳ab. REFUND_REQUEST — AI با empathy + ارجاع به پشتیبانی
-      else if (intent === 'REFUND_REQUEST') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('REFUND_REQUEST');
-        replyType = ai.replyType || 'refund_request';
-        needsHuman = true;
-        // ثبت درخواست مرجوعی در دیتابیس
-        saveWarrantyReturn({
-          customer_phone: cleanPhone,
-          customer_name: '',
-          reason: 'درخواست مرجوعی وجه',
-        }).catch(err => console.error('[Webhook] خطا در ثبت مرجوعی:', err?.message));
-      }
-
-      // ── ۳ac. ESCALATION_FOLLOWUP — AI دنباله escalation رو ادامه بده
+      // ── ۳ab. ESCALATION_FOLLOWUP — AI دنباله escalation رو ادامه بده
       else if (intent === 'ESCALATION_FOLLOWUP') {
         const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
         replyText = ai.reply || `پیام شما به درخواست پشتیبانی قبلی اضافه شد. کارشناسان در ساعت اداری بررسی می‌کنند.\n\nپشتیبانی: ${SUPPORT_PHONE}`;
@@ -1659,120 +1653,202 @@ module.exports = async function handler(req, res) {
         console.log(`[Menu] Static intent ${intent} resolved via dynamic tree for ${redactPhone(cleanPhone)}`);
       }
 
-      // ── ۳b. AI-FIRST — همه پاسخ‌های غیرمنو از AI عبور می‌کنند ──
-      // GREETING / HELP → AI با لحن گرم و طبیعی
-      else if (intent === 'GREETING' || intent === 'HELP') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || 'سلام! به فروشگاه محصولات غذایی عقرب خوش آمدید.\nخرید شما عمده است یا خرده؟';
-        replyType = ai.replyType || intent.toLowerCase();
-      }
-      // BRAND_QUESTION → AI
-      else if (intent === 'BRAND_QUESTION') {
-        const brandAnswer = await searchBrandKnowledge(messageBody);
-        if (brandAnswer) {
-          replyText = brandAnswer;
-          replyType = 'brand_knowledge';
-        } else {
-          const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-          replyText = ai.reply || getAutoReply('BRAND_QUESTION');
-          replyType = ai.replyType || 'brand_fallback';
-        }
-      }
-      // WARRANTY_QUERY → AI (با context گارانتی)
-      else if (intent === 'WARRANTY_QUERY') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('WARRANTY_QUERY');
-        replyType = ai.replyType || 'static';
-      }
-      // ORDER → AI با راهنمایی طبیعی
-      else if (intent === 'ORDER') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('ORDER');
-        replyType = ai.replyType || 'order';
-        // ثبت درخواست خرید در دیتابیس
-        saveOrderRequest({
-          customer_phone: cleanPhone,
-          customer_type: effectiveStatus || 'unknown',
-          product_interest: messageBody.slice(0, 200),
-          message_text: messageBody.slice(0, 500),
-        }).catch(err => console.error('[Webhook] خطا در ثبت درخواست خرید:', err?.message));
-      }
-      // GENERAL → AI (قبلاً هم AI بود)
-      else if (intent === 'GENERAL') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('GENERAL');
-        replyType = ai.replyType || 'general_fallback';
-      }
-      // PRICE_QUERY → AI (ممنوعیت قیمت در پرامپت AI کنترل می‌شه)
-      else if (intent === 'PRICE_QUERY') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('FALLBACK');
-        replyType = ai.replyType || 'price_fallback';
-        // ثبت لید (مخصوصاً برای مشتری عمده)
-        if (effectiveStatus === 'known_wholesale') {
-          saveOrderRequest({
-            customer_phone: cleanPhone,
-            customer_type: 'wholesale',
-            product_interest: 'استعلام قیمت — ' + messageBody.slice(0, 200),
-            message_text: messageBody.slice(0, 500),
-          }).catch(err => console.error('[Webhook] خطا در ثبت لید قیمت:', err?.message));
-        }
-      }
-      // EDUCATION → AI
-      else if (intent === 'EDUCATION') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('EDUCATION');
-        replyType = ai.replyType || 'education';
-      }
-      // CONTACT → AI (اطلاعات تماس توی پرامپته)
-      else if (intent === 'CONTACT') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('FALLBACK');
-        replyType = ai.replyType || 'contact';
-      }
-      // FALLBACK → AI (به جای جواب رباتیک، AI سعی می‌کنه بفهمه)
-      else if (intent === 'FALLBACK') {
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
-        replyText = ai.reply || getAutoReply('FALLBACK');
-        replyType = ai.replyType || 'fallback';
-      }
-
-      // ── ۳h. PRODUCT_QUERY — AI-FIRST: موتور جستجوی محصول + AI ──
+      // ── ۳b. Orchestrator-First — همه پاسخ‌های متنی غیراختصاصی ──
+      //     (GREETING, HELP, BRAND_QUESTION, WARRANTY_QUERY, ORDER, GENERAL,
+      //      PRICE_QUERY, EDUCATION, CONTACT, FALLBACK, PRODUCT_QUERY, ...)
+      //     ابتدا orchestrator مرکزی صدا زده می‌شود — اگر در دسترس نبود
+      //     (timeout, network error) → fallback به AI قدیمی
       else {
-        console.log(`[ProductAI] START | msg="${redactBody(messageBody)}" | customer=${effectiveStatus} | phone=${redactPhone(cleanPhone)}`);
-
-        // ── جستجوی محصولات ─────────────────────────────────────────
-        const normalizedMsg = messageBody.trim().replace(/\s+/g, ' ');
-        const products = await searchProducts(messageBody);
-        const signalResult = await detectAndSearchProducts(messageBody);
-
-        // ترکیب نتایج جستجو
-        const allProducts = products.length > 0 ? products :
-                          signalResult.products || [];
-
-        console.log(`[ProductAI] Found ${allProducts.length} product(s) for ${redactPhone(cleanPhone)}`);
-
-        // ── AI با context محصولات ──────────────────────────────────
-        const ai = await aiReply(messageBody, cleanPhone, effectiveStatus, {
-          products: allProducts.length > 0 ? allProducts : undefined,
+        const orchResponse = await callOrchestrator({
+          channel: 'whatsapp',
+          messageType: 'text',
+          senderId: cleanPhone,
+          timestamp: new Date().toISOString(),
+          text: messageBody,
+          attachments: [],
+          context: {
+            customer_type: effectiveStatus,
+            webhook_intent: intent,
+            intent_subtype: intentSubtype,
+          },
+          correlation_id: inserted?.id ? `wa_${inserted.id}` : null,
         });
 
-        if (ai.reply) {
-          replyText = ai.reply;
-          replyType = ai.replyType;
-          console.log(`[ProductAI] AI response for ${redactPhone(cleanPhone)}`);
-        } else if (ai.limitReached) {
-          replyText = 'در حال حاضر به سقف پاسخگویی هوشمند رسیده‌ایم. لطفاً بعداً تلاش کنید یا با پشتیبانی تماس بگیرید.';
-          replyType = 'ai_limit';
-        } else if (allProducts.length > 0) {
-          // Fallback نهایی: لیست محصولات
-          replyText = buildProductReply(allProducts, effectiveStatus);
-          replyType = 'product_search';
-          console.log(`[ProductAI] Fallback to product list for ${redactPhone(cleanPhone)}`);
+        if (orchResponse && orchResponse.text) {
+          replyText = orchResponse.text;
+          replyType = orchResponse.metadata?.intent?.toLowerCase() || 'orchestrator';
+          needsHuman = orchResponse.metadata?.requires_human === true;
+
+          // ── Post-orchestrator Intent-Specific Hooks ──
+          // Some intents need WhatsApp-specific actions (DB writes, forced human)
+          // that the orchestrator doesn't handle.
+          if (intent === 'DISSATISFACTION') {
+            needsHuman = true;
+            saveWarrantyReturn({
+              customer_phone: cleanPhone,
+              customer_name: '',
+              reason: 'نارضایتی مشتری — نیاز به پیگیری',
+            }).catch(err => console.error('[Webhook] خطا در ثبت گارانتی:', err?.message));
+          } else if (intent === 'REFUND_REQUEST') {
+            needsHuman = true;
+            saveWarrantyReturn({
+              customer_phone: cleanPhone,
+              customer_name: '',
+              reason: 'درخواست مرجوعی وجه',
+            }).catch(err => console.error('[Webhook] خطا در ثبت مرجوعی:', err?.message));
+          } else if (intent === 'ORDER') {
+            saveOrderRequest({
+              customer_phone: cleanPhone,
+              customer_type: effectiveStatus || 'unknown',
+              product_interest: messageBody.slice(0, 200),
+              message_text: messageBody.slice(0, 500),
+            }).catch(err => console.error('[Webhook] خطا در ثبت درخواست خرید:', err?.message));
+          } else if (intent === 'PRICE_QUERY' && effectiveStatus === 'known_wholesale') {
+            saveOrderRequest({
+              customer_phone: cleanPhone,
+              customer_type: 'wholesale',
+              product_interest: 'استعلام قیمت — ' + messageBody.slice(0, 200),
+              message_text: messageBody.slice(0, 500),
+            }).catch(err => console.error('[Webhook] خطا در ثبت لید قیمت:', err?.message));
+          }
         } else {
-          replyText = getAutoReply('FALLBACK');
-          replyType = 'fallback';
-          await logSearchMiss(messageBody, cleanPhone);
+          // ── Legacy AI Fallback (orchestrator در دسترس نبود) ──
+          // GREETING / HELP → AI با لحن گرم و طبیعی
+          if (intent === 'GREETING' || intent === 'HELP') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || 'سلام! به فروشگاه محصولات غذایی عقرب خوش آمدید.\nخرید شما عمده است یا خرده؟';
+            replyType = ai.replyType || intent.toLowerCase();
+          }
+          // BRAND_QUESTION → AI
+          else if (intent === 'BRAND_QUESTION') {
+            const brandAnswer = await searchBrandKnowledge(messageBody);
+            if (brandAnswer) {
+              replyText = brandAnswer;
+              replyType = 'brand_knowledge';
+            } else {
+              const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+              replyText = ai.reply || getAutoReply('BRAND_QUESTION');
+              replyType = ai.replyType || 'brand_fallback';
+            }
+          }
+          // WARRANTY_QUERY → AI (با context گارانتی)
+          else if (intent === 'WARRANTY_QUERY') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('WARRANTY_QUERY');
+            replyType = ai.replyType || 'static';
+          }
+          // ORDER → AI با راهنمایی طبیعی
+          else if (intent === 'ORDER') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('ORDER');
+            replyType = ai.replyType || 'order';
+            // ثبت درخواست خرید در دیتابیس
+            saveOrderRequest({
+              customer_phone: cleanPhone,
+              customer_type: effectiveStatus || 'unknown',
+              product_interest: messageBody.slice(0, 200),
+              message_text: messageBody.slice(0, 500),
+            }).catch(err => console.error('[Webhook] خطا در ثبت درخواست خرید:', err?.message));
+          }
+          // GENERAL → AI (قبلاً هم AI بود)
+          else if (intent === 'GENERAL') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('GENERAL');
+            replyType = ai.replyType || 'general_fallback';
+          }
+          // PRICE_QUERY → AI (ممنوعیت قیمت در پرامپت AI کنترل می‌شه)
+          else if (intent === 'PRICE_QUERY') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('FALLBACK');
+            replyType = ai.replyType || 'price_fallback';
+            // ثبت لید (مخصوصاً برای مشتری عمده)
+            if (effectiveStatus === 'known_wholesale') {
+              saveOrderRequest({
+                customer_phone: cleanPhone,
+                customer_type: 'wholesale',
+                product_interest: 'استعلام قیمت — ' + messageBody.slice(0, 200),
+                message_text: messageBody.slice(0, 500),
+              }).catch(err => console.error('[Webhook] خطا در ثبت لید قیمت:', err?.message));
+            }
+          }
+          // EDUCATION → AI
+          else if (intent === 'EDUCATION') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('EDUCATION');
+            replyType = ai.replyType || 'education';
+          }
+          // CONTACT → AI (اطلاعات تماس توی پرامپته)
+          else if (intent === 'CONTACT') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('FALLBACK');
+            replyType = ai.replyType || 'contact';
+          }
+          // ESCALATION → AI (legacy fallback)
+          else if (intent === 'ESCALATION') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('ESCALATION');
+            replyType = ai.replyType || 'escalation';
+            needsHuman = true;
+          }
+          // DISSATISFACTION → AI (legacy fallback)
+          else if (intent === 'DISSATISFACTION') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('DISSATISFACTION');
+            replyType = ai.replyType || 'dissatisfaction';
+            needsHuman = true;
+            saveWarrantyReturn({
+              customer_phone: cleanPhone,
+              customer_name: '',
+              reason: 'نارضایتی مشتری — نیاز به پیگیری',
+            }).catch(err => console.error('[Webhook] خطا در ثبت گارانتی:', err?.message));
+          }
+          // REFUND_REQUEST → AI (legacy fallback)
+          else if (intent === 'REFUND_REQUEST') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('REFUND_REQUEST');
+            replyType = ai.replyType || 'refund_request';
+            needsHuman = true;
+            saveWarrantyReturn({
+              customer_phone: cleanPhone,
+              customer_name: '',
+              reason: 'درخواست مرجوعی وجه',
+            }).catch(err => console.error('[Webhook] خطا در ثبت مرجوعی:', err?.message));
+          }
+          // FALLBACK → AI (به جای جواب رباتیک، AI سعی می‌کنه بفهمه)
+          else if (intent === 'FALLBACK') {
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus);
+            replyText = ai.reply || getAutoReply('FALLBACK');
+            replyType = ai.replyType || 'fallback';
+          }
+          // PRODUCT_QUERY / catch-all → موتور جستجوی محصول + AI
+          else {
+            console.log(`[ProductAI] START | msg="${redactBody(messageBody)}" | customer=${effectiveStatus} | phone=${redactPhone(cleanPhone)}`);
+            const products = await searchProducts(messageBody);
+            const signalResult = await detectAndSearchProducts(messageBody);
+            const allProducts = products.length > 0 ? products : (signalResult.products || []);
+            console.log(`[ProductAI] Found ${allProducts.length} product(s) for ${redactPhone(cleanPhone)}`);
+
+            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus, {
+              products: allProducts.length > 0 ? allProducts : undefined,
+            });
+
+            if (ai.reply) {
+              replyText = ai.reply;
+              replyType = ai.replyType;
+              console.log(`[ProductAI] AI response for ${redactPhone(cleanPhone)}`);
+            } else if (ai.limitReached) {
+              replyText = 'در حال حاضر به سقف پاسخگویی هوشمند رسیده‌ایم. لطفاً بعداً تلاش کنید یا با پشتیبانی تماس بگیرید.';
+              replyType = 'ai_limit';
+            } else if (allProducts.length > 0) {
+              replyText = buildProductReply(allProducts, effectiveStatus);
+              replyType = 'product_search';
+              console.log(`[ProductAI] Fallback to product list for ${redactPhone(cleanPhone)}`);
+            } else {
+              replyText = getAutoReply('FALLBACK');
+              replyType = 'fallback';
+              await logSearchMiss(messageBody, cleanPhone);
+            }
+          }
         }
       }
 

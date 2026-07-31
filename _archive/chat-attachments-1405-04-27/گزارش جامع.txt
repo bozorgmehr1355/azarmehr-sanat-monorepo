@@ -1,0 +1,491 @@
+I have now read all key governance docs (PROJECT_MAP, DEVELOPMENT_RULES, DATABASE_SOURCE_OF_TRUTH, OMNICHANNEL_BLUEPRINT, AGENTS.md, SERVICE_CONTRACTS, SERVICE_HEALTH_MATRIX, DB_MIGRATION_READINESS, UI_EXECUTION_CONTRACT, PROJECT_TASK_EVIDENCE_AI_MVP_PLAN, PROJECT_ADDITIONS_REPORT, and the three scenario SSOT files). The P11/PHASE2B reports are summarized verbatim inside PROJECT_MAP §Performance + PROJECT_ADDITIONS_REPORT, so their claims are captured. Here is the full structured audit.
+
+---
+
+============================================================
+A) EXECUTIVE VERDICT
+============================================================
+
+- **وضعیت کلی:** PARTIAL / operational-status = **UNKNOWN**. کد منبع (backend + admin-panel projects/tasks) پیاده‌شده و داخلیاً سالم است، اما اجرای migration در DB زنده **انجام نشده** و سلامتِ deploy **تأییدنشده**.
+- **آیا operational است؟** نه — کد آماده است اما runtime آن وابسته به اجرای migrationها و deploy است که UNKNOWNاند.
+- **بزرگترین blocker:** (۱) migrationها در Supabase live **اجرا نشده‌اند** → همهٔ جداول/RLS در runtime غایب‌اند؛ (۲) سلامت deploy admin/messenger/wholesale **UNKNOWN** (SERVICE_HEALTH_MATRIX قدیمی/stale است).
+- **کدام app/server اول باید اصلاح شود؟** `backend/` + `supabase/` (پی‌ساز). اما گام‌های اجراییِ بلافاصله = **docs-governance** (رفع تناقضات) + **backend TEST** (تأیید سلامت داخلی).
+- **مستندات قابل اعتمادند؟** پراکنده/متناقض. SoT کد = PROJECT_MAP (جدید ۱۴۰۵/۰۴/۲۳). SERVICE_CONTRACTS/HEALTH_MATRIX **stale (۱۴۰۴/۰۴/۲۰)** و با PROJECT_MAP تناقض دارند.
+- **ساخت فایل جدید لازم است؟** نه در این مرحله. طبق قانون سخت (بخش I)، هیچ مستند جدید بدون تأیید owner ساخته نشود.
+- **وارد fix شویم؟** خیر — این یک audit است. فقط باید به‌سوی اصلاحِ مبتنی‌بر‌evidence حرکت کنیم.
+
+============================================================
+B) DOCUMENT INVENTORY
+============================================================
+
+ستون‌ها: file path | type | related app | status | priority | why | use-for-execution
+
+**Root / governance**
+- `AGENTS.md` | rule | all | active(reverted to 153-line official) | HIGH | قوانین پروژه؛ اما ارجاعات SSOT خراب (Basteh.txt/fale.txt) | conditional (fix filenames)
+- `new-pin-ui.txt` | unknown | admin-panel? | unknown | LOW | ریشه، محتوا نامعلوم | no
+
+**docs/ (project docs)**
+- `docs/PROJECT_MAP.md` | map | all | active (newest ۱۴۰۵/۰۴/۲۳) | HIGH | **SoT اولویت ۱** برای مسیرهای منبع/وضعیت | YES
+- `docs/DEVELOPMENT_RULES.md` | rule | all | active | HIGH | **SoT اولویت ۲** برای gate/deploy | YES
+- `docs/DATABASE_SOURCE_OF_TRUTH.md` | map | backend/db | active | HIGH | معماری اتصال DB | YES
+- `docs/OMNICHANNEL_AI_AGENT_BLUEPRINT.md` | plan | whatsapp/messenger/backend | active(proposed) | HIGH | بلوپرینت omnichannel (P0 انجام‌شده) | YES
+- `docs/SERVICE_CONTRACTS.md` | contract | all | **stale (۱۴۰۴/۰۴/۲۰)** | MED | قرارداد سرویس‌ها؛ با PROJECT_MAP تناقض در وضعیت deploy | conditional (update datestamp)
+- `docs/SERVICE_HEALTH_MATRIX.md` | audit | all | **stale (۱۴۰۴/۰۴/۲۰)** | MED | ماتریس سلامت؛ ادعای FAIL/BROKEN در deploy | conditional (mark stale)
+- `docs/DB_MIGRATION_READINESS.md` | audit | supabase | active | HIGH | وضعیت دقیق migration/RLS + verification SQL | YES
+- `docs/UI_EXECUTION_CONTRACT.md` | contract | admin/messenger/wholesale | active(Phase0) | MED | قرارداد UI + توکن‌ها | YES
+- `docs/PROJECT_ADDITIONS_REPORT.md` | report | all | active | MED | خلاصه وضعیت ویژگی‌ها | YES (historical-leaning)
+- `docs/PROJECT_TASK_EVIDENCE_AI_MVP_PLAN.md` | plan | backend/admin/messenger | active | HIGH | نقشه MVP پروژه/تسک | YES
+- `docs/P11_PERFORMANCE_EVALUATION_REPORT.md` | report | backend | historical | LOW | گزارش ارزیابی (خلاصه در PROJECT_MAP §Performance) | reference
+- `docs/PHASE2B_REPORTING_API_AUTHORIZATION_FIX_REPORT.md` | report | backend | historical | LOW | گزارش رفع IDOR/auth | reference
+- `docs/PHASE2B_REPORTING_API_FINAL_SMOKE_TEST.md` | test | backend | historical | LOW | اسموک تست ریپورتینگ | reference
+- `docs/retail-scenario-basteh.txt` | rule(text) | whatsapp | active(**SoT واقعی**) | HIGH | سناریوی خرده — نام واقعی (نه Basteh.txt) | YES
+- `docs/wholesale-scenario-fale.txt` | rule(text) | whatsapp | active(**SoT واقعی**) | HIGH | سناریوی عمده — نام واقعی (نه fale.txt) | YES
+- `docs/warranty-scenario.txt` | rule(text) | whatsapp/admin | active(SSOT) | HIGH | سناریوی ۹مرحله‌ای گارانتی | YES
+
+**App-level docs (mostly tiny/legacy)**
+- `admin-panel/README.md` (۱۶ B) | unknown | admin-panel | unknown | LOW | رید می‌نامرئف | no
+- `messenger-app/README.md` | unknown | messenger | unknown | LOW | رید می | no
+- `wholesale-portal/README.md` | unknown | wholesale | unknown | LOW | رید می | no
+- `backend/README.md` | unknown | backend | unknown | LOW | رید می | no
+- `tmp/services/backend/README.md` + `tmp/**` | legacy/scratch | backend | unknown | LOW | پوشه tmp (خارج از SoT) | no
+- `whatsapp-broadcast-api/.vercel/README.txt`, `backend/.vercel/README.txt`, `messenger-app/.vercel/README.txt`, `wholesale-portal/.vercel/README.txt` | deploy note | — | active | LOW | یادداشت Vercel | no
+- `messenger-app/_security_archive/test-login.html.bak` | legacy(archived) | messenger | legacy | LOW | صفحات auth-bypass آرشیو | no (legacy)
+- `supabase/add-reporting-indexes.sql`, `create-meetings-ai-audit.sql` | db(migration) | supabase | active | HIGH | بخشی از migrationها | YES
+
+**Excluded from doc-set:** `node_modules/**` (هزاران فایل وابستگی) و `docs/work/.venv/**` (Python venv برای docx) — غیرپروژه.
+
+============================================================
+C) SOURCE OF TRUTH MATRIX
+============================================================
+
+**۱) Admin Panel**
+- production source: `admin-panel/index.html` (تک‌فایل، React+Babel درون‌خطی) — PROJECT_MAP:62-66
+- legacy/unknown: `admin-panel/dashboard.html` (۷۵۰KB، نامعلوم)، `admin-panel/src/` (خارج از SoT)، `admin-panel/README.md`، `.github/`+`github/` (dup)
+- key docs: PROJECT_MAP §Admin Panel؛ AGENTS §قانون گارانتی
+- confidence: **HIGH** (مسیر در PROJECT_MAP صریح و با line-number تأیید شده)
+- evidence: `admin-panel/index.html` در parent فقط یک فایل tracked (clean)؛ convertToProject واقعی است.
+
+**۲) Backend**
+- production source: `backend/handlers/*.js` + `backend/api/index.js` + `backend/server.js` + `_lib.js`/`_audit.js` — PROJECT_MAP:56-59,120-134
+- legacy/unknown: `backend/query-portal.js` (قرنطینه در `F:\_secret_quarantine\` طبق DATABASE_SOURCE_OF_TRUTH:67)؛ `tmp/services/backend/*` (scratch)
+- key docs: PROJECT_MAP §BackEnd؛ SERVICE_CONTRACTS §1؛ DEVELOPMENT_RULES §۱
+- confidence: **HIGH**
+- evidence: handlerها mount شده در هر دو entrypoint (server.js:133-156 / api/index.js:58-80)
+
+**۳) Wholesale Portal**
+- production source: `wholesale-portal/index.html` — PROJECT_MAP:75-79
+- legacy/unknown: `dashboard.html`(LEGACY), `wholesale-dashboard.jsx`(ORPHAN), `*.bak/*.backup*/*.bak-deeplink`، debug/test/html/js (test.html, simple-test.html, debug_check*.js …) — PROJECT_MAP:359-368
+- key docs: PROJECT_MAP §Wholesale؛ SERVICE_CONTRACTS §4
+- confidence: **MEDIUM** (خروجی static deploy "Loading..." طبق HEALTH_MATRIX → UNKNOWN)
+- evidence: PROJECT_MAP:140-154
+
+**۴) Messenger App**
+- production source: `messenger-app/components/index.jsx` → build → `bundle.min.js` — PROJECT_MAP:68-73, DEVELOPMENT_RULES §۳
+- legacy/unknown: `messenger-app/modules/*` (DEAD CODE)؛ `tmp/apps/wholesale-portal/*` (scratch)؛ `_security_archive/*.bak` (archived)
+- key docs: PROJECT_MAP §Messenger؛ UI_EXECUTION_CONTRACT
+- confidence: **MEDIUM** (تب‌های projects/tasks دمو/محلی‌اند؛ core modules طبق HEALTH_MATRIX "deleted")
+- evidence: agent confirmed INIT_PROJECTS/USERS hardcoded، no /api/* calls
+
+**۵) WhatsApp Broadcast API / UltraMsg**
+- production source: `whatsapp-broadcast-api/api/webhook.js` (+`_webhook-security.js`) — PROJECT_MAP:81-85
+- legacy/unknown: `vercel.json` ghost routes (تبلیغ‌شده، پیاده‌نشده)
+- key docs: PROJECT_MAP §WhatsApp؛ OMNICHANNEL §16
+- confidence: **HIGH** (webhook live، shared-secret gate در P0)
+- evidence: OMNICHANNEL §16 (P0 patch) + agent
+
+**۶) Supabase / Database**
+- SoT for schema: `supabase/*.sql` — PROJECT_MAP §Project Control/database source
+- migration files: create-projects-tasks, create-task-progress-blockers, create-meetings-ai-audit, fix-missing-columns, fix-project-tasks-status-lifecycle, add-reporting-indexes, rls-policies, rls-policies-project-control-addendum, rbac-tables, groups-tables, create-groups-tables, run-all-in-dashboard, schema, storage-attachments, alter-messages-add-files, create-performance-scores
+- RLS/security docs: `supabase/rls-policies.sql` + `rls-policies-project-control-addendum.sql` + DB_MIGRATION_READINESS §B
+- confidence: **HIGH** for file content; **LOW** for "executed in live DB" (UNKNOWN)
+- evidence: DB_MIGRATION_READINESS صریحاً: "هیچ migrationی اجرا نشده"؛ prod status UNKNOWN
+
+**۷) Deployment**
+- allowed deploy target: **Vercel** (serverless functions / static) — SERVICE_CONTRACTS
+- forbidden deploy target: `azarmehr-backend-main.vercel.app` (ممنوع در AGENTS/PROJECT_MAP/DB_SOURCE) — **استفاده نشده** (تأیید شد)
+- deploy rules: فقط با دستور صریح + عبور از preflight gate (`check:db-source`+`check:regression-safety`+`check:preflight`) + تأیید SERVICE_HEALTH_MATRIX — DEVELOPMENT_RULES §۲,§۵
+- confidence: **HIGH**
+- evidence: DEVELOPMENT_RULES:55-77؛ AGENTS:103-133
+
+============================================================
+D) CLAIMS EXTRACTION
+============================================================
+
+فقط ادعاهای مبتنی‌بر سند را آوردم؛ وضعیت با evidence کد/تست مشخص شد.
+
+**C1** "backend handlers (projects/tasks/members/meetings/action-items/reports/performance) پیاده‌شده‌اند" — PROJECT_MAP:188-196, PROJECT_ADDITIONS:29-35 — category: api/db — DONE — evidence: code (server.js/api/index.js mount) — IMPLEMENTED
+**C2** "route parity: ۶ مسیر در هر دو entrypoint mount شد" — PROJECT_MAP:131-133 — api — DONE — IMPLEMENTED
+**C3** "RLS روی ۱۱ جدول فعال؛ ۸ policy برای ۸ تای آن‌ها" — PROJECT_MAP:217-219, rls-policies.sql — db/security — DONE(partial) — evidence: ۳ جدول (task_progress_updates/task_blockers/meeting_action_items) فاقد policy → deny-all — PARTIAL
+**C4** "performance_scores جدول ساخته می‌شود" — create-performance-scores.sql — db — DONE(file) / NOT DONE(executed) — evidence: DB_MIGRATION_READINESS "PROPOSED/NOT EXECUTED" — NOT_IMPLEMENTED(live)
+**C5** "GET /api/reports/users/performance عملیاتی است" — PROJECT_MAP:271, performance-reports.js — api — DONE(handler) / BLOCKED(DB) — PARTIAL
+**C6** "admin-panel convertToProject → POST /api/projects + /api/project-tasks" — PROJECT_MAP:175-183, index.html:1764-1781 — ui/api — DONE — IMPLEMENTED
+**C7** "admin-panel POST notifications" → ۴۰۵ — index.html:1795 + notifications.js(فقط GET/PATCH) — ui/api — BLOCKER — NOT_IMPLEMENTED(POST+table)
+**C8** "ReportsModule فقط CRM sales است؛ مصرف‌کننده‌ای برای /api/reports/users/performance ندارد" — PROJECT_MAP:258-263, index.html:4238-4418 — ui — DONE(as-documented) — IMPLEMENTED(صفحه) / GAP(feature)
+**C9** "meetings/meeting_action_items backend آماده‌اند" — PROJECT_MAP:194-195 — api/db — DONE — IMPLEMENTED
+**C10** "meetings/meeting_action_items هیچ UI ادمینی ندارند" — PROJECT_MAP:411, agent — ui — BLOCKER — NOT_IMPLEMENTED(UI)
+**C11** "messenger projects/tasks tabs محلی/دمو هستند" — PROJECT_MAP:184-187, agent(INIT_PROJECTS/USERS) — ui — UNKNOWN/EXPERIMENTAL — NOT_IMPLEMENTED(live)
+**C12** "messenger chat مستقیم روی Supabase messages (دور زدن /api/chat)" — agent(components/index.jsx:841-847,1024) — ui/db — RISK — PARTIAL
+**C13** "whatsapp webhook shared-secret gate (P0) fail-closed" — OMNICHANNEL §16, _webhook-security.js — whatsapp/security — DONE — IMPLEMENTED
+**C14** "UltraMsg signature verification در webhook" — OMNICHANNEL §16 — whatsapp/security — UNKNOWN (shared-secret جایگزین شد) — UNKNOWN
+**C15** "whatsapp ghost routes → admin UI ۴۰۴" — PROJECT_MAP:163-164, OMNICHANNEL §16 — whatsapp/ui — BLOCKER — NOT_IMPLEMENTED/ghosts
+**C16** "Supabase فقط منبع داده؛ هیچ handler مستقیم به PG وصل نشود" — DEVELOPMENT_RULES §۱, DATABASE_SOURCE:14 — db/rule — RULE — DOCUMENTED_ONLY (کد چک نشد در این pass اما ادعا سازگار)
+**C17** "azarmehr-backend-main.vercel.app ممنوع و استفاده نشده" — AGENTS:289, PROJECT_MAP:49, DB_SOURCE:— — rule — RULE — DOCUMENTED_ONLY (تأیید شد در docs; کد چک نشد)
+**C18** "migrations اجرا نشده‌اند؛ prod DB UNKNOWN" — DB_MIGRATION_READINESS:4,215 — db — BLOCKER — NOT_IMPLEMENTED(live)
+**C19** "groups tables در دو فایل تکراری ساخته می‌شوند" — DB_MIGRATION_READINESS:18 — db — DUPLICATE — CONFLICTING
+**C20** "admin-panel/messenger/wholesale deployed = FAIL/BROKEN/CAUTION" — SERVICE_HEALTH_MATRIX:19-22 — deploy — CONFLICTING با PROJECT_MAP(PRODUCTION) — UNKNOWN(نیازمند live check)
+**C21** "AGENTS.md به docs/Basteh.txt و docs/fale.txt ارجاع می‌دهد" — AGENTS:73-74 — docs — CONFLICTING (فایل‌های واقعی retial-scenario-basteh.txt / wholesale-scenario-fale.txt هستند) — CONFLICTING
+**C22** "هر تغییر backend → npm run check:preflight + syntax + downstream" — DEVELOPMENT_RULES:44, AGENTS:113 — git/test — RULE — enforce before action
+
+============================================================
+E) IMPLEMENTED VS NOT IMPLEMENTED
+============================================================
+
+**۱) FULLY IMPLEMENTED**
+- backend: handlers projects/project-tasks/project-members/meetings/meeting-action-items/reports/performance با RBAC+audit+status-lifecycle — evidence: server.js/api/index.js mount + PROJECT_MAP:188-196. test: node -c pass (ادعا). remaining risk: live DB migration ناموجود → runtime fail.
+- SQL table defs (create-projects-tasks, create-task-progress-blockers, create-meetings-ai-audit, fix-*, rbac, groups) — idempotent — evidence: DB_MIGRATION_READINESS §A. remaining risk: اجرا نشده‌اند.
+- RLS روی ۸ جدول با policy (۸ تا) — evidence: rls-policies.sql. remaining risk: ۳ جدول deny-all.
+- admin-panel: convertToProject → POST /api/projects + /api/project-tasks (connected) — evidence: index.html:1764-1781. remaining risk: notifications ۴۰۵.
+- whatsapp: webhook live + shared-secret gate (P0) — evidence: OMNICHANNEL §16. remaining risk: ghost routes, UltraMsg signature UNKNOWN.
+- route parity ۶ مسیر در هر دو entrypoint — evidence: PROJECT_MAP:131-133.
+
+**۲) PARTIALLY IMPLEMENTED**
+- notifications: done=GET/PATCH handler + UI call; missing=POST handler + table → admin ۴۰۵. blocker=C7. first fix=create notifications table migration + add POST in notifications.js.
+- meetings/meeting_action_items: done=backend+SQL; missing=admin UI. blocker=C10. first fix=build UI در index.html.
+- performance_scores: done=handler + SQL file; missing=execution در DB → calc ۴۰۰. blocker=C4. first fix=execute create-performance-scores.sql.
+- messenger projects/tasks: done=REST/client; missing=live backend connection (demo). first fix=wire به /api/* یا mark demo.
+- chat: done=realtime Supabase; missing=/api/chat مسیر (orphan) + order_chat table. first fix=create order_chat + route consumer.
+- ۳ RLS tables: done=RLS enabled; missing=policy (deny-all). first fix=execute addendum.
+
+**۳) NOT IMPLEMENTED**
+- outbound notifications/reminders/communication sending (push/email/whatsapp داخلی) — promised in PROJECT_TASK_EVIDENCE §۹ (notifications) — missing: هیچ منطق ارسال در backend. severity:HIGH. should we do it? yes (MVP workflow) — needs decision.
+- employee-performance UI در admin-panel — promised PROJECT_MAP:262,331 — missing: UI. severity:MED. should do? yes.
+- `/public-warranty-request` backend route (wholesale calls it) — PROJECT_MAP:150-151 — missing: handler → ۴۰۴. severity:MED.
+- `/api/chat` consumer + `order_chat` table — missing. severity:MED.
+- unified communication store (order_chat vs messages vs crm_communications) — missing: یکپارچه‌سازی. severity:MED.
+- WhatsApp admin UI (ghost routes) — missing. severity:MED.
+
+**۴) UNKNOWN / NEEDS MANUAL CONFIRMATION**
+- live DB migration state (کدام اجرا شدند؟) — why: نیازمند Supabase Dashboard/SQL access. needed: اجرای verification SQL در DB_MIGRATION_READINESS §D. safe next: owner اجرای verification query.
+- deployed health admin/messenger/wholesale — why: SERVICE_HEALTH_MATRIX stale(۱۴۰۴). needed: live GET /[app].vercel.app. safe next: curl health endpoints.
+- `system_role` claim در JWT — why: نیازمند بررسی decode. needed: review _lib.js + JWT_SECRET. safe next: grep auth.jwt() در handlers.
+- UltraMsg signature verification — replaced by shared-secret; UNKNOWN if provider signature exists.
+
+============================================================
+F) CONTRADICTIONS AND DUPLICATES
+============================================================
+
+**Conflicts**
+- **F1** PROJECT_MAP (۱۴۰۵, SoT) می‌گوید ۵ app = PRODUCTION؛ SERVICE_HEALTH_MATRIX (۱۴۰۴, stale) می‌گوید admin FAIL / messenger FAIL / wholesale CAUTION / whatsapp CAUTION. files: PROJECT_MAP.md vs SERVICE_HEALTH_MATRIX.md. risk: HIGH (تصمیم‌گیری deploy غلط). SoT: PROJECT_MAP برای مسیر منبع؛ deploy-health = UNKNOWN. decision from owner? YES.
+- **F2** AGENTS.md:73-74 ارجاع به `docs/Basteh.txt` و `docs/fale.txt`؛ فایل‌های واقعی `docs/retail-scenario-basteh.txt` و `docs/wholesale-scenario-fale.txt`. risk: MED (SSOT خراب). SoT: نام‌های واقعی. decision? YES (اصلاح AGENTS.md).
+- **F3** `groups-tables.sql` و `create-groups-tables.sql` هر دو `groups`+`group_members` را CREATE می‌کنند. risk: MED (conflict اگر هر دو اجرا شوند). SoT: groups-tables.sql (طبق PROJECT_MAP:204). decision? YES.
+- **F4** `run-all-in-dashboard.sql` ادعا می‌کند همه را وصل می‌کند اما فقط RBAC seed + storage + ALTER messages دارد؛ project/task/meeting/performance را ندارد. risk: LOW. SoT: اجرای تک‌تک فایل‌ها به ترتیب.
+- **F5** admin-panel POST /api/notifications (index.html:1795) اما notifications.js فقط GET/PATCH + جدول در SQL نیست → ۴۰۵. risk: HIGH. SoT: باید table+POST اضافه شود.
+- **F6** `/api/chat` mount + chat.js (order_chat) اما order_chat در SQL نیست و هیچ frontend consumer ندارد. risk: MED. SoT: orphan → یا حذف یا تکمیل.
+- **F7** SERVICE_CONTRACTS/HEALTH_MATRIX (۱۴۰۴): "GET /api/health → ۴۰۴ (health.js missing)"; OMNICHANNEL (۱۴۰۵, P0) + agent: "GET health پاسخ برمی‌گرداند". risk: LOW (احتمالاً health.js در P0 اضافه شد و SERVICE_CONTRACTS stale). SoT: live verify. decision? recommended.
+- **F8** messenger = PRODUCTION (PROJECT_MAP) vs "local BROKEN, core modules deleted" (HEALTH_MATRIX/UI_CONTRACT) vs "projects/tasks demo" (PROJECT_MAP/agent). risk: MED. SoT: PROJECT_MAP مسیر منبع؛ اتصال=UNKNOWN/experimental.
+- **F9** performance_scores: PROJECT_ADDITIONS "OPERATIONAL/MIGRATION CLEANED" vs DB_MIGRATION_READINESS "NOT EXECUTED, calc fails, PARTIAL". risk: MED. SoT: DB_MIGRATION_READINESS (اجرا نشده). decision? YES.
+- **F10** backend git origin = `azarmehr-backend` (nested independent) per SERVICE_CONTRACTS; اما parent monorepo اصلاً git نیست، backend/ در parent untracked، و هر app ریپوی nested مستقل دارد. risk: HIGH (governance fragmented). SoT: یک ریپوی واحد یا submodule ثبت‌شده. decision? YES.
+
+**Duplicates**
+- **D1** groups-tables.sql ↔ create-groups-tables.sql (همان جداول). canonical: `groups-tables.sql`. historical: `create-groups-tables.sql`. delete? NO — فقط پیشنهاد.
+- **D2** run-all-in-dashboard.sql ↔ rbac-tables.sql (هر دو user_roles/role_permissions DROP+CREATE). canonical: `rbac-tables.sql`. historical: run-all (seeder).
+- **D3** PROJECT_MAP + SERVICE_CONTRACTS + SERVICE_HEALTH_MATRIX + PROJECT_ADDITIONS + DB_MIGRATION_READINESS همه وضعیت سرویس‌ها را توصیف می‌کنند. canonical: PROJECT_MAP (newest). historical: بقیه.
+
+============================================================
+G) OPERATIONAL BLOCKERS
+============================================================
+
+**HIGH**
+- **G1** notifications: POST handler + table غایب → admin ۴۰۵. evidence: index.html:1795 + notifications.js. severity:HIGH. blocks: admin workflow. diag: grep notifications در supabase (no match). fix: migration + POST. smoke: POST returns 201.
+- **G2** migrations در live DB اجرا نشده. evidence: DB_MIGRATION_READINESS:4,215. blocks: همه runtime. diag: verification SQL §D در Supabase. fix: owner اجرای ordered SQL. smoke: pg_tables/pg_policies queries.
+- **G3** deployed health admin/messenger/wholesale UNKNOWN/FAIL. evidence: HEALTH_MATRIX:19-22 (stale). blocks: operational use. diag: curl live URLs. fix: deploy/re-deploy صحیح. smoke: GET / returns 200 + content.
+- **G4** nested-git governance fragmentation. evidence: SERVICE_CONTRACTS §git origin per app; parent non-git. blocks: source control integrity. diag: git -C每 app remote -v. fix: یک ریپو یا submodule. smoke: n/a.
+
+**MEDIUM**
+- **G5** meetings/meeting_action_items بی‌UI. evidence: PROJECT_MAP:411. fix: build UI. smoke: CRUD در admin.
+- **G6** ۳ RLS tables deny-all. evidence: rls-policies.sql gap. fix: addendum execute. smoke: policy query.
+- **G7** messenger demo + chat bypass. evidence: agent. fix: wire /api/* یا mark demo + route chat. smoke: build+load.
+- **G8** AGENTS.md broken SSOT filenames. evidence: F2. fix: اصلاح (owner approval). smoke: grep references.
+- **G9** whatsapp ghost routes → admin ۴۰۴. evidence: OMNICHANNEL §16. fix: remove یا implement. smoke: no ۴۰۴.
+
+**LOW**
+- **G10** groups sql duplicate (D1). fix: یکی را historical.
+- **G11** docs sprawl/staleness (SERVICE_CONTRACTS/HEALTH_MATRIX stale). fix: datestamp/update یا mark stale.
+- **G12** hardcoded Supabase anon key در wholesale/messenger (security follow-up). fix: proxy به /api/notifications + rotate. smoke: n/a operational.
+
+============================================================
+H) APP/SERVICE EXECUTION STATUS
+============================================================
+
+**۱) admin-panel/**
+- operational: PARTIAL
+- implemented: convertToProject→projects/project-tasks (connected); ReportsModule (CRM); AccessModule
+- not implemented: notifications POST (۴۰۵); meetings/action-items UI; employee-performance UI
+- broken/likely broken: notifications ۴۰۵; deployed=FAIL(per stale matrix)
+- API deps: `/api/projects`,`/api/project-tasks`,`/api/notifications`(broken),`/api/reports`(CRM only)
+- DB deps: projects/project_tasks/project_members (UNKNOWN live)
+- auth deps: JWT (requireAuth/requireAdmin)
+- tests: ندارد (syntax ندارد — JSX)
+- tests missing: browser smoke
+- first blocker: G1 (notifications) + G3 (deploy health)
+- next step: fix notifications + build meetings UI + verify deploy
+
+**۲) backend/**
+- operational: PARTIAL (کد آماده، DB اجرا نشده)
+- implemented: ۶ handler group + RBAC + audit + status lifecycle + route parity + preflight scripts
+- not implemented: notifications POST; /public-warranty-request; /api/chat consumer; outbound notify
+- broken: notifications POST path; order_chat table
+- API deps: mount شده در هر دو entrypoint
+- DB deps: Supabase (service-role) — UNKNOWN live
+- auth deps: _lib.js requireAuth/Role/Admin/SuperAdmin + JWT_SECRET
+- tests: smoke-test.js / smoke-test-nonadmin-auth.js / _sql_test.js (ادعا)
+- tests missing: real integration
+- first blocker: G2 (migrations)
+- next step: اجرای ordered migrations + add notifications POST
+
+**۳) wholesale-portal/**
+- operational: PARTIAL (static deploy "Loading...")
+- implemented: API_BASE/WHATSAPP_API_BASE resolver; static deploy
+- not implemented: /public-warranty-request backend; debug/test/backup files publicly served
+- broken: "Loading..." (API/Supabase issue); direct anon Supabase exposure
+- API deps: VITE_API_BASE, WHATSAPP_API_BASE
+- DB deps: Supabase anon (security follow-up)
+- auth deps: backend hardcoded
+- tests: ندارد
+- tests missing: api connectivity
+- first blocker: G3 + debug files
+- next step: verify API connectivity + cleanup debug files
+
+**۴) messenger-app/**
+- operational: PARTIAL/UNKNOWN (deployed=empty per stale matrix)
+- implemented: build pipeline; chat realtime Supabase; auth/RBAC consumption
+- not implemented: projects/tasks live connection (demo); chat via /api/chat
+- broken: core modules "deleted" per matrix; chat bypasses backend
+- API deps: users/roles/groups (live)؛ projects/tasks (demo)
+- DB deps: Supabase messages (direct)
+- auth deps: Supabase anon (hardcoded key)
+- tests: build:min
+- tests missing: e2e
+- first blocker: G7
+- next step: connect tabs یا mark demo + route chat
+
+**۵) whatsapp-broadcast-api/**
+- operational: PARTIAL (webhook live, UltraMsg signature UNKNOWN)
+- implemented: webhook GET/POST; shared-secret gate (P0); writes warranty_returns/order_requests
+- not implemented: UltraMsg signature verify; ghost-route impl
+- broken: ghost routes → admin ۴۰۴
+- API deps: UltraMsg + Supabase
+- DB deps: Supabase (warranty_returns/order_requests)
+- auth deps: X-Webhook-Secret (ULTRAMSG_WEBHOOK_SECRET)
+- tests: webhook-security.test.js
+- tests missing: live webhook POST smoke
+- first blocker: G9 + set secret in prod
+- next step: remove ghosts + set ULTRAMSG_WEBHOOK_SECRET
+
+**۶) supabase/**
+- operational: UNKNOWN (migrations اجرا نشده)
+- implemented: ۱۲+ migration files (idempotent) + RLS + addendum proposal
+- not implemented: execution در live DB
+- broken: ۳ tables deny-all; performance_scores غایب
+- API deps: n/a
+- DB deps: PostgreSQL
+- auth deps: SUPABASE_SERVICE_ROLE_KEY
+- tests: verification SQL (§D) — اجرا نشده
+- tests missing: live verification
+- first blocker: G2
+- next step: owner اجرای ordered migrations + verification
+
+============================================================
+I) HARD EXECUTION LAW FROM NOW ON
+============================================================
+
+این قانون سخت است؛ هیچ کاری خارج از آن انجام نشود:
+
+**۱) No more random docs**
+- هیچ فایل مستند (.md/.txt) جدید ساخته نشود مگر owner صریحاً تأیید کند.
+- گزارش‌ها فقط در خروجی چت/کنسول باشند مگر درخواست صریحِ ذخیره داده شود.
+
+**۲) One target at a time**
+هر مرحله فقط یکی: admin-panel / backend / wholesale-portal / messenger-app / whatsapp-broadcast-api / supabase / docs-governance.
+
+**۳) One output type at a time**
+هر مرحله فقط یکی: REPORT / FIX / TEST.
+
+**۴) Required step template before action**
+- Step number:
+- Output type: REPORT/FIX/TEST
+- Target app/service:
+- Goal:
+- Scope:
+- Files to read:
+- Files to change:
+- Will change files? yes/no
+- Risk:
+- Stop condition:
+- Smoke test plan:
+
+**۵) Required result template after action**
+- Result:
+- Evidence:
+- Files changed:
+- Tests run:
+- Pass/Fail:
+- Git status:
+- Next exact step:
+
+**۶) No fix without evidence**
+هیچ fix انجام نشود مگر: bug/blocker با file:line/route/evidence مشخص؛ target مشخص؛ source-of-truth مشخص.
+
+**۷) No deploy without smoke test**
+هیچ deploy مگر: local/static smoke PASS + service-specific smoke مشخص + owner اجازه.
+
+**۸) No secret exposure**
+هیچ secret/توکن/کلید/env-value/JWT/cookie/header چاپ نشود؛ فقط نام متغیر.
+
+**۹) No API_BASE hardcode / no forbidden URL**
+API_BASE جدید hardcode نشود؛ `azarmehr-backend-main.vercel.app` استفاده نشود.
+
+**۱۰) Legacy protection**
+روی legacy/deprecated (dashboard.html, modules/*, *.bak, debug_*) تغییر انجام نشود مگر owner تأیید کند.
+
+============================================================
+J) MASTER EXECUTION PLAN
+============================================================
+
+**Step 1** (REPORT · docs-governance)
+- Goal: رفع تناقضات مستندات؛ اعلان SoT قطعی
+- Why first: بدون SoT واحد، هیچ fixی مبتنی‌بر evidence نیست
+- Files: PROJECT_MAP.md, DEVELOPMENT_RULES.md, AGENTS.md, SERVICE_CONTRACTS.md, SERVICE_HEALTH_MATRIX.md
+- Change allowed? no
+- Expected: جدول reconciled در کنسول؛ SERVICE_CONTRACTS/HEALTH_MATRIX علامت "stale"
+- Smoke: n/a
+- Stop: owner تأیید SoT
+
+**Step 2** (TEST · backend)
+- Goal: تأیید سلامت داخلی backend
+- Why: پی‌ساز operational بودن
+- Files: backend/server.js, backend/api/index.js, handlers/*, package.json
+- Change allowed? no
+- Expected: `node -c` PASS؛ `npm run check:preflight` PASS
+- Smoke: node -c backend/server.js backend/api/index.js + npm run check:preflight
+- Stop: gate PASS
+
+**Step 3** (FIX · docs-governance) — *نیازمند owner approval*
+- Goal: اصلاح ارجاعات خراب AGENTS.md (Basteh.txt→retail-scenario-basteh.txt؛ fale.txt→wholesale-scenario-fale.txt) + datestamp SERVICE_CONTRACTS/HEALTH_MATRIX
+- Why: SSOT خراب (F2) باعث سردرگمی می‌شود
+- Files: AGENTS.md, SERVICE_CONTRACTS.md, SERVICE_HEALTH_MATRIX.md
+- Change allowed? yes (پس از approval)
+- Expected: grep references اصلاح شود
+- Smoke: git diff --check
+- Stop: working tree consistent
+
+**Step 4** (FIX · supabase) — *owner/external (Supabase Dashboard)*
+- Goal: اجرای ordered migrations در live DB
+- Why: G2 — بدون آن همه runtime fail
+- Files: create-projects-tasks → create-task-progress-blockers → create-meetings-ai-audit → fix-missing-columns → fix-project-tasks-status-lifecycle → add-reporting-indexes → rls-policies → rls-policies-project-control-addendum → create-performance-scores
+- Change allowed? yes (DB, خارج از repo)
+- Expected: verification SQL §D tables+RLS نشان دهد
+- Smoke: pg_tables/pg_policies queries
+- Stop: همه جداول + RLS حاضرند
+
+**Step 5** (FIX · backend + supabase) — *owner approval*
+- Goal: notifications POST + table (رفع G1)
+- Why: admin ۴۰۵
+- Files: backend/handlers/notifications.js, supabase (notifications table migration)
+- Change allowed? yes
+- Expected: POST /api/notifications → 201
+- Smoke: curl POST test
+- Stop: 201 + table exists
+
+**Step 6** (FIX · admin-panel) — *owner approval*
+- Goal: ساخت UI meetings/meeting_action_items (رفع G5)
+- Why: endpoints آماده، UI ندارد
+- Files: admin-panel/index.html
+- Change allowed? yes
+- Expected: UI loads + CRUD
+- Smoke: browser load + create meeting
+- Stop: عملیاتی
+
+**Step 7** (FIX · messenger-app) — *owner approval*
+- Goal: wire projects/tasks به /api/* یا mark demo؛ route chat via /api/chat (رفع G7)
+- Why: demo/bypass
+- Files: messenger-app/components/index.jsx, supabase (order_chat), backend (chat consumer)
+- Change allowed? yes
+- Expected: build:min PASS + data flow
+- Smoke: npm run build:min + load
+- Stop: عملیاتی
+
+**Step 8** (TEST · all) — *owner approval*
+- Goal: service-specific smoke per SERVICE_CONTRACTS + cross-service
+- Why: تأیید end-to-end
+- Files: همه
+- Change allowed? no
+- Expected: همه green
+- Smoke: health + intent + CRUD
+- Stop: PASS
+
+**Step 9** (FIX · whatsapp-broadcast-api) — *owner approval*
+- Goal: remove ghost routes یا implement؛ set ULTRAMSG_WEBHOOK_SECRET (رفع G9)
+- Why: admin ۴۰۴
+- Files: whatsapp-broadcast-api/vercel.json, api/webhook.js, env
+- Change allowed? yes
+- Expected: no ۴۰۴ ghost؛ health 200
+- Smoke: GET /api/webhook
+- Stop: operational
+
+**Step 10** (DEPLOY · per-app, owner-approved) — *owner approval*
+- Goal: deploy backend→admin→messenger→wholesale با preflight
+- Why: G3
+- Files: همه
+- Change allowed? yes
+- Expected: live health OK
+- Smoke: GET /[app] returns 200+content
+- Stop: operational
+
+============================================================
+K) FIRST 3 ACTIONS ONLY
+============================================================
+
+**Action 1** (REPORT · docs-governance)
+- exact goal: تولید جدول reconciled SoT — PROJECT_MAP+DEVELOPMENT_RULES+مستندات ۱۴۰۵ به‌عنوان SoT؛ SERVICE_CONTRACTS/HEALTH_MATRIX علامت "stale" برای deploy-health
+- exact files: PROJECT_MAP.md, DEVELOPMENT_RULES.md, SERVICE_CONTRACTS.md, SERVICE_HEALTH_MATRIX.md, AGENTS.md
+- exact commands: (فقط خواندن/مقایسه — بدون تغییر)
+- no-change: YES
+- expected output: جدول در کنسول
+
+**Action 2** (TEST · backend)
+- exact goal: تأیید syntax + preflight gate
+- exact files: backend/server.js, backend/api/index.js, handlers/*, package.json
+- exact commands: `node -c backend/server.js backend/api/index.js` و `npm run check:preflight` (بدون تغییر فایل)
+- no-change: YES
+- expected output: PASS/FAIL
+
+**Action 3** (FIX-candidate · docs-governance) — *pending owner approval*
+- exact goal: اصلاح ارجاعات AGENTS.md (Basteh.txt→retail-scenario-basteh.txt؛ fale.txt→wholesale-scenario-fale.txt)
+- exact files: AGENTS.md (خط ۷۳-۷۴)
+- exact commands: edit AGENTS.md (پس از تأیید صریح owner)
+- will change: YES (فقط پس از approval)
+- expected output: grep references اصلاح‌شده؛ git diff --check PASS
+
+> طبق قانون سخت (I) و محدودیت‌های این تسک، **Action ۳ فقط پس از تأیید صریح شما اجرا می‌شود**. Actions ۱ و ۲ بلافاصله و بدون تغییر قابل اجراند.
+
+============================================================
+L) NO-CHANGE CONFIRMATION
+============================================================
+
+- files changed: **no**
+- new files created: **no**
+- files deleted: **no**
+- staged: **no**
+- committed: **no**
+- pushed: **no**
+- deployed: **no**
+- migrations executed: **no**
+- real external messages sent: **no**
+- secrets printed: **no**
+
+============================================================
+دستورات کمکی پیشنهادی
+============================================================
+
+(از خروجی این pass برای مراحل بعدی استفاده شد؛ هیچ دستوری اجرا نشد. گزارش فقط در کنسول است.)

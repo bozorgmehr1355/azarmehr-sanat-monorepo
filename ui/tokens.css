@@ -1,0 +1,107 @@
+/* ui/tokens.css — Shared design tokens for the Azarmehr Sanat UI foundation (Phase 0).
+   Single source of truth for visual tokens. No runtime logic.
+   ASCII-only. Consumed by linking this file, or via ui/tokens.js (window.UI_TOKENS).
+   Mirror of ui/tokens.js — keep both value-synchronized and bump version together. */
+
+:root {
+  /* Color — brand */
+  --ui-color-brand: #D4880E;
+  --ui-color-brand-contrast: #1A1205;
+
+  /* Color — semantic status */
+  --ui-color-success: #1F9D55;
+  --ui-color-warning: #E0A106;
+  --ui-color-danger: #D64545;
+  --ui-color-info: #2F80C2;
+
+  /* Color — neutral / surface */
+  --ui-color-bg: #0F0F0F;
+  --ui-color-surface: #1A1A1A;
+  --ui-color-surface-2: #242424;
+  --ui-color-text: #F5F5F5;
+  --ui-color-text-muted: #9AA0A6;
+  --ui-color-border: #333333;
+
+  /* Color — focus */
+  --ui-color-focus: #7CC4FF;
+
+  /* Typography */
+  --ui-font-family: 'IRANSans', 'Vazirmatn', Tahoma, sans-serif;
+  --ui-font-size-xs: 12px;
+  --ui-font-size-sm: 14px;
+  --ui-font-size-md: 16px;
+  --ui-font-size-lg: 18px;
+  --ui-font-size-xl: 22px;
+  --ui-font-size-2xl: 28px;
+  --ui-line-height-tight: 1.25;
+  --ui-line-height-base: 1.5;
+  --ui-font-weight-regular: 400;
+  --ui-font-weight-medium: 500;
+  --ui-font-weight-bold: 700;
+
+  /* Spacing scale (4px base) */
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 24px;
+  --ui-space-6: 32px;
+  --ui-space-7: 48px;
+  --ui-space-8: 64px;
+
+  /* Radius */
+  --ui-radius-sm: 4px;
+  --ui-radius-md: 8px;
+  --ui-radius-lg: 12px;
+  --ui-radius-xl: 16px;
+  --ui-radius-pill: 999px;
+
+  /* Shadow */
+  --ui-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ui-shadow-2: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --ui-shadow-3: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --ui-shadow-focus: 0 0 0 var(--ui-focus-ring-width) var(--ui-color-focus);
+
+  /* z-index */
+  --ui-z-base: 0;
+  --ui-z-sticky: 100;
+  --ui-z-drawer: 200;
+  --ui-z-modal: 300;
+  --ui-z-toast: 400;
+  --ui-z-tooltip: 500;
+
+  /* Motion */
+  --ui-duration-fast: 120ms;
+  --ui-duration-base: 200ms;
+  --ui-duration-slow: 320ms;
+  --ui-easing-standard: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* Layout widths / breakpoints */
+  --ui-breakpoint-sm: 480px;
+  --ui-breakpoint-md: 768px;
+  --ui-breakpoint-lg: 1024px;
+  --ui-container-max: 1200px;
+  --ui-sidebar-width: 240px;
+
+  /* Focus ring */
+  --ui-focus-ring-width: 3px;
+  --ui-focus-ring-color: var(--ui-color-focus);
+  --ui-focus-ring: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+}
+
+/* RTL/LTR helper classes */
+.ui-ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+.ui-rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.ui-latin-input {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: embed;
+}

@@ -89,8 +89,8 @@
 
 - **architecture:** تک‌فایله (`index.html`)؛ React + Babel درون‌خطی؛ بدون bundler.
 - **entry point:** `admin-panel/index.html`.
-- **API resolution:** تابع `resolveApiBase()` (خط ۱۰۶–۱۲۸) به ترتیب بررسی می‌کند:
-  `window.AZARMEHR_API_BASE` → پارامتر `?apiBase=` → `localStorage.AZARMEHR_API_BASE` → فال‌بک `/api`.
+- **API resolution:** تابع `resolveApiBase()` (خط ۱۰۶–۱۲۷) به ترتیب بررسی می‌کند:
+  `window.AZARMEHR_API_BASE` → پارامتر `?apiBase=` → `localStorage.AZARMEHR_API_BASE` → فال‌بک `https://azarmehr-backend.vercel.app`.
   تابع `api(method, path, body)` (خط ۱۶۷–۱۹۷) آدرس را می‌سازد: `${BASE}/${path}` و پیشوند `/api/` را حذف می‌کند.
 - **modules:** `AccessModule` (مدیریت کاربران)، `ReportsModule` (خط ۴۲۵۰ — ارزیابی عملکرد)،
   گردش کار سفارش→پروژه `convertToProject` (خط ۱۷۶۴)، پنل پروژه‌ها/وظایف.

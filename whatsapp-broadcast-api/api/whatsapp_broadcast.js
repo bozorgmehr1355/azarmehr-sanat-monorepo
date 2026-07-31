@@ -14,7 +14,7 @@
  * Source-of-truth for audience fields: supabase/crm-production-baseline.sql (crm_customers).
  */
 
-const { supabase, cors, requireAdmin } = require('./_lib');
+const { supabase, cors, requireAdmin, requireAuthOrAdmin } = require('./_lib');
 
 function selectRecipientNumber(row) {
   // Prefer: whatsapp → mobile → phone
@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
   // Auth gate — admin JWT only. Fail-closed; no public fallback.
   let me;
   try {
-    me = requireAdmin(req);
+    me = await requireAuthOrAdmin(req);
   } catch (e) {
     return res.status(e.status || 401).json({ error: e.message || 'Unauthorized' });
   }

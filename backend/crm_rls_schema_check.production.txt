@@ -1,0 +1,3 @@
+﻿public|crm_customers|user_id|integer|int4|YES
+public|users|id|uuid|uuid|YES
+public|users|system_role|text|text|YES

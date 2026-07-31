@@ -53,6 +53,40 @@ module.exports = async (req, res) => {
       return res.json(data || []);
     }
 
+    // ─── POST: ایجاد فاکتور ───
+    if (req.method === 'POST') {
+      requireAdmin(req);
+      const body = req.body || {};
+      const allowed = [
+        'order_id', 'customer_id', 'invoice_number', 'invoice_type',
+        'total', 'status', 'notes', 'issue_date', 'sent_at'
+      ];
+      const row = {};
+      for (const [k, v] of Object.entries(body)) {
+        if (allowed.includes(k)) row[k] = v;
+      }
+      if (Object.keys(row).length === 0) {
+        return res.status(400).json({ error: 'هیچ فیلد مجازی ارسال نشده' });
+      }
+
+      const { data, error } = await supabase
+        .from('crm_invoices')
+        .insert(row)
+        .select()
+        .single();
+
+      if (error) {
+        if (error.message?.includes('relation') && error.message?.includes('does not exist')) {
+          return res.status(404).json({
+            error: 'invoices_not_found',
+            message: 'جدول فاکتورها وجود ندارد'
+          });
+        }
+        return res.status(500).json({ error: error.message });
+      }
+      return res.status(201).json(data);
+    }
+
     // ─── PATCH: ویرایش فاکتور ───
     if (req.method === 'PATCH') {
       requireAdmin(req);

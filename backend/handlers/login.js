@@ -92,7 +92,7 @@ module.exports = async (req, res) => {
     const permissions = await getUserPermissions(user.id, user.system_role);
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, system_role: user.system_role, permissions },
+      { id: user.id, name: user.full_name, username: user.username, system_role: user.system_role, permissions },
       JWT_SECRET,
       { expiresIn: '7d' }
     );

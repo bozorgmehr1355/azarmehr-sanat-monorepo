@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html><body>
+<h3>Smoke Test Page</h3>
+<div id="result">Loading...</div>
+<script>
+const apiBase = 'https://whatsapp-broadcast-bedlsa7mj-ams-group.vercel.app';
+const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI3MmY1NGYwLTMzNjQtNDFlMS1iNTg3LWM2NDIzNDU1ZDcwYiIsInVzZXJuYW1lIjoiYm96b3JnbWVociIsInN5c3RlbV9yb2xlIjoic3VwZXJfYWRtaW4iLCJwZXJtaXNzaW9ucyI6WyJvcmdfY2hhcnQ6dmlldyIsIm9yZ19jaGFydDplZGl0IiwiYWRtaW5fcGFuZWw6dmlldyIsInVzZXJzOm1hbmFnZSIsInNldHRpbmdzOm1hbmFnZSIsInBlcm1pc3Npb25zOm1hbmFnZSIsImNoYXQ6dmlldyIsInBheW1lbnRzOnZpZXciLCJjcm06dmlldyJdLCJpYXQiOjE3ODQzNTc4MjUsImV4cCI6MTc4NDk2MjYyNX0.0bFV_AjPoloRN2XxC6ivuoUOzQFwapx1upWdgIrvhJ8';
+async function run() {
+  try {
+    const unauthRes = await fetch(apiBase + '/api/whatsapp-inbox?limit=1&offset=0');
+    document.getElementById('result').innerHTML += '<p>Unauthenticated: ' + unauthRes.status + '</p>';
+    
+    const authRes = await fetch(apiBase + '/api/whatsapp-inbox?limit=5&offset=0', {
+      headers: { 'Authorization': 'Bearer ' + jwt }
+    });
+    const authData = await authRes.json();
+    document.getElementById('result').innerHTML += '<p>Authenticated status: ' + authRes.status + '</p>';
+    document.getElementById('result').innerHTML += '<p>Has data: ' + (authData.data !== undefined) + '</p>';
+    document.getElementById('result').innerHTML += '<p>Has count: ' + (authData.count !== undefined) + '</p>';
+    document.getElementById('result').innerHTML += '<p>Count: ' + authData.count + '</p>';
+    document.getElementById('result').innerHTML += '<p>Data items: ' + (authData.data ? authData.data.length : 0) + '</p>';
+    document.getElementById('result').innerHTML += '<p>raw_payload: ' + JSON.stringify(authData).includes('raw_payload') + '</p>';
+    
+    const pageRes = await fetch(apiBase + '/api/whatsapp-inbox?limit=500&offset=-10', {
+      headers: { 'Authorization': 'Bearer ' + jwt }
+    });
+    const pageData = await pageRes.json();
+    document.getElementById('result').innerHTML += '<p>Pagination status: ' + pageRes.status + '</p>';
+    document.getElementById('result').innerHTML += '<p>Pagination has data: ' + (pageData.data !== undefined) + '</p>';
+    
+    const whRes = await fetch(apiBase + '/api/webhook');
+    const whText = await whRes.text();
+    document.getElementById('result').innerHTML += '<p>Webhook status: ' + whRes.status + '</p>';
+    
+    document.getElementById('result').innerHTML += '<h2>DONE</h2>';
+  } catch(e) {
+    document.getElementById('result').innerHTML += '<p>Error: ' + e.message + '</p>';
+  }
+}
+run();
+<\/script>
+</body></html>
