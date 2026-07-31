@@ -2,6 +2,9 @@ const { supabase, cors, requireAdmin } = require('./_lib');
 
 // ─── Mapping مراحل کاری ──────────────────────────────────────────────────────
 // هر مرحله: stage name, assignee (username), توضیحات
+// ⚠️ جدول هدف این مراحل همیشه crm_order_tasks است (لاجیک پیشرفت workflow_status
+// در crm-order-tasks.js بر اساس همین جدول است). جدول project_tasks صرفاً برای
+// تسک‌های عمومی و متغیر پروژه‌هاست و در این تبدیل دخالت ندارد.
 const TASK_STAGES = [
   {
     stage: 'sales_review',
@@ -103,7 +106,8 @@ module.exports = async (req, res) => {
       return res.status(404).json({ error: 'سفارش پیدا نشد' });
     }
 
-    // ── بررسی: آیا قبلاً tasks ایجاد شده؟ ────────────────────────────────────
+    // ── گاردهای تکراری (idempotency) ─────────────────────────────────────────
+    // ۱) آیا قبلاً مراحل کاری برای این سفارش ساخته شده؟
     const { data: existingTasks } = await supabase
       .from('crm_order_tasks')
       .select('id')
@@ -117,12 +121,47 @@ module.exports = async (req, res) => {
       });
     }
 
-    // ── ساختن آرایه tasks ────────────────────────────────────────────────────
+    // ۲) آیا قبلاً پروژه‌ای برای این سفارش ساخته شده؟
+    const { data: existingProject } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('order_id', parsedId)
+      .limit(1);
+
+    if (existingProject && existingProject.length > 0) {
+      return res.status(409).json({
+        error: 'برای این سفارش قبلاً پروژه ایجاد شده است',
+        order_id: parsedId
+      });
+    }
+
+    // ── گام A: ایجاد پروژه ───────────────────────────────────────────────────
+    // title از نام مشتری (یا شماره سفارش) ساخته می‌شود؛ manager_id = ادمین درخواست‌دهنده
+    const customerName = order.crm_customers?.name || null;
+    const projectTitle = `پروژه فروش ${customerName || '#' + parsedId}`;
+    const projectDescription = order.note || `سفارش شماره ${parsedId}`;
+
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .insert({
+        order_id: parsedId,
+        title: projectTitle,
+        description: projectDescription,
+        manager_id: admin.id,
+        status: 'active'
+      })
+      .select()
+      .single();
+
+    if (projectError) {
+      return res.status(500).json({ error: projectError.message || 'خطا در ایجاد پروژه' });
+    }
+
+    // ── گام B: ایجاد ۸ مرحله کاری ────────────────────────────────────────────
     const paymentType = order.payment_type || 'cash';
     const workflowStatus = order.workflow_status || 'submitted';
 
     const tasks = TASK_STAGES.map((stageDef, index) => {
-      // کپی details و اضافه کردن payment_type
       const stageDetails = {
         ...stageDef.details,
         payment_type: paymentType,
@@ -140,19 +179,21 @@ module.exports = async (req, res) => {
       };
     });
 
-    // ── Bulk insert tasks ────────────────────────────────────────────────────
     const { data: createdTasks, error: insertError } = await supabase
       .from('crm_order_tasks')
       .insert(tasks)
       .select();
 
+    // ── جبران (compensation): اگر ساخت مراحل شکست خورد، پروژهٔ ایجادشده حذف شود ──
+    // تا دیتابیس در وضعیت ناقص (پروژه بدون مراحل) نماند.
     if (insertError) {
+      await supabase.from('projects').delete().eq('id', project.id).select();
       return res.status(500).json({
-        error: insertError.message || 'خطا در ایجاد مراحل کاری'
+        error: insertError.message || 'خطا در ایجاد مراحل کاری — پروژه حذف و عملیات لغو شد'
       });
     }
 
-    // ── ثبت در تاریخچه ───────────────────────────────────────────────────────
+    // ── ثبت در تاریخچه (بهترین‌تلاش — شکستش کل عملیات را لغو نمی‌کند) ───────────
     await supabase
       .from('crm_order_history')
       .insert({
@@ -160,17 +201,26 @@ module.exports = async (req, res) => {
         from_status: workflowStatus,
         to_status: workflowStatus,
         changed_by: admin.username || admin.id?.toString() || 'system',
-        notes: `ایجاد ${tasks.length} مرحله کاری برای سفارش #${parsedId}`,
+        notes: `ایجاد ${tasks.length} مرحله کاری و پروژه «${projectTitle}» برای سفارش #${parsedId}`,
         created_at: new Date().toISOString()
       });
+
+    // ── عضو تیم پروژه (بهترین‌تلاش — هماهنگ با projects.js) ───────────────────
+    try {
+      await supabase
+        .from('project_members')
+        .insert({ project_id: project.id, user_id: admin.id, role: 'manager' });
+    } catch (_) {} // ignore duplicate
 
     // ── Response ─────────────────────────────────────────────────────────────
     return res.status(201).json({
       ok: true,
+      converted: true,
       order_id: parsedId,
       workflow_status: workflowStatus,
       payment_type: paymentType,
       customer_status: order.crm_customers?.status || 'unknown',
+      project: project,
       tasks: createdTasks || [],
       total_stages: createdTasks?.length || 0
     });
