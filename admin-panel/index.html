@@ -31,9 +31,16 @@
       --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
       --font-xs: 10px; --font-sm: 11px; --font-base: 12px; --font-md: 13px; --font-lg: 15px; --font-xl: 18px;
 
-      /* ─── Appearance & Layout tokens (client-side، تنظیم توسط کاربر — localStorage) ─── */
-      --ui-density-padding: 8px;        /* فشرده ۴ / استاندارد ۸ / راحت ۱۲ */
-      --ui-row-height: 40px;            /* ۳۲ / ۴۰ / ۴۸ */
+      /* ─── Appearance & Layout tokens (SSOT — نام‌های کاربری، توسط applyLayoutSettings ست می‌شوند) ─── */
+      --control-height: 40px;           /* ارتفاع دکمه/اینپوت ۳۲..۵۶ */
+      --radius-base: 12px;              /* شعاع گوشه‌ها ۰..۲۴ */
+      --sidebar-w: 320px;               /* عرض سایدبار (باز/جمع‌شده/کشویی) */
+      --table-cell-padding: 8px;        /* فاصله افقی/عمودی سلول‌های جدول */
+      --content-max-w: 100%;            /* حداکثر عرض محتوا (fluid یا boxed) */
+      --ui-table-row-height: 40px;      /* ارتفاع ردیف جدول ۳۲..۵۶ */
+      --ui-table-cell-padding: 8px;     /* فاصله سلول جدول (اسلایدر دقیق) */
+      --ui-density-padding: 8px;        /* فشرده ۴ / استاندارد ۸ / راحت ۱۲ (سازگاری) */
+      --ui-row-height: 40px;            /* ۳۲ / ۴۰ / ۴۸ (سازگاری) */
       --ui-control-height: 40px;        /* ارتفاع دکمه/اینپوت ۳۲..۵۶ */
       --ui-control-radius: 12px;        /* شعاع گوشه‌ها ۰..۲۴ */
       --ui-sidebar-width: 320px;        /* باز ۳۲۰ / جمع‌شده ۶۴ / کشویی ۰ */
@@ -131,13 +138,14 @@
     .ui-table-wrap { overflow:auto; border:1px solid var(--color-border); border-radius: var(--ui-control-radius); }
     .ui-table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; min-width:640px; }
     .ui-table thead th {
-      text-align:right; padding:calc(var(--ui-density-padding) + 3px) 10px;
+      text-align:right; padding:calc(var(--ui-table-cell-padding) + 3px) 10px;
       background:var(--color-surface-alt); color:var(--color-text-muted);
       font-size:11px; font-weight:700; white-space:nowrap; letter-spacing:0.2px;
       border-bottom:1px solid var(--color-border);
     }
     .ui-table tbody td {
-      padding:var(--ui-density-padding) 10px; color:var(--color-text); vertical-align:middle;
+      padding:var(--ui-table-cell-padding) 10px; color:var(--color-text); vertical-align:middle;
+      min-height:var(--ui-table-row-height);
       border-bottom:var(--ui-table-gridlines) solid var(--color-border);
       white-space:nowrap; overflow:hidden; text-overflow:var(--ui-table-cell-ellipsis); max-width:0;
     }
@@ -152,8 +160,17 @@
     html[data-table-sticky-actions="on"] .ui-table tbody td.ui-col-actions { background:var(--color-surface); }
     html[data-table-sticky-actions="on"] .ui-table tbody tr:hover td.ui-col-actions { background:var(--color-surface-alt); }
 
+    /* سایدبار جمع‌شده (collapsed): متن‌ها مخفی، آیکون‌ها وسط‌چین */
+    html[data-sidebar-mode="collapsed"] .side-brand-text { display:none !important; }
+    html[data-sidebar-mode="collapsed"] .side-brand-wrap { justify-content:center; padding:16px 8px !important; }
+    html[data-sidebar-mode="collapsed"] .side-nav-btn { justify-content:center; padding:9px !important; gap:0 !important; }
+    html[data-sidebar-mode="collapsed"] .side-nav-btn .side-label { display:none !important; }
+    html[data-sidebar-mode="collapsed"] .side-foot { justify-content:center; padding:12px 8px !important; }
+    html[data-sidebar-mode="collapsed"] .side-foot .side-label { display:none !important; }
+
     /* عرض محتوا */
     .ui-container { max-width: var(--ui-container-max-width); margin:0 auto; width:100%; }
+    main.ui-container { max-width: var(--content-max-w); }
 </style>
 </head>
 <body>
@@ -206,12 +223,64 @@ const LAYOUT_DEFAULTS = {
   radius: 12,                     // 0..24 px
   sidebarMode: "expanded",        // expanded | collapsed | drawer
   sidebarWidth: 320,              // عرض حالت باز
+  tableRowHeight: 40,             // ارتفاع ردیف جدول 32..56 px
+  tableCellPadding: 8,            // فاصله سلول جدول 2..20 px
   tableStickyHeader: true,
   tableGridlines: false,
   tableWrap: false,               // false → truncate ، true → wrap
   tableStickyActions: true,
   containerWidth: "fluid",        // fluid | boxed1200 | boxed1440
 };
+
+/**
+ * applyLayoutSettings(settings) — SSOT اعمال تنظیمات ظاهری
+ * متغیرهای CSS را مستقیماً روی document.documentElement.style ست کرده و
+ * همان لحظه در localStorage ذخیره می‌کند (با Refresh باقی می‌مانند).
+ */
+function applyLayoutSettings(settings) {
+  const cfg = Object.assign({}, LAYOUT_DEFAULTS, settings || {});
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(cfg)); } catch (e) {}
+
+  const root = document.documentElement;
+  const pad     = { compact:4, standard:8, comfortable:12 }[cfg.density] || 8;
+  const ctlH    = Math.min(56, Math.max(32, Number(cfg.controlHeight) || 40));
+  const rad     = Math.min(24, Math.max(0, Number(cfg.radius) || 12));
+  const rowH    = Math.min(56, Math.max(32, Number(cfg.tableRowHeight) || 40));
+  const cellPad = Math.min(20, Math.max(2, typeof cfg.tableCellPadding === "number" ? cfg.tableCellPadding : pad));
+  const sidebarW = cfg.sidebarMode === "expanded"
+      ? Math.min(440, Math.max(200, Number(cfg.sidebarWidth) || 320))
+      : cfg.sidebarMode === "collapsed" ? 64 : 0;
+  const containerW = cfg.containerWidth === "boxed1200" ? "1200px"
+      : cfg.containerWidth === "boxed1440" ? "1440px" : "100%";
+
+  /* ── نام‌های کاربری (SSOT — کنترل‌پنل) ── */
+  root.style.setProperty("--control-height",   ctlH + "px");
+  root.style.setProperty("--radius-base",      rad + "px");
+  root.style.setProperty("--sidebar-w",        sidebarW + "px");
+  root.style.setProperty("--table-cell-padding", cellPad + "px");
+  root.style.setProperty("--content-max-w",    containerW);
+
+  /* ── نام‌های مصرف‌شده در CSS/کامپوننت‌های فعلی (سازگاری) ── */
+  root.style.setProperty("--ui-density-padding", pad + "px");
+  root.style.setProperty("--ui-row-height",      rowH + "px");
+  root.style.setProperty("--ui-table-row-height", rowH + "px");
+  root.style.setProperty("--ui-table-cell-padding", cellPad + "px");
+  root.style.setProperty("--ui-control-height",   ctlH + "px");
+  root.style.setProperty("--ui-control-radius",   rad + "px");
+  root.style.setProperty("--ui-sidebar-width",    sidebarW + "px");
+  root.style.setProperty("--ui-table-gridlines",  cfg.tableGridlines ? "1px" : "0px");
+  root.style.setProperty("--ui-table-cell-ellipsis", cfg.tableWrap ? "clip" : "ellipsis");
+  root.style.setProperty("--ui-container-max-width", containerW);
+
+  /* ── فلگ‌های ویژگی در html (استیکی/سایدبار) ── */
+  root.dataset.sidebarMode = cfg.sidebarMode;
+  root.dataset.tableStickyHeader = cfg.tableStickyHeader ? "on" : "off";
+  root.dataset.tableStickyActions = cfg.tableStickyActions ? "on" : "off";
+
+  if (typeof window.__onLayoutChange === "function") window.__onLayoutChange(cfg);
+  return cfg;
+}
+
 const LayoutEngine = {
   key: LAYOUT_KEY,
   defaults: LAYOUT_DEFAULTS,
@@ -222,32 +291,15 @@ const LayoutEngine = {
     } catch (e) { return Object.assign({}, LAYOUT_DEFAULTS); }
   },
   save(cfg) { try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(cfg)); } catch (e) {} },
-  apply(cfg) {
-    const root = document.documentElement;
-    const pad  = { compact:4, standard:8, comfortable:12 }[cfg.density] || 8;
-    const rowH = { compact:32, standard:40, comfortable:48 }[cfg.density] || 40;
-    root.style.setProperty("--ui-density-padding", pad + "px");
-    root.style.setProperty("--ui-row-height", rowH + "px");
-    root.style.setProperty("--ui-control-height", Math.min(56, Math.max(32, Number(cfg.controlHeight)||40)) + "px");
-    root.style.setProperty("--ui-control-radius", Math.min(24, Math.max(0, Number(cfg.radius)||12)) + "px");
-    const sidebarW = cfg.sidebarMode === "expanded" ? (Number(cfg.sidebarWidth)||320) : cfg.sidebarMode === "collapsed" ? 64 : 0;
-    root.style.setProperty("--ui-sidebar-width", sidebarW + "px");
-    root.dataset.sidebarMode = cfg.sidebarMode;
-    root.style.setProperty("--ui-table-gridlines", cfg.tableGridlines ? "1px" : "0px");
-    root.style.setProperty("--ui-table-cell-ellipsis", cfg.tableWrap ? "clip" : "ellipsis");
-    root.dataset.tableStickyHeader = cfg.tableStickyHeader ? "on" : "off";
-    root.dataset.tableStickyActions = cfg.tableStickyActions ? "on" : "off";
-    root.style.setProperty("--ui-container-max-width", cfg.containerWidth === "boxed1200" ? "1200px" : cfg.containerWidth === "boxed1440" ? "1440px" : "100%");
-    if (typeof window.__onLayoutChange === "function") window.__onLayoutChange(cfg);
-    return cfg;
-  },
+  apply(cfg) { return applyLayoutSettings(cfg); },
   reset() {
     const d = Object.assign({}, LAYOUT_DEFAULTS);
     this.save(d);
     return this.apply(d);
   }
 };
-LayoutEngine.apply(LayoutEngine.get());
+applyLayoutSettings(LayoutEngine.get());
+window.applyLayoutSettings = applyLayoutSettings;
 window.LayoutEngine = LayoutEngine;
 
 const C = {
@@ -286,7 +338,7 @@ const BH = { sm:32, md:36, lg:40, xl:44 };
 const cardStyle = { 
   background: C.surface, 
   border: `1px solid ${C.border}`, 
-  borderRadius: 4, 
+  borderRadius: "var(--ui-control-radius)", 
   padding: 16, 
   boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
   transition: "all 0.12s ease",
@@ -7732,18 +7784,17 @@ function AppearancePanel({ me, showToast }) {
   const set = function(k, v) {
     const next = Object.assign({}, cfg, { [k]: v });
     setCfg(next);
-    LayoutEngine.save(next);
-    LayoutEngine.apply(next);
+    applyLayoutSettings(next); // ست فوری روی documentElement + ذخیره در localStorage
   };
   const reset = function() {
-    const d = LayoutEngine.reset();
+    const d = applyLayoutSettings(Object.assign({}, LAYOUT_DEFAULTS));
     setCfg(d);
     showToast("تنظیمات ظاهری به حالت پیش‌فرض بازگشت");
   };
 
   const Card = function({ icon, title, desc, children }) {
     return (
-      <div style={{ background:C.surface, border:"1px solid "+C.border, borderRadius:16, padding:18, marginBottom:14 }}>
+      <div style={{ background:C.surface, border:"1px solid "+C.border, borderRadius:"var(--ui-control-radius)", padding:18, marginBottom:14 }}>
         <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
           <Ic name={icon} size={18} color={C.primary} />
           <h3 style={{ fontSize:14, fontWeight:700, color:C.text }}>{title}</h3>
@@ -7759,8 +7810,8 @@ function AppearancePanel({ me, showToast }) {
         {options.map(function(o){
           const active = o[0] === value;
           return (
-            <button key={o[0]} onClick={function(){ onChange(o[0]); }}
-              style={{ padding:"7px 14px", borderRadius:10, cursor:"pointer", fontSize:12, fontWeight:600,
+            <button key={o[0]} onClick={function(){ onChange(o[0]); }} className="ui-btn"
+              style={{ padding:"7px 14px", minHeight:"var(--ui-control-height)", borderRadius:"var(--ui-control-radius)", cursor:"pointer", fontSize:12, fontWeight:600,
                 border:"1px solid "+(active?C.primary:C.border),
                 background: active?C.primaryDim:"transparent", color: active?C.primary:C.textMuted }}>
               {o[1]}
@@ -7794,46 +7845,84 @@ function AppearancePanel({ me, showToast }) {
     );
   };
 
+  // ردیف‌های پیش‌نمایش زنده جدول (همان کلاس‌های ui-table واقعی)
+  const previewRows = [
+    { id:"T-101", title:"ثبت شاهد تسک فروش", status:"در حال انجام", col:C.cyan },
+    { id:"T-102", title:"بررسی لاگ عملیات",  status:"در انتظار",     col:C.warning },
+    { id:"T-103", title:"تأیید پیش‌فاکتور",   status:"تکمیل",        col:C.success },
+  ];
+
   return (
-    <div style={{ animation:"fadeUp 0.3s ease", maxWidth:720 }}>
+    <div style={{ animation:"fadeUp 0.3s ease", maxWidth:760 }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, flexWrap:"wrap", gap:10 }}>
         <div>
           <h2 style={{ fontSize:16, color:C.text, fontWeight:600, marginBottom:2 }}>ظاهر و چیدمان</h2>
-          <p style={{ fontSize:12, color:C.textDim }}>تغییرات بلافاصله روی همین صفحه اعمال می‌شود و در مرورگر ذخیره می‌ماند.</p>
+          <p style={{ fontSize:12, color:C.textDim }}>تغییرات به‌صورت زنده روی همین صفحه و همه بخش‌ها اعمال می‌شود و در مرورگر ذخیره می‌ماند.</p>
         </div>
         <Btn label="بازنشانی به پیش‌فرض" icon="refresh" small outline onClick={reset} />
       </div>
 
-      <Card icon="rows" title="چگالی رابط" desc="فاصله‌گذاری و ارتفاع ردیف‌های جدول و کارت‌ها">
-        <Seg options={[["compact","فشرده"],["standard","استاندارد"],["comfortable","راحت"]]} value={cfg.density} onChange={function(v){ set("density", v); }} />
+      <Card icon="maximize" title="اندازه کنترل‌ها" desc="ارتفاع دکمه‌ها و فیلدها و شعاع گوشه‌ها — اسلایدرهای پیوسته">
+        <SliderRow label="ارتفاع دکمه/اینپوت (--control-height)" value={cfg.controlHeight} min={32} max={56} step={2} unit="px" onChange={function(v){ set("controlHeight", v); }} />
+        <SliderRow label="شعاع گوشه‌ها (--radius-base)" value={cfg.radius} min={0} max={24} step={2} unit="px" onChange={function(v){ set("radius", v); }} />
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:8, padding:"10px 12px", background:C.surfaceAlt, borderRadius:"var(--ui-control-radius)" }}>
+          <input style={{ ...iStyle, flex:1 }} defaultValue="نمونه فیلد — ارتفاع و گوشه‌ها" />
+          <Btn label="دکمه نمونه" small onClick={function(){}} />
+        </div>
       </Card>
 
-      <Card icon="maximize" title="اندازه کنترل‌ها" desc="ارتفاع دکمه‌ها و فیلدها و شعاع گوشه‌ها">
-        <SliderRow label="ارتفاع دکمه/اینپوت" value={cfg.controlHeight} min={32} max={56} step={2} unit="px" onChange={function(v){ set("controlHeight", v); }} />
-        <SliderRow label="شعاع گوشه‌ها" value={cfg.radius} min={0} max={24} step={2} unit="px" onChange={function(v){ set("radius", v); }} />
-      </Card>
-
-      <Card icon="layout" title="نوار کناری" desc="کشویی فقط در موبایل مجاز است؛ در دسکتاپ باز یا جمع‌شده">
-        <Seg options={[["expanded","باز (۳۲۰px)"],["collapsed","جمع‌شده (۶۴px)"],["drawer","کشویی"]]} value={cfg.sidebarMode} onChange={function(v){ set("sidebarMode", v); }} />
+      <Card icon="layout" title="نوار کناری" desc="عرض سایدبار و حالت آن؛ کشویی فقط در موبایل مجاز است">
+        <Seg options={[["expanded","باز"],["collapsed","جمع‌شده"],["drawer","کشویی"]]} value={cfg.sidebarMode} onChange={function(v){ set("sidebarMode", v); }} />
         {cfg.sidebarMode === "expanded" && (
           <div style={{ marginTop:12 }}>
-            <SliderRow label="عرض حالت باز" value={cfg.sidebarWidth} min={240} max={400} step={8} unit="px" onChange={function(v){ set("sidebarWidth", v); }} />
+            <SliderRow label="عرض حالت باز (--sidebar-w)" value={cfg.sidebarWidth} min={200} max={400} step={8} unit="px" onChange={function(v){ set("sidebarWidth", v); }} />
           </div>
+        )}
+        {cfg.sidebarMode === "collapsed" && (
+          <div style={{ fontSize:11, color:C.warning, marginTop:10 }}>در حالت جمع‌شده فقط آیکون‌ها نمایش داده می‌شوند (۶۴px).</div>
         )}
         {cfg.sidebarMode === "drawer" && (
           <div style={{ fontSize:11, color:C.warning, marginTop:10 }}>حالت کشویی برای دسکتاپ توصیه نمی‌شود؛ در دسکتاپ از حالت «باز» استفاده کنید.</div>
         )}
       </Card>
 
-      <Card icon="table" title="جدول‌ها" desc="تنظیمات نمایش جدول‌های استاندارد (وظایف، لاگ، پیش‌نویس‌ها)">
+      <Card icon="table" title="جدول‌ها" desc="تنظیمات دقیق جدول‌های استاندارد (وظایف، لاگ، پیش‌نویس‌ها) — پیش‌نمایش زنده پایین">
+        <SliderRow label="ارتفاع ردیف جدول (--ui-table-row-height)" value={cfg.tableRowHeight} min={32} max={56} step={2} unit="px" onChange={function(v){ set("tableRowHeight", v); }} />
+        <SliderRow label="فاصله سلول‌ها (--table-cell-padding)" value={cfg.tableCellPadding} min={2} max={20} step={1} unit="px" onChange={function(v){ set("tableCellPadding", v); }} />
         <Toggle label="سرستون چسبان (sticky header)" value={cfg.tableStickyHeader} onChange={function(v){ set("tableStickyHeader", v); }} />
         <Toggle label="ستون عملیات چسبان" value={cfg.tableStickyActions} onChange={function(v){ set("tableStickyActions", v); }} />
         <Toggle label="خطوط افقی بین ردیف‌ها" value={cfg.tableGridlines} onChange={function(v){ set("tableGridlines", v); }} />
         <Toggle label="شکستن متن طولانی در سلول" value={cfg.tableWrap} onChange={function(v){ set("tableWrap", v); }} />
+        <div className="ui-table-wrap" style={{ marginTop:12, maxHeight:200 }}>
+          <table className="ui-table">
+            <thead>
+              <tr>
+                <th>شناسه</th>
+                <th>عنوان تسک</th>
+                <th>وضعیت</th>
+                <th className="ui-col-actions">عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {previewRows.map(function(r){
+                return (
+                  <tr key={r.id}>
+                    <td>{r.id}</td>
+                    <td>{r.title}</td>
+                    <td><span style={{ padding:"2px 10px", borderRadius:20, fontSize:10, fontWeight:600, background:r.col+"22", color:r.col }}>{r.status}</span></td>
+                    <td className="ui-col-actions">
+                      <button className="ui-btn" style={{ padding:"2px 12px", fontSize:11, background:"transparent", border:"1px solid "+C.borderLight, color:C.textMuted, cursor:"pointer", borderRadius:"var(--ui-control-radius)" }}>ویرایش</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
-      <Card icon="minimize" title="عرض محتوا" desc="عرض حداکثر بدنه صفحات">
-        <Seg options={[["fluid","تمام عرض"],["boxed1200","محدود ۱۲۰۰px"],["boxed1440","محدود ۱۴۴۰px"]]} value={cfg.containerWidth} onChange={function(v){ set("containerWidth", v); }} />
+      <Card icon="minimize" title="عرض محتوا" desc="تمام‌عرض (Fluid) یا جعبه‌ای با حداکثر عرض محدود (Boxed)">
+        <Seg options={[["fluid","تمام عرض (Fluid)"],["boxed1200","محدود ۱۲۰۰px"],["boxed1440","محدود ۱۴۴۰px"]]} value={cfg.containerWidth} onChange={function(v){ set("containerWidth", v); }} />
       </Card>
     </div>
   );
@@ -8192,7 +8281,7 @@ function Sidebar({ tab, setTab, me, onLogout, onChangePassword, isMobile, open, 
     transition:"transform 0.28s ease, visibility 0.28s ease",
     boxShadow: open ? "-6px 0 32px #0008" : "none"
   } : {
-    width:"var(--ui-sidebar-width, 320px)", height:"100vh",
+    width:"var(--sidebar-w, var(--ui-sidebar-width, 320px))", height:"100vh",
     background:`linear-gradient(180deg, ${C.surface} 0%, #161616 100%)`,
     borderLeft:`1px solid ${C.border}`, borderRight:`2px solid #D4880E11`,
     display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto",
@@ -8205,16 +8294,16 @@ function Sidebar({ tab, setTab, me, onLogout, onChangePassword, isMobile, open, 
           <Ic name="close" size={20} color={C.textDim} />
         </button>
       )}
-      <div style={{ padding:"20px 16px 16px", borderBottom:`1px solid ${C.border}` }}>
+      <div className="side-brand-wrap" style={{ padding:"20px 16px 16px", borderBottom:`1px solid ${C.border}` }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <div style={{ width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center" }}>
             <svg viewBox="0 0 1597.09 1256.73" style={{ width:36, height:36 }} xmlns="http://www.w3.org/2000/svg">
               <path fill="#D1D3D4" d="M32.12,800.55c5.51,37.78,23.61,71.79,52.02,101.42c24.63,25.68,57.02,48.03,95.7,66.58c124.95,59.95,315.53,80.27,521.98,45.1c161.02-27.41,303.14-83.72,406.19-153.93c15.45-10.53,4.94-37.08-12.43-31.46c-67.51,21.84-142.36,40.31-221.71,53.83c-302.01,51.45-562.33,13.23-608.42-84.92c-0.42-0.91-0.82-1.81-1.2-2.72c-2.55-5.95-4.31-12.13-5.23-18.53c-16.65-113.64,231.63-250.37,554.57-305.36c110.39-18.8,215.21-25.62,306.08-21.88c-111.74-43.28-245.77-68.52-389.88-68.52c-104.25,0-203.22,13.21-292.3,36.91C183.05,499.71,10.79,654.94,32.12,800.55"/>
-              <path fill="#D1D3D4" d="M471.02,1137.2c111.72,43.28,245.7,68.48,389.77,68.48c104.42,0,203.56-13.23,292.74-37.02c254.21-82.7,426.22-237.85,404.88-383.38c-5.51-37.75-23.61-71.79-52.02-101.38c-24.61-25.68-57-48.05-95.66-66.62c-124.97-59.95-315.51-80.28-522-45.1c-160.99,27.43-303.14,83.72-406.17,153.95c-15.45,10.51-4.96,37.06,12.41,31.44c67.53-21.84,142.38-40.29,221.73-53.81c302-51.45,562.33-13.21,608.44,84.9c0.4,0.91,0.78,1.81,1.18,2.72c2.53,5.97,4.3,12.16,5.23,18.53c16.65,113.64-231.63,250.37-554.57,305.38C666.63,1134.1,561.83,1140.91,471.02,1137.2"/>
+              <path fill="#D1D3D4" d="M471.02,1137.2c111.72,43.28,245.7,68.48,389.77,68.48c104.42,0,203.56-13.23,292.74-37.02c254.21-82.7,426.22-237.85,404.88-383.38c-5.51-37.75-23.61-71.79-52.02-101.38-24.61-25.68-57-48.05-95.66-66.62-124.97-59.95-315.51-80.28-522-45.1-160.99,27.43-303.14,83.72-406.17,153.95-15.45,10.51-4.96,37.06,12.41,31.44c67.53-21.84,142.38-40.29,221.73-53.81c302-51.45,562.33-13.21,608.44,84.9c0.4,0.91,0.78,1.81,1.18,2.72c2.53,5.97,4.3,12.16,5.23,18.53c16.65,113.64-231.63,250.37-554.57,305.38C666.63,1134.1,561.83,1140.91,471.02,1137.2"/>
               <path fill="#FDB913" d="M958.52,180.31c0,78.1-63.33,141.43-141.43,141.43s-141.43-63.33-141.43-141.43S738.99,38.88,817.09,38.88C895.19,38.88,958.52,102.21,958.52,180.31"/>
             </svg>
           </div>
-          <div>
+          <div className="side-brand-text">
             <div style={{ fontSize:12, fontWeight:700, color:C.text }}>شرکت آذرمهر صنعت</div>
             <div style={{ fontSize:10, color:C.textDim }}>گروه محصولات غذایی عقرب</div>
           </div>
@@ -8228,16 +8317,16 @@ function Sidebar({ tab, setTab, me, onLogout, onChangePassword, isMobile, open, 
               const locked = item.saOnly && !isSA;
               const active = tab===item.key;
               return (
-                <button key={item.key} onClick={() => !locked && handleNav(item.key)} style={{
+                <button key={item.key} onClick={() => !locked && handleNav(item.key)} className="side-nav-btn" style={{
                   display:"flex", alignItems:"center", gap:10, width:"100%", padding:"9px 12px",
-                  borderRadius:10, border:"none", cursor:locked?"not-allowed":"pointer", fontFamily:FF,
+                  borderRadius:"var(--ui-control-radius)", border:"none", cursor:locked?"not-allowed":"pointer", fontFamily:FF,
                   fontSize:13, marginBottom:2, textAlign:"right", whiteSpace:"nowrap", overflow:"hidden",
                   background:active?C.primaryDim:"transparent",
                   color:locked?C.textMuted:active?C.primary:C.textDim,
                   transition:"all 0.15s"
                 }}>
                   <Ic name={item.icon} size={16} color={locked?C.textMuted:active?C.primary:C.textDim} />
-                  <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis" }}>{item.label}</span>
+                  <span className="side-label" style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis" }}>{item.label}</span>
                   {locked && <Ic name="lock" size={12} color={C.textMuted} />}
                 </button>
               );
@@ -8245,21 +8334,21 @@ function Sidebar({ tab, setTab, me, onLogout, onChangePassword, isMobile, open, 
           </div>
         ))}
       </nav>
-      <div style={{ padding:"12px 16px", borderTop:`1px solid ${C.border}` }}>
+      <div className="side-foot" style={{ padding:"12px 16px", borderTop:`1px solid ${C.border}` }}>
         <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
           <div style={{ width:32, height:32, borderRadius:"50%", background:C.primaryDim, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, color:C.primary }}>{me?.name?.charAt(0)||"A"}</div>
           <div style={{ flex:1, overflow:"hidden" }}>
-            <div style={{ fontSize:12, fontWeight:600, color:C.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me?.name}</div>
-            <div style={{ fontSize:10, color:C.textDim }}>{me?.system_role==="super_admin"?"مدیر ارشد":me?.system_role==="admin"?"ادمین":"مشاهده‌گر"}</div>
+            <div className="side-label" style={{ fontSize:12, fontWeight:600, color:C.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me?.name}</div>
+            <div className="side-label" style={{ fontSize:10, color:C.textDim }}>{me?.system_role==="super_admin"?"مدیر ارشد":me?.system_role==="admin"?"ادمین":"مشاهده‌گر"}</div>
           </div>
         </div>
         <button onClick={(e) => { e.stopPropagation(); onChangePassword(); }} style={{ display:"flex", alignItems:"center", gap:8, width:"100%", padding:"8px 10px", borderRadius:8, border:`1px solid ${C.border}`, cursor:"pointer", fontFamily:FF, fontSize:12, background:"transparent", color:C.textDim, marginBottom:6 }}>
           <Ic name="lock" size={14} color={C.textDim} />
-          تغییر رمز
+          <span className="side-label">تغییر رمز</span>
         </button>
         <button onClick={onLogout} style={{ display:"flex", alignItems:"center", gap:8, width:"100%", padding:"8px 10px", borderRadius:8, border:`1px solid ${C.border}`, cursor:"pointer", fontFamily:FF, fontSize:12, background:"transparent", color:C.textDim }}>
           <Ic name="logout" size={14} color={C.textDim} />
-          خروج از حساب
+          <span className="side-label">خروج از حساب</span>
         </button>
       </div>
     </aside>
@@ -8405,7 +8494,7 @@ function App() {
       )}
       <Sidebar tab={tab} setTab={setTab} me={me} onLogout={logout} onChangePassword={openChangePassword}
                isMobile={isMobile} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <main style={{ flex:1, padding:isMobile?12:24, paddingBottom:isMobile?70:24, overflowY:"auto", overflowX:"hidden", minWidth:0 }}>
+      <main className="ui-container" style={{ flex:1, padding:isMobile?12:24, paddingBottom:isMobile?70:24, overflowY:"auto", overflowX:"hidden", minWidth:0, maxWidth:"var(--content-max-w)", margin:"0 auto" }}>
         {isMobile && (
           <div style={{ display:"flex", alignItems:"center", marginBottom:14, paddingBottom:12, borderBottom:`1px solid ${C.border}` }}>
             <button onClick={() => setSidebarOpen(true)}
