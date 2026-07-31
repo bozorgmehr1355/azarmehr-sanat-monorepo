@@ -30,11 +30,21 @@
       --space-sm: 8px; --space-md: 12px; --space-lg: 16px; --space-xl: 20px; --space-xxl: 24px;
       --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
       --font-xs: 10px; --font-sm: 11px; --font-base: 12px; --font-md: 13px; --font-lg: 15px; --font-xl: 18px;
+
+      /* ─── Appearance & Layout tokens (client-side، تنظیم توسط کاربر — localStorage) ─── */
+      --ui-density-padding: 8px;        /* فشرده ۴ / استاندارد ۸ / راحت ۱۲ */
+      --ui-row-height: 40px;            /* ۳۲ / ۴۰ / ۴۸ */
+      --ui-control-height: 40px;        /* ارتفاع دکمه/اینپوت ۳۲..۵۶ */
+      --ui-control-radius: 12px;        /* شعاع گوشه‌ها ۰..۲۴ */
+      --ui-sidebar-width: 320px;        /* باز ۳۲۰ / جمع‌شده ۶۴ / کشویی ۰ */
+      --ui-container-max-width: 100%;   /* fluid یا ۱۲۰۰/۱۴۴۰ */
+      --ui-table-gridlines: 0px;        /* ۰ = بدون خط، ۱px = نمایش خط */
+      --ui-table-cell-ellipsis: ellipsis; /* ellipsis یا clip */
     }
 
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; font-family: 'IRANSans', Tahoma, Arial, sans-serif !important; }
     html, body, #root { height:100%; width:100%; }
-    body { background:var(--color-bg); direction:rtl; font-family:'IRANSans',Tahoma,sans-serif; overflow:hidden; color:var(--color-text); }
+    body { background:var(--color-bg); direction:rtl; font-family:'IRANSans',Tahoma,sans-serif; overflow:auto; color:var(--color-text); }
     @keyframes spin      { to { transform:rotate(360deg); } }
     @keyframes fadeUp    { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
@@ -56,7 +66,30 @@
     .tr-hover-alt:nth-child(even):hover { background:#222222; }
     #root tr:hover { background:#222222; }
     .orders-mobile { display:none; }
-    @media (max-width: 768px) {
+
+    /* === GRID-TABLE: Unified grid table stabilization === */
+    .grid-table { overflow-x: auto !important; }
+    .grid-table > div { min-width: 0; }
+    .cell-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+    /* === PATCH-1: Orders Table Stabilization === */
+    .orders-desktop > div {              /* grid container */
+      min-width: 740px;                  /* prevent column collapse */
+    }
+    .orders-desktop > div > div {        /* every cell: header + data */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-height: 48px;
+      min-width: 0;
+    }
+    .orders-desktop > div > div > span { /* badges / tags inside cells */
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 900px) {
       .orders-desktop { display:none !important; }
       .orders-mobile { display:flex !important; }
       .pdf-actions-row { flex-direction:column !important; gap:8px !important; }
@@ -85,7 +118,43 @@
       #invoice-print tr, #invoice-print td, #invoice-print th { break-inside:avoid; }
       .no-print { display:none !important; }
     }
-  </style>
+  .grid-table > div { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* === Appearance & Layout primitives (کنترل‌پنل ظاهری — مصرف‌شده در Tasks / Audit / AI Drafts) === */
+    /* ارتفاع و شعاع کنترل‌ها از توکن‌ها پیروی می‌کنند */
+    input, textarea, select { min-height: var(--ui-control-height); border-radius: var(--ui-control-radius); }
+    input[type="range"] { min-height: 0; border-radius: 4px; }
+    button { transition: all 0.12s ease; }
+    .ui-btn { min-height: var(--ui-control-height); border-radius: var(--ui-control-radius); }
+
+    /* جدول استاندارد فاز ۱ */
+    .ui-table-wrap { overflow:auto; border:1px solid var(--color-border); border-radius: var(--ui-control-radius); }
+    .ui-table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; min-width:640px; }
+    .ui-table thead th {
+      text-align:right; padding:calc(var(--ui-density-padding) + 3px) 10px;
+      background:var(--color-surface-alt); color:var(--color-text-muted);
+      font-size:11px; font-weight:700; white-space:nowrap; letter-spacing:0.2px;
+      border-bottom:1px solid var(--color-border);
+    }
+    .ui-table tbody td {
+      padding:var(--ui-density-padding) 10px; color:var(--color-text); vertical-align:middle;
+      border-bottom:var(--ui-table-gridlines) solid var(--color-border);
+      white-space:nowrap; overflow:hidden; text-overflow:var(--ui-table-cell-ellipsis); max-width:0;
+    }
+    .ui-table tbody tr:hover td { background:var(--color-surface-alt); }
+    .ui-table td.ui-cell-wrap { white-space:normal; max-width:none; overflow:visible; }
+    html[data-table-sticky-header="on"] .ui-table thead th { position:sticky; top:0; z-index:3; }
+    html[data-table-sticky-actions="on"] .ui-table thead th.ui-col-actions,
+    html[data-table-sticky-actions="on"] .ui-table tbody td.ui-col-actions {
+      position:sticky; left:0; z-index:2; background:var(--color-surface-alt);
+      box-shadow:-4px 0 0 var(--color-surface), 0 1px 0 var(--color-border);
+    }
+    html[data-table-sticky-actions="on"] .ui-table tbody td.ui-col-actions { background:var(--color-surface); }
+    html[data-table-sticky-actions="on"] .ui-table tbody tr:hover td.ui-col-actions { background:var(--color-surface-alt); }
+
+    /* عرض محتوا */
+    .ui-container { max-width: var(--ui-container-max-width); margin:0 auto; width:100%; }
+</style>
 </head>
 <body>
 <div id="root"></div>
@@ -128,6 +197,58 @@ function resolveApiBase() {
   return 'https://azarmehr-backend.vercel.app/api';
 }
 const API_BASE = resolveApiBase();
+
+/* ═══════════════════════════ APPEARANCE & LAYOUT ENGINE (client-side — localStorage) ═══════════════ */
+const LAYOUT_KEY = "azarmehr_layout_v1";
+const LAYOUT_DEFAULTS = {
+  density: "standard",            // compact | standard | comfortable
+  controlHeight: 40,              // 32..56 px
+  radius: 12,                     // 0..24 px
+  sidebarMode: "expanded",        // expanded | collapsed | drawer
+  sidebarWidth: 320,              // عرض حالت باز
+  tableStickyHeader: true,
+  tableGridlines: false,
+  tableWrap: false,               // false → truncate ، true → wrap
+  tableStickyActions: true,
+  containerWidth: "fluid",        // fluid | boxed1200 | boxed1440
+};
+const LayoutEngine = {
+  key: LAYOUT_KEY,
+  defaults: LAYOUT_DEFAULTS,
+  get() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(LAYOUT_KEY) || "{}");
+      return Object.assign({}, LAYOUT_DEFAULTS, raw);
+    } catch (e) { return Object.assign({}, LAYOUT_DEFAULTS); }
+  },
+  save(cfg) { try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(cfg)); } catch (e) {} },
+  apply(cfg) {
+    const root = document.documentElement;
+    const pad  = { compact:4, standard:8, comfortable:12 }[cfg.density] || 8;
+    const rowH = { compact:32, standard:40, comfortable:48 }[cfg.density] || 40;
+    root.style.setProperty("--ui-density-padding", pad + "px");
+    root.style.setProperty("--ui-row-height", rowH + "px");
+    root.style.setProperty("--ui-control-height", Math.min(56, Math.max(32, Number(cfg.controlHeight)||40)) + "px");
+    root.style.setProperty("--ui-control-radius", Math.min(24, Math.max(0, Number(cfg.radius)||12)) + "px");
+    const sidebarW = cfg.sidebarMode === "expanded" ? (Number(cfg.sidebarWidth)||320) : cfg.sidebarMode === "collapsed" ? 64 : 0;
+    root.style.setProperty("--ui-sidebar-width", sidebarW + "px");
+    root.dataset.sidebarMode = cfg.sidebarMode;
+    root.style.setProperty("--ui-table-gridlines", cfg.tableGridlines ? "1px" : "0px");
+    root.style.setProperty("--ui-table-cell-ellipsis", cfg.tableWrap ? "clip" : "ellipsis");
+    root.dataset.tableStickyHeader = cfg.tableStickyHeader ? "on" : "off";
+    root.dataset.tableStickyActions = cfg.tableStickyActions ? "on" : "off";
+    root.style.setProperty("--ui-container-max-width", cfg.containerWidth === "boxed1200" ? "1200px" : cfg.containerWidth === "boxed1440" ? "1440px" : "100%");
+    if (typeof window.__onLayoutChange === "function") window.__onLayoutChange(cfg);
+    return cfg;
+  },
+  reset() {
+    const d = Object.assign({}, LAYOUT_DEFAULTS);
+    this.save(d);
+    return this.apply(d);
+  }
+};
+LayoutEngine.apply(LayoutEngine.get());
+window.LayoutEngine = LayoutEngine;
 
 const C = {
   bg:"#0B0D10", surface:"#14171C", surfaceAlt:"#1B1F26", surfaceHover:"#242A33",
@@ -469,6 +590,11 @@ function Ic({ name, size=18, color=C.textMuted, style }) {
       activity:  <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>,
       columns:   <><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></>,
       helpCircle: <><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
+      layout:    <><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></>,
+      table:     <><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></>,
+      rows:      <><rect x="3" y="4" width="18" height="7" rx="1"/><rect x="3" y="13" width="18" height="7" rx="1"/></>,
+      maximize:  <><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></>,
+      minimize:  <><path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></>,
    };
    return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
@@ -585,7 +711,7 @@ function Modal({ title, onClose, children, maxWidth=700 }) {
 }
 
 const iStyle = {
-  width:"100%", padding:"10px 14px", borderRadius:4, border:`1px solid ${C.border}`,
+  width:"100%", minHeight:"var(--ui-control-height)", padding:"10px 14px", borderRadius:"var(--ui-control-radius)", border:`1px solid ${C.border}`,
   background:C.surface, color:C.text, fontFamily:FF, fontSize:13,
   transition:"0.12s",
   ':focus': { borderColor:C.accent1, boxShadow:`0 0 0 2px ${C.accent1}22` }
@@ -610,7 +736,7 @@ function Btn({ label, onClick, icon, color=C.primary, outline, danger, small, di
       display:"inline-flex", alignItems:"center", gap:6, justifyContent:"center",
       padding: small ? "8px 14px" : "11px 20px",
       width: full ? "100%" : undefined,
-      borderRadius:10, border:bdr, background: disabled ? "#222222" : bg,
+      minHeight:"var(--ui-control-height)", borderRadius:"var(--ui-control-radius)", border:bdr, background: disabled ? "#222222" : bg,
       color: disabled ? "#6B7280" : clr, cursor: disabled ? "not-allowed" : "pointer",
       fontFamily:FF, fontSize: small ? 12 : 13, fontWeight:700, opacity: disabled ? 0.5 : 1,
       transition:"0.12s",
@@ -1060,7 +1186,7 @@ function DonutWidget({ labels, data, colors }) {
   return <canvas ref={ref} style={{ width:"100%", height:"100%" }} />;
 }
 
-function Dashboard({ me, showToast, onNavigate }) {
+function Dashboard({ me, showToast, onNavigate, isMobile }) {
   const [stats, setStats] = useState({ customers:0, orders:0, products:0, revenue:0, outstanding:0 });
   const [monthlyData, setMonthlyData] = useState({ labels:[], data:[] });
   const [statusData, setStatusData] = useState({ labels:[], data:[], colors:[] });
@@ -1134,7 +1260,7 @@ function Dashboard({ me, showToast, onNavigate }) {
         <KPICard label="مرجوعی در انتظار" value={fa(claims.filter(c=>c.status==="pending").length)} sub="نیاز به بررسی" icon="shield" color="#EF4444" onClick={() => onNavigate("guarantee")} />
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:16, marginBottom:20 }}>
+      <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap:16, marginBottom:20 }}>
         <div style={{...cardStyle, padding:20 }}>
           <p style={{ fontSize:13, fontWeight:600, color:C.text, marginBottom:16 }}>فروش ۶ ماه اخیر</p>
           <div style={{ height:200 }}>
@@ -1316,6 +1442,8 @@ function PaymentsPendingSection({ showToast }) {
   var [loading, setLoading] = React.useState(true);
   var [collapsed, setCollapsed] = React.useState(false);
   var [verifyingId, setVerifyingId] = React.useState(null);
+  const winW = useWindowWidth();
+  const isMobile = winW < 900;
 
   const loadPayments = React.useCallback(function() {
     setLoading(true);
@@ -1362,7 +1490,7 @@ function PaymentsPendingSection({ showToast }) {
   if (items.length === 0) return null;
 
   return (
-    <div style={{ marginBottom:20, border:"1px solid "+C.info+"44", borderRadius:12, overflow:"hidden" }}>
+    <div style={{ marginBottom:20, border:"1px solid "+C.info+"44", borderRadius:12, overflowX:"hidden" }}>
       <div
         onClick={function(){ setCollapsed(function(p){ return !p; }); }}
         style={{ padding:"12px 16px", background:C.infoDim, display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer" }}
@@ -1384,11 +1512,11 @@ function PaymentsPendingSection({ showToast }) {
               <div key={item.id} style={{
                 padding:"12px 16px",
                 borderBottom: idx < items.length-1 ? "1px solid "+C.border : "none",
-                display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12
+                display:"flex", justifyContent:"space-between", alignItems: isMobile ? "stretch" : "flex-start", flexDirection: isMobile ? "column" : "row", gap:12
               }}>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <p style={{ fontSize:13, fontWeight:600, marginBottom:3, color:C.text }}>
-                    {item.customer_name || "مشتری نامشخص"}
+                 <div style={{ flex:1, minWidth:0, wordBreak:"break-word" }}>
+                   <p style={{ fontSize:13, fontWeight:600, marginBottom:3, color:C.text }}>
+                     {item.customer_name || "مشتری نامشخص"}
                     {item.customer_phone && (
                       <span style={{ fontSize:11, color:C.textDim, fontWeight:400, marginRight:8, direction:"ltr" }}>{fa(item.customer_phone)}</span>
                     )}
@@ -1401,22 +1529,29 @@ function PaymentsPendingSection({ showToast }) {
                     {item.created_at ? new Date(item.created_at).toLocaleString("fa-IR") : ""}
                   </p>
                 </div>
-                <div style={{ display:"flex", gap:6, flexShrink:0 }}>
-                  <Btn
-                    label={busy ? "..." : "تایید"}
-                    icon="check"
-                    small
-                    color={C.success}
-                    disabled={busy}
-                    onClick={function(){ handleVerify(item, "approve"); }}
-                  />
-                  <Btn
-                    label={busy ? "..." : "رد"}
-                    small
-                    danger
-                    disabled={busy}
-                    onClick={function(){ handleVerify(item, "reject"); }}
-                  />
+                <div style={{
+                  display:"flex", gap:6, flexWrap:"wrap", flexShrink:0,
+                  ...(isMobile ? { width:"100%", justifyContent:"stretch" } : {})
+                }}>
+                  <div style={{ flex:isMobile ? 1 : undefined, minWidth:0 }}>
+                    <Btn
+                      label={busy ? "..." : "تایید"}
+                      icon="check"
+                      small
+                      color={C.success}
+                      disabled={busy}
+                      onClick={function(){ handleVerify(item, "approve"); }}
+                    />
+                  </div>
+                  <div style={{ flex:isMobile ? 1 : undefined, minWidth:0 }}>
+                    <Btn
+                      label={busy ? "..." : "رد"}
+                      small
+                      danger
+                      disabled={busy}
+                      onClick={function(){ handleVerify(item, "reject"); }}
+                    />
+                  </div>
                 </div>
               </div>
             );
@@ -1805,7 +1940,7 @@ async function convertToProject(ord) {
   const proj = await pr.json();
   // 2. Create 8 tasks
   for (const t of B2B_TASKS) {
-      await fetch(`${API_BASE}/project-tasks`, {
+    const taskRes = await fetch(`${API_BASE}/project-tasks`, {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
       body:JSON.stringify({
@@ -1816,6 +1951,9 @@ async function convertToProject(ord) {
         priority: t.pri,
       })
     });
+    if (!taskRes.ok) {
+      throw new Error(`خطا در ساخت وظیفه: ${t.title}`);
+    }
   }
   // 3. Notify team via backend API
   const msg = `📋 پروژه جدید: سفارش ${ord.customer_name||'#'+ord.id}\n💰 ${Number(ord.total_amount||0).toLocaleString('fa-IR')} ریال\n📦 ۸ وظیفه assign شد`;
@@ -1838,6 +1976,9 @@ function OrderDetail({ order, customer, me, showToast, onUpdate, onClose, onCust
   const [showPayModal, setShowPayModal] = useState(false);
   const [payNotes, setPayNotes]         = useState("");
   const [payVerifying, setPayVerifying] = useState(false);
+  const [moreOpen, setMoreOpen]         = useState(false);
+  const [secOpen, setSecOpen]           = useState({shipping:false, docs:false, system:false});
+  const toggleSec = (k) => setSecOpen(v => ({...v, [k]: !v[k]}));
 
   const verifyPayment = async () => {
     setPayVerifying(true);
@@ -1981,260 +2122,297 @@ function OrderDetail({ order, customer, me, showToast, onUpdate, onClose, onCust
 
   return (
     <Modal title={`سفارش #${fa(order.id)}`} onClose={onClose} maxWidth={860}>
-      {/* Header info */}
-      <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
-        <div style={{ flex:1, minWidth:180, padding:14, background:C.surfaceAlt, borderRadius:10 }}>
-          <p style={{ fontSize:11, color:C.textMuted, marginBottom:5, fontWeight:600 }}>مشتری</p>
-          <p onClick={onCustomerClick ? () => onCustomerClick(customer) : undefined}
-             style={{ fontSize:14, fontWeight:600, marginBottom:3,
-               cursor:onCustomerClick?'pointer':'default',
-               color:onCustomerClick?C.primary:C.text,
-               textDecoration:onCustomerClick?'underline':'none',
-               textUnderlineOffset:2 }}>{customer?.name||"—"}</p>
-          <div style={{ display:"flex", gap:10, fontSize:11, color:C.textMuted }}>
-            {customer?.phone && <span>📞 {fa(customer.phone)}</span>}
-            {creditAllowed && <span style={{ color:C.success }}>✓ اعتباری</span>}
-          </div>
-        </div>
-        <div style={{ padding:14, background:C.surfaceAlt, borderRadius:10 }}>
-          <p style={{ fontSize:11, color:C.textMuted, marginBottom:5, fontWeight:600 }}>وضعیت</p>
-          <Tag status={order.order_status} />
-          {order.order_status==="exit_approval" && (() => {
-            const entered = log.find(l=>l.to_status==="exit_approval");
-            if (!entered) return null;
-            const elapsedMin = Math.floor((Date.now()-new Date(entered.created_at))/60000);
-            const remaining = 60 - elapsedMin;
-            const over = remaining < 0;
-            return (
-              <div style={{ marginTop:6, padding:"3px 8px", borderRadius:5, fontSize:11, fontWeight:600,
-                background: over?"#EF444420":"#F9731620",
-                color: over?"#EF4444":"#F97316" }}>
-                {over ? `⚠ ${fa(Math.abs(remaining))} دقیقه تأخیر` : `⏱ SLA: ${fa(remaining)} دقیقه مانده`}
-              </div>
-            );
-          })()}
-          {order.order_status==="customer_approval" && (
-            <div style={{ marginTop:6, padding:"3px 8px", borderRadius:5, fontSize:11, fontWeight:600,
-              background:"#EC489920", color:"#EC4899" }}>
-              👤 مسئول: کریملو
-            </div>
-          )}
-        </div>
-        {order.order_status === "pending_payment" && (
-          <div style={{ padding:14, background:C.successDim, borderRadius:10, display:"flex", alignItems:"center" }}>
-            <button onClick={() => setShowPayModal(true)} style={{
-              padding:"10px 18px", borderRadius:8, border:"none",
-              background:C.success, color:"#fff", cursor:"pointer",
-              fontFamily:FF, fontSize:13, fontWeight:600
-            }}>تأیید پرداخت</button>
-          </div>
+    {/* ── HEADER per ADMIN_ORDERDETAIL_UI_LAW ── */}
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginBottom:10 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+        <span style={{ fontSize:13, fontWeight:700, color:C.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+          سفارش #{fa(order.id)}
+        </span>
+        <Tag status={order.order_status} />
+      </div>
+      <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
+        {isAdmin && act && !saving && (
+          <button onClick={() => changeStatus(act.next)} style={{
+            display:"inline-flex", alignItems:"center", gap:4,
+            padding:"8px 16px", borderRadius:8, border:"none",
+            background:C.primary, color:"#111",
+            cursor:"pointer", fontFamily:FF, fontSize:12, fontWeight:700,
+            whiteSpace:"nowrap"
+          }}>{act.label}</button>
         )}
-        <div style={{ padding:14, background:C.surfaceAlt, borderRadius:10 }}>
-          <p style={{ fontSize:11, color:C.textMuted, marginBottom:5, fontWeight:600 }}>نوع سفارش</p>
-          {isAdmin && order.order_status === "registered" ? (
-            <div style={{ display:"flex", gap:6 }}>
-              {[["stock","موجودی انبار"],["custom","سفارشی/تولیدی"]].map(([v,l]) => (
-                <button key={v} onClick={() => setOrderType(v)} style={{
-                  padding:"4px 10px", borderRadius:6, border:`1.5px solid ${orderType===v?C.primary:C.border}`,
-                  background:orderType===v?C.primaryDim:"transparent", color:orderType===v?C.primary:C.textMuted,
-                  cursor:"pointer", fontFamily:FF, fontSize:11
-                }}>{l}</button>
-              ))}
-            </div>
-          ) : (
-            <span style={{ fontSize:13, fontWeight:600, color:orderType==="custom"?C.indigo:C.cyan }}>
-              {orderType==="custom"?"سفارشی / تولیدی":"موجودی انبار"}
-            </span>
-          )}
-        </div>
-        <div style={{ padding:14, background:C.primaryDim, borderRadius:10 }}>
-          <p style={{ fontSize:11, color:C.textMuted, marginBottom:5, fontWeight:600 }}>مبلغ کل</p>
-          <p style={{ fontSize:15, fontWeight:700, color:C.primary }}>{cur(order.total_amount)}</p>
-          {discount > 0 && <p style={{ fontSize:10, color:C.success }}>تخفیف حجمی {fa(discount)}٪ اعمال شد</p>}
-        </div>
-      </div>
-
-      {/* تخفیف حجمی */}
-      {totalQty > 0 && (
-        <div style={{ marginBottom:14, padding:"8px 14px", background:C.successDim, border:`1px solid ${C.success}22`, borderRadius:8, display:"flex", alignItems:"center", gap:8, fontSize:12 }}>
-          <Ic name="package" size={14} color={C.success} />
-          <span style={{ color:C.success, fontWeight:600 }}>حجم سفارش: {fa(totalQty)} کارتن</span>
-          <span style={{ color:C.textMuted }}>—</span>
-          <span style={{ color:C.text }}>{tier ? `${tier.label}: ${tier.note}` : ""}</span>
-        </div>
-      )}
-
-      {/* آیتم‌ها */}
-      <div style={{ overflowX:"auto", marginBottom:16 }}>
-      <table style={{ width:"100%", borderCollapse:"collapse" }}>
-        <thead>
-          <tr style={{ borderBottom:`1px solid ${C.border}` }}>
-            {["ردیف","شرح کالا","واحد","تعداد","قیمت واحد","تخفیف (ریال)","مبلغ کل"].map(h=>(
-              <th key={h} style={{ padding:"8px 10px", textAlign:"right", fontSize:11, color:C.textDim, fontWeight:600, whiteSpace:"nowrap" }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {items.length===0 ? (
-            <tr><td colSpan={7} style={{ padding:20, textAlign:"center", color:C.textDim, fontSize:12 }}>آیتمی ثبت نشده</td></tr>
-          ) : items.map((it,i) => {
-            const itemName = it.name || it.product_name || it.item_name || '—';
-            const qty = Number(it.qty || it.quantity || 0);
-            const price = Number(it.unitPrice || it.unit_price || 0);
-            const discount = Number(it.discount || 0);
-            const lineTotal = Number(it.lineTotal || it.line_total || it.total || (qty * price) || 0);
-            const unit = it.unit || it.packaging || it.unit_name || '';
-            return (
-              <tr key={i} style={{ borderBottom:`1px solid ${C.border}` }}>
-                <td style={{ padding:"9px 8px", fontSize:12, color:C.textMuted, textAlign:"center", width:36 }}>{fa(i+1)}</td>
-                <td style={{ padding:"9px 8px", fontSize:13 }}>{itemName}</td>
-                <td style={{ padding:"9px 8px", fontSize:12, color:C.textMuted, textAlign:"center" }}>{unit || '—'}</td>
-                <td style={{ padding:"9px 8px", fontSize:13, textAlign:"center" }}>{fa(qty)}</td>
-                <td style={{ padding:"9px 8px", fontSize:13, textAlign:"left", direction:"ltr" }}>{cur(price)}</td>
-                <td style={{ padding:"9px 8px", fontSize:12, textAlign:"left", direction:"ltr", color: discount>0?C.success:C.textDim }}>{discount>0 ? cur(discount) : '—'}</td>
-                <td style={{ padding:"9px 8px", fontSize:13, fontWeight:600, textAlign:"left", direction:"ltr" }}>{cur(lineTotal)}</td>
-              </tr>
-            );
-          })}
-          {items.length > 0 && (
-            <tr style={{ borderTop:`2px solid ${C.border}` }}>
-              <td colSpan={6} style={{ padding:"9px 8px", fontSize:13, fontWeight:700, textAlign:"left" }}>جمع کل</td>
-              <td style={{ padding:"9px 8px", fontSize:14, fontWeight:700, color:C.primary, textAlign:"left", direction:"ltr" }}>
-                {cur(items.reduce((s,it) => s + Number(it.lineTotal || it.line_total || it.total || 0), 0))}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      </div>
-
-      {/* توضیحات سفارش */}
-      {(order.note || order.description || order.customer_note || order.admin_note) && (
-        <div style={{ marginBottom:16, padding:"10px 14px", background:C.surfaceAlt, borderRadius:10 }}>
-          <p style={{ fontSize:12, color:C.textMuted, marginBottom:6, fontWeight:600 }}>توضیحات / یادداشت</p>
-          {order.note && <p style={{ fontSize:12, color:C.text, marginBottom:3 }}>📝 {order.note}</p>}
-          {order.description && <p style={{ fontSize:12, color:C.text, marginBottom:3 }}>📋 {order.description}</p>}
-          {order.customer_note && <p style={{ fontSize:12, color:C.text, marginBottom:3 }}>👤 یادداشت مشتری: {order.customer_note}</p>}
-          {order.admin_note && <p style={{ fontSize:12, color:C.text, marginBottom:3 }}>🔧 یادداشت ادمین: {order.admin_note}</p>}
-        </div>
-      )}
-
-      {/* تاریخچه */}
-      {log.length > 0 && (
-        <div style={{ marginBottom:16 }}>
-          <p style={{ fontSize:12, color:C.textMuted, marginBottom:8, fontWeight:600 }}>تاریخچه وضعیت</p>
-          <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-            {log.map((l,i) => (
-              <div key={i} style={{ padding:"7px 12px", background:C.surfaceAlt, borderRadius:8, fontSize:12 }}>
-                <Tag status={l.from_status} /> <span style={{ color:C.textDim, margin:"0 6px" }}>←</span> <Tag status={l.to_status} />
-                <span style={{ color:C.textDim, marginRight:10 }}>{new Date(l.created_at).toLocaleString("fa-IR")}</span>
-                {l.note && <span style={{ color:C.textMuted }}>— {l.note}</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* اقدام بعدی */}
-      {isAdmin && act && (
-        <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:16, marginBottom:12 }}>
-          <p style={{ fontSize:12, color:C.textMuted, marginBottom:12, fontWeight:600 }}>اقدام بعدی</p>
-
-          {act.next==="shipped" && (
-            <Fld label="کد رهگیری (اجباری)">
-              <input style={iStyle} value={trackCode} onChange={e=>setTrackCode(e.target.value)} placeholder="کد پستی یا باربری..." />
-            </Fld>
-          )}
-
-          {act.next==="payment_confirmed" && (
-            <div>
-              <Fld label="روش پرداخت">
-                <div style={{ display:"flex", gap:8 }}>
-                  {[["cash","نقد / کارت"],["check","چک"]].map(([v,l]) => (
-                    <button key={v} onClick={() => setPayMethod(v)} style={{
-                      flex:1, padding:"8px", borderRadius:8, cursor:"pointer", fontFamily:FF, fontSize:13,
-                      border:`2px solid ${payMethod===v?C.primary:C.border}`,
-                      background:payMethod===v?C.primaryDim:"transparent", color:payMethod===v?C.primary:C.textMuted
-                    }}>{l}</button>
-                  ))}
-                </div>
-              </Fld>
-              {payMethod==="check" && (
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
-                  <Fld label="شماره چک *">
-                    <input style={iStyle} value={checkNum} onChange={e=>setCheckNum(e.target.value)} />
-                  </Fld>
-                  <Fld label="بانک صادرکننده">
-                    <input style={iStyle} value={checkBank} onChange={e=>setCheckBank(e.target.value)} />
-                  </Fld>
-                  <Fld label="تاریخ سررسید">
-                    <JalaliPicker value={checkDate} onChange={setCheckDate} placeholder="انتخاب تاریخ سررسید" />
-                  </Fld>
-                </div>
+        {isAdmin && act && saving && (
+          <span style={{ padding:"8px 16px", borderRadius:8, background:C.primaryDim,
+            color:C.primary, fontSize:12, fontWeight:600 }}>...</span>
+        )}
+        <div style={{ position:"relative", flexShrink:0 }}>
+          <button onClick={() => setMoreOpen(v=>!v)} style={{
+            display:"inline-flex", alignItems:"center", gap:3,
+            padding:"8px 12px", borderRadius:8, border:`1px solid ${C.border}`,
+            background:"transparent", color:C.text,
+            cursor:"pointer", fontFamily:FF, fontSize:12, fontWeight:600,
+            whiteSpace:"nowrap"
+          }}>
+            بیشتر <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+          </button>
+          {moreOpen && (
+            <div style={{ position:"absolute", top:"calc(100% + 4px)", left:0, zIndex:600,
+              minWidth:190, background:C.surface, border:`1px solid ${C.borderLight}`,
+              borderRadius:10, boxShadow:"0 8px 24px #0008", padding:5 }}>
+              {order.order_status === "pending_payment" && isAdmin && (
+                <button onClick={() => { setShowPayModal(true); setMoreOpen(false); }} style={{
+                  display:"flex", alignItems:"center", gap:8, width:"100%",
+                  padding:"7px 12px", borderRadius:7, border:"none",
+                  background:"transparent", color:C.success,
+                  cursor:"pointer", fontFamily:FF, fontSize:12, fontWeight:600,
+                  whiteSpace:"nowrap"
+                }}>
+                  <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  تأیید پرداخت
+                </button>
+              )}
+              {order.order_status !== "cancelled" && order.order_status !== "delivered" && isAdmin && (
+                <button onClick={() => { changeStatus("cancelled"); setMoreOpen(false); }} style={{
+                  display:"flex", alignItems:"center", gap:8, width:"100%",
+                  padding:"7px 12px", borderRadius:7, border:"none",
+                  background:"transparent", color:C.danger,
+                  cursor:"pointer", fontFamily:FF, fontSize:12, fontWeight:600,
+                  whiteSpace:"nowrap"
+                }}>
+                  <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  لغو سفارش
+                </button>
+              )}
+              {isAdmin && (
+                <button onClick={async()=>{ setMoreOpen(false); try { const pid = await convertToProject(order); showToast(`✅ پروژه ساخته شد (ID: ${pid})`,'success'); } catch(e) { showToast('❌ '+e.message,'error'); } }} style={{
+                  display:"flex", alignItems:"center", gap:8, width:"100%",
+                  padding:"7px 12px", borderRadius:7, border:"none",
+                  background:"transparent", color:C.text,
+                  cursor:"pointer", fontFamily:FF, fontSize:12, fontWeight:600,
+                  whiteSpace:"nowrap"
+                }}>
+                  <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
+                  تبدیل به پروژه
+                </button>
               )}
             </div>
           )}
-
-          <Fld label="یادداشت (اختیاری)">
-            <textarea style={{ ...iStyle, resize:"none" }} rows={2} value={note} onChange={e=>setNote(e.target.value)} />
-          </Fld>
-          {act.assignedTo && (
-            <div style={{ padding:"8px 12px", borderRadius:8, marginBottom:8,
-              background: act.sla ? "#F9731610" : "#EC489910",
-              border:`1px solid ${act.sla?"#F9731640":"#EC489940"}`,
-              fontSize:12, color:C.text, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <span>👤 مسئول این مرحله: <b style={{ color: act.sla?"#F97316":"#EC4899" }}>{act.assignedTo}</b></span>
-              {act.sla && <span style={{ fontSize:11, color:"#F97316" }}>⏱ SLA: {fa(act.sla)} دقیقه</span>}
-            </div>
-          )}
-          {act.assignedTo && (
-            <div style={{ padding:"8px 12px", borderRadius:8, marginBottom:8, background:act.sla?"#F9731610":"#EC489910", border:"1px solid "+(act.sla?"#F9731640":"#EC489940"), fontSize:12, color:C.text, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <span>👤 مسئول: <b style={{ color:act.sla?"#F97316":"#EC4899" }}>{act.assignedTo}</b></span>
-              {act.sla && <span style={{ fontSize:11, color:"#F97316" }}>⏱ SLA: {fa(act.sla)} دقیقه</span>}
-            </div>
-          )}
-          <Btn label={saving?"...":act.label} full icon="check" onClick={() => changeStatus(act.next)} disabled={saving} />
-          {order.order_status !== "cancelled" && order.order_status !== "delivered" && (
-            <div style={{ marginTop:8 }}>
-              <Btn label="لغو سفارش" full icon="x" danger onClick={() => changeStatus("cancelled")} />
-            </div>
-          )}
         </div>
-      )}
-
-      {order.order_status === "proforma_issued" && (
-        <ProformaStatusBadge
-          orderId={order.id} order={order} customer={customer} items={items} showToast={showToast}
-        />
-      )}
-      {isAdmin && (
-        <button
-          onClick={async()=>{
-            try {
-              const pid = await convertToProject(order);
-              showToast(`✅ پروژه ساخته شد (ID: ${pid})`,'success');
-            } catch(e) {
-              showToast('❌ '+e.message,'error');
-            }
-          }}
-          style={{
-            width:'100%', padding:'9px 16px',
-            borderRadius:8, border:'none',
-            background:'#8DB33A', color:'#fff',
-            fontSize:13, fontWeight:700,
-            cursor:'pointer', fontFamily:'inherit',
-            marginTop:8
-          }}
-        >
-          🔄 تبدیل به پروژه + تخصیص وظایف
-        </button>
-      )}
-      <div style={{ display:"flex", gap:8 }}>
-        {order.order_status !== "proforma_issued" && (
-          <InvoiceBtn orderId={order.id} order={order} customer={customer} items={items} type="proforma" showToast={showToast} onUpdate={onUpdate} />
-        )}
-        <InvoiceBtn orderId={order.id} order={order} customer={customer} items={items} type="official" showToast={showToast} onUpdate={onUpdate} />
       </div>
+    </div>
+    {/* ── PRIMARY per ADMIN_ORDERDETAIL_UI_LAW L7: مشتری | مالی ── */}
+    <div style={{ display:"flex", gap:10, marginBottom:16 }}>
+      {/* Customer card */}
+      <div style={{ flex:1, minWidth:0, padding:14, background:C.surfaceAlt, borderRadius:10 }}>
+        <p style={{ fontSize:11, color:C.textMuted, marginBottom:5, fontWeight:600 }}>مشتری</p>
+        <p onClick={onCustomerClick ? () => onCustomerClick(customer) : undefined}
+           style={{ fontSize:14, fontWeight:600, marginBottom:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
+             cursor:onCustomerClick?'pointer':'default',
+             color:onCustomerClick?C.primary:C.text,
+             textDecoration:onCustomerClick?'underline':'none',
+             textUnderlineOffset:2 }} title={customer?.name||""}>{customer?.name||"—"}</p>
+        <div style={{ display:"flex", gap:8, fontSize:11, color:C.textMuted, alignItems:"center" }}>
+          {customer?.phone && <span>📞 {fa(customer.phone)}</span>}
+          {creditAllowed && <span style={{ color:C.success }}>✓ اعتباری</span>}
+          {onCustomerClick && <span style={{ marginRight:"auto", fontSize:10, color:C.primary, fontWeight:600 }}>جزئیات ←</span>}
+        </div>
+      </div>
+      {/* Financial card — 3 rows only */}
+      <div style={{ flex:1, minWidth:0, padding:14, background:C.surfaceAlt, borderRadius:10 }}>
+        <p style={{ fontSize:11, color:C.textMuted, marginBottom:8, fontWeight:600 }}>خلاصه مالی</p>
+        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5, fontSize:12 }}>
+          <span style={{ color:C.textMuted }}>مبلغ کل</span>
+          <b style={{ color:C.text, fontSize:13, fontWeight:700 }}>{cur(order.total_amount)}</b>
+        </div>
+        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5, fontSize:12 }}>
+          <span style={{ color:C.textMuted }}>پرداخت‌شده</span>
+          <b style={{ color:C.success, fontSize:13, fontWeight:700 }}>{cur(["payment_confirmed","paid","ready_to_ship","exit_approval","shipped","delivered"].includes(order.order_status) ? order.total_amount : 0)}</b>
+        </div>
+        <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, paddingTop:3, borderTop:`1px solid ${C.border}22` }}>
+          <span style={{ color:C.textMuted }}>مانده</span>
+          <b style={{ fontSize:15, fontWeight:800, color:(["payment_confirmed","paid","ready_to_ship","exit_approval","shipped","delivered"].includes(order.order_status)?0:Number(order.total_amount||0))>0?C.warning:C.success }}>
+            {cur(["payment_confirmed","paid","ready_to_ship","exit_approval","shipped","delivered"].includes(order.order_status) ? 0 : order.total_amount)}
+          </b>
+        </div>
+        {discount > 0 && <p style={{ marginTop:8, fontSize:10, color:C.success }}>✓ تخفیف حجمی {fa(discount)}٪</p>}
+      </div>
+    </div>
+
+    {/* حجم سفارش / تخفیف حجمی */}
+    {totalQty > 0 && (
+      <div style={{ marginBottom:14, padding:"8px 14px", background:C.successDim, border:`1px solid ${C.success}22`, borderRadius:8, display:"flex", alignItems:"center", gap:8, fontSize:12 }}>
+        <Ic name="package" size={14} color={C.success} />
+        <span style={{ color:C.success, fontWeight:600 }}>حجم سفارش: {fa(totalQty)} کارتن</span>
+        <span style={{ color:C.textMuted }}>—</span>
+        <span style={{ color:C.text }}>{tier ? `${tier.label}: ${tier.note}` : ""}</span>
+      </div>
+    )}
+
+    {/* اقلام (جدول) */}
+    <div style={{ overflowX:"auto", marginBottom:16 }}>
+    <table style={{ width:"100%", borderCollapse:"collapse" }}>
+      <thead>
+        <tr style={{ borderBottom:`1px solid ${C.border}` }}>
+          {["ردیف","شرح کالا","واحد","تعداد","قیمت واحد","تخفیف (ریال)","مبلغ کل"].map(h=>(
+            <th key={h} style={{ padding:"8px 10px", textAlign:"right", fontSize:11, color:C.textDim, fontWeight:600, whiteSpace:"nowrap" }}>{h}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {items.length===0 ? (
+          <tr><td colSpan={7} style={{ padding:20, textAlign:"center", color:C.textDim, fontSize:12 }}>آیتمی ثبت نشده</td></tr>
+        ) : items.map((it,i) => {
+          const itemName = it.name || it.product_name || it.item_name || '—';
+          const qty = Number(it.qty || it.quantity || 0);
+          const price = Number(it.unitPrice || it.unit_price || 0);
+          const discount = Number(it.discount || 0);
+          const lineTotal = Number(it.lineTotal || it.line_total || it.total || (qty * price) || 0);
+          const unit = it.unit || it.packaging || it.unit_name || '';
+          return (
+            <tr key={i} style={{ borderBottom:`1px solid ${C.border}` }}>
+              <td style={{ padding:"9px 8px", fontSize:12, color:C.textMuted, textAlign:"center", width:36 }}>{fa(i+1)}</td>
+              <td style={{ padding:"9px 8px", fontSize:13 }}>{itemName}</td>
+              <td style={{ padding:"9px 8px", fontSize:12, color:C.textMuted, textAlign:"center" }}>{unit || '—'}</td>
+              <td style={{ padding:"9px 8px", fontSize:13, textAlign:"center" }}>{fa(qty)}</td>
+              <td style={{ padding:"9px 8px", fontSize:13, textAlign:"left", direction:"ltr" }}>{cur(price)}</td>
+              <td style={{ padding:"9px 8px", fontSize:12, textAlign:"left", direction:"ltr", color: discount>0?C.success:C.textDim }}>{discount>0 ? cur(discount) : '—'}</td>
+              <td style={{ padding:"9px 8px", fontSize:13, fontWeight:600, textAlign:"left", direction:"ltr" }}>{cur(lineTotal)}</td>
+            </tr>
+          );
+        })}
+        {items.length > 0 && (
+          <tr style={{ borderTop:`2px solid ${C.border}` }}>
+            <td colSpan={6} style={{ padding:"9px 8px", fontSize:13, fontWeight:700, textAlign:"left" }}>جمع کل</td>
+            <td style={{ padding:"9px 8px", fontSize:14, fontWeight:700, color:C.primary, textAlign:"left", direction:"ltr" }}>
+              {cur(items.reduce((s,it) => s + Number(it.lineTotal || it.line_total || it.total || 0), 0))}
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+    </div>
+
+    {/* ── SECONDARY per ADMIN_ORDERDETAIL_UI_LAW L8: سه آکاردئون ── */}
+    <div style={{ marginBottom:16 }}>
+
+      {/* 1. ارسال و تحویل */}
+      <div style={{ borderBottom:`1px solid ${C.border}`, paddingBottom:0 }}>
+        <button onClick={()=>toggleSec("shipping")} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", padding:"12px 0", background:"transparent", border:"none", cursor:"pointer", fontFamily:FF, fontSize:13, fontWeight:600, color:C.text }}>
+          <span>ارسال و تحویل</span>
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" style={{ transform:secOpen["shipping"]?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.15s" }}><polyline points="6 15 12 9 18 15" /></svg>
+        </button>
+        {secOpen["shipping"] && (
+          <div style={{ paddingBottom:12 }}>
+            <div style={{ marginBottom:10 }}>
+              <span style={{ fontSize:11, color:C.textMuted, fontWeight:600 }}>نوع سفارش: </span>
+              {isAdmin && order.order_status === "registered" ? (
+                <span style={{ fontSize:12, color:C.text }}>
+                  {[["stock","موجودی انبار"],["custom","سفارشی/تولیدی"]].map(([v,l]) => (
+                    <button key={v} onClick={() => setOrderType(v)} style={{ padding:"3px 8px", borderRadius:6, border:`1.5px solid ${orderType===v?C.primary:C.border}`, background:orderType===v?C.primaryDim:"transparent", color:orderType===v?C.primary:C.textMuted, cursor:"pointer", fontFamily:FF, fontSize:11, marginLeft:4 }}>{l}</button>
+                  ))}
+                </span>
+              ) : (
+                <span style={{ fontSize:12, color:orderType==="custom"?C.indigo:C.cyan, fontWeight:600 }}>
+                  {orderType==="custom"?"سفارشی / تولیدی":"موجودی انبار"}
+                </span>
+              )}
+            </div>
+            {order.order_status==="exit_approval" && (() => {
+              const entered = log.find(l=>l.to_status==="exit_approval");
+              if (!entered) return null;
+              const elapsedMin = Math.floor((Date.now()-new Date(entered.created_at))/60000);
+              const remaining = 60 - elapsedMin;
+              const over = remaining < 0;
+              return (
+                <div style={{ marginBottom:10, padding:"6px 10px", borderRadius:6, fontSize:11, fontWeight:600, background: over?"#EF444420":"#F9731620", color: over?"#EF4444":"#F97316", display:"inline-block" }}>
+                  {over ? `⚠ ${fa(Math.abs(remaining))} دقیقه تأخیر` : `⏱ SLA: ${fa(remaining)} دقیقه مانده`}
+                </div>
+              );
+            })()}
+            {order.order_status==="customer_approval" && (
+              <div style={{ marginBottom:10, padding:"6px 10px", borderRadius:6, fontSize:11, fontWeight:600, background:"#EC489920", color:"#EC4899", display:"inline-block" }}>
+                👤 مسئول: کریملو
+              </div>
+            )}
+            {isAdmin && act?.next==="shipped" && (
+              <Fld label="کد رهگیری (اجباری)">
+                <input style={iStyle} value={trackCode} onChange={e=>setTrackCode(e.target.value)} placeholder="کد پستی یا باربری..." />
+              </Fld>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 2. اسناد و پیوست‌ها */}
+      <div style={{ borderBottom:`1px solid ${C.border}`, paddingBottom:0 }}>
+        <button onClick={()=>toggleSec("docs")} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", padding:"12px 0", background:"transparent", border:"none", cursor:"pointer", fontFamily:FF, fontSize:13, fontWeight:600, color:C.text }}>
+          <span>اسناد و پیوست‌ها</span>
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" style={{ transform:secOpen["docs"]?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.15s" }}><polyline points="6 15 12 9 18 15" /></svg>
+        </button>
+        {secOpen["docs"] && (
+          <div style={{ paddingBottom:12 }}>
+            {(order.note || order.description || order.customer_note || order.admin_note) && (
+              <div style={{ marginBottom:12, padding:"10px 12px", background:C.surface, borderRadius:8 }}>
+                {order.note && <p style={{ fontSize:12, color:C.text, marginBottom:3 }}>📝 {order.note}</p>}
+                {order.description && <p style={{ fontSize:12, color:C.text, marginBottom:3 }}>📋 {order.description}</p>}
+                {order.customer_note && <p style={{ fontSize:12, color:C.text, marginBottom:3 }}>👤 یادداشت مشتری: {order.customer_note}</p>}
+                {order.admin_note && <p style={{ fontSize:12, color:C.text, marginBottom:3 }}>🔧 یادداشت ادمین: {order.admin_note}</p>}
+              </div>
+            )}
+            <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+              {order.order_status !== "proforma_issued" && (
+                <InvoiceBtn orderId={order.id} order={order} customer={customer} items={items} type="proforma" showToast={showToast} onUpdate={onUpdate} />
+              )}
+              <InvoiceBtn orderId={order.id} order={order} customer={customer} items={items} type="official" showToast={showToast} onUpdate={onUpdate} />
+            </div>
+            {order.order_status === "proforma_issued" && (
+              <ProformaStatusBadge orderId={order.id} order={order} customer={customer} items={items} showToast={showToast} />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 3. سیستم */}
+      <div style={{ borderBottom:`1px solid ${C.border}`, paddingBottom:0 }}>
+        <button onClick={()=>toggleSec("system")} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", padding:"12px 0", background:"transparent", border:"none", cursor:"pointer", fontFamily:FF, fontSize:13, fontWeight:600, color:C.text }}>
+          <span>سیستم</span>
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" style={{ transform:secOpen["system"]?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.15s" }}><polyline points="6 15 12 9 18 15" /></svg>
+        </button>
+        {secOpen["system"] && (
+          <div style={{ paddingBottom:12 }}>
+            {isAdmin && act && (
+              <div>
+                {act.assignedTo && (
+                  <div style={{ padding:"8px 12px", borderRadius:8, marginBottom:8, background: act.sla ? "#F9731610" : "#EC489910", border:`1px solid ${act.sla?"#F9731640":"#EC489940"}`, fontSize:12, color:C.text, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    <span>👤 مسئول: <b style={{ color: act.sla?"#F97316":"#EC4899" }}>{act.assignedTo}</b></span>
+                    {act.sla && <span style={{ fontSize:11, color:"#F97316" }}>⏱ {fa(act.sla)} دقیقه</span>}
+                  </div>
+                )}
+                {act.next==="payment_confirmed" && (
+                  <div style={{ marginBottom:10 }}>
+                    <Fld label="روش پرداخت">
+                      <div style={{ display:"flex", gap:8 }}>{[["cash","نقد / کارت"],["check","چک"]].map(([v,l]) => (
+                        <button key={v} onClick={() => setPayMethod(v)} style={{ flex:1, padding:"8px", borderRadius:8, cursor:"pointer", fontFamily:FF, fontSize:13, border:`2px solid ${payMethod===v?C.primary:C.border}`, background:payMethod===v?C.primaryDim:"transparent", color:payMethod===v?C.primary:C.textMuted }}>{l}</button>
+                      ))}</div>
+                    </Fld>
+                    {payMethod==="check" && (
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+                        <Fld label="شماره چک *"><input style={iStyle} value={checkNum} onChange={e=>setCheckNum(e.target.value)} /></Fld>
+                        <Fld label="بانک"><input style={iStyle} value={checkBank} onChange={e=>setCheckBank(e.target.value)} /></Fld>
+                        <Fld label="سررسید"><JalaliPicker value={checkDate} onChange={setCheckDate} placeholder="..." /></Fld>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <Fld label="یادداشت (اختیاری)">
+                  <textarea style={{ ...iStyle, resize:"none" }} rows={2} value={note} onChange={e=>setNote(e.target.value)} />
+                </Fld>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+    </div>
 
       {showPayModal && (
         <Modal title={`تأیید پرداخت سفارش #${fa(order.id)}`} onClose={() => setShowPayModal(false)} maxWidth={480}>
@@ -2968,8 +3146,8 @@ function OrdersModule({ me, showToast }) {
         ? <Empty text="سفارشی یافت نشد" icon="📋" />
         : (<>
           {/* دسکتاپ */}
-          <div style={{...cardStyle, overflow:"hidden", display:"block" }} className="orders-desktop">
-            <div style={{ display:"grid", gridTemplateColumns:"60px 2fr 110px 80px 80px 120px 130px 90px" }}>
+          <div style={{...cardStyle, display:"block" }} className="orders-desktop grid-table">
+            <div style={{ display:"grid", gridTemplateColumns:"60px 2fr 110px 80px 80px 120px 130px 130px" }}>
               {["#","مشتری","تاریخ","نوع","کانال","مبلغ","وضعیت",""].map((h,i)=>(
                 <div key={i} style={{ padding:"10px 14px", fontSize:11, color:C.textMuted, fontWeight:700, borderBottom:`1px solid ${C.border}` }}>{h}</div>
               ))}
@@ -3156,7 +3334,7 @@ function NewOrderModal({ customers, showToast, onClose, onSaved }) {
         <div style={{ display:"grid", gap:8 }}>
           {items.map(function(it, idx) {
             return (
-              <div key={idx} style={{ display:"grid", gridTemplateColumns:"2fr 80px 120px auto", gap:8, alignItems:"center", background:C.surfaceAlt, borderRadius:8, padding:"8px 10px" }}>
+              <div key={idx} style={{ display:"grid", gridTemplateColumns:"2fr 130px 120px auto", gap:8, alignItems:"center", background:C.surfaceAlt, borderRadius:8, padding:"8px 10px" }}>
                 <select style={{ ...iStyle, fontSize:12 }} value={it.product_id} onChange={function(e){ updateItem(idx,"product_id",e.target.value); }}>
                   <option value="">انتخاب محصول...</option>
                   {products.map(function(p){ return <option key={p.id} value={p.id}>{p.name}</option>; })}
@@ -3313,8 +3491,8 @@ function ProductsModule({ me, showToast }) {
             {title} ({fa(items.length)})
           </h3>
         )}
-        <div style={{ ...cardStyle, overflow:"hidden", padding:0 }}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr 1fr 1fr 1fr 1fr 1fr 80px", borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ ...cardStyle, padding:0 }} className="grid-table">
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr 1fr 1fr 1fr 1fr 1fr 100px", borderBottom:`1px solid ${C.border}` }}>
             {["کد","نام محصول","دسته","تعداد/کارتن","🟢 معمولی","🔵 نقره‌ای","موجودی",""].map((h,i)=>(
               <div key={i} style={{ padding:"10px 8px", fontSize:11, color:C.textDim, fontWeight:700, textAlign:"center" }}>{h}</div>
             ))}
@@ -3323,7 +3501,7 @@ function ProductsModule({ me, showToast }) {
             <Empty text="محصولی در این دسته نیست" icon="📦" />
           ) : items.map((p,i)=>(
             <div key={p.id} style={{
-              display:"grid", gridTemplateColumns:"1fr 2fr 1fr 1fr 1fr 1fr 1fr 80px",
+              display:"grid", gridTemplateColumns:"1fr 2fr 1fr 1fr 1fr 1fr 1fr 100px",
               borderBottom: i<items.length-1 ? `1px solid ${C.border}` : "none",
               background: i%2===0 ? C.surface : C.surfaceAlt, alignItems:"center"
             }}>
@@ -3774,8 +3952,8 @@ function ScorpionModule({ showToast }) {
       <div style={{ position:"relative", marginBottom:14 }}>
         <input style={{ ...iStyle, paddingRight:34 }} value={search} onChange={e=>setSearch(e.target.value)} placeholder="جستجو..." />
       </div>
-      <div style={{ ...cardStyle, overflow:"hidden" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", borderBottom:`1px solid ${C.border}` }}>
+       <div style={{ ...cardStyle }} className="grid-table">
+         <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", borderBottom:`1px solid ${C.border}` }}>
           {["نام","تلفن","شهر","تاریخ ثبت"].map((h,i)=>(
             <div key={i} style={{ padding:"10px 14px", fontSize:11, color:C.textDim, fontWeight:700 }}>{h}</div>
           ))}
@@ -3913,9 +4091,9 @@ function AccessModule({ me, showToast }) {
         ))}
       </div>
 
-      {/* لیست کاربران */}
-      <div style={{...cardStyle, overflow:"hidden", marginBottom:24 }}>
-        <div style={{ padding:"14px 18px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center" }}>
+       {/* لیست کاربران */}
+       <div style={{...cardStyle, marginBottom:24 }} className="grid-table">
+         <div style={{ padding:"14px 18px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center" }}>
           <h3 style={{ fontSize:14, fontWeight:700, color:C.text, flex:1 }}>کاربران پنل مدیریت</h3>
         </div>
         {admins.map((a,i) => {
@@ -3930,7 +4108,7 @@ function AccessModule({ me, showToast }) {
               <div style={{ width:38, height:38, borderRadius:"50%", background:ROLE_COLOR[a.role]+"22",
                 display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, fontWeight:700,
                 color:ROLE_COLOR[a.role], flexShrink:0 }}>
-                {a.name.charAt(0)}
+                {(a.name||'').charAt(0)}
               </div>
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ fontSize:13, fontWeight:600, color:C.text, display:"flex", alignItems:"center", gap:6 }}>
@@ -3969,9 +4147,9 @@ function AccessModule({ me, showToast }) {
       </div>
 
       {/* ماتریس دسترسی */}
-      <div style={{ ...cardStyle, overflow:"hidden" }}>
-        <div style={{ padding:"14px 18px", borderBottom:`1px solid ${C.border}` }}>
-          <h3 style={{ fontSize:14, fontWeight:700, color:C.text }}>ماتریس دسترسی</h3>
+       <div style={{ ...cardStyle }} className="grid-table">
+         <div style={{ padding:"14px 18px", borderBottom:`1px solid ${C.border}` }}>
+           <h3 style={{ fontSize:14, fontWeight:700, color:C.text }}>ماتریس دسترسی</h3>
         </div>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
@@ -4259,7 +4437,7 @@ function CustomerPortal({ me, onLogout }) {
           <Btn label="خروج" outline onClick={onLogout} />
         </div>
         {loading ? <Spinner /> : (
-          <div style={{ ...cardStyle, overflow:"hidden" }}>
+          <div style={{ ...cardStyle }} className="grid-table">
             <div style={{ padding:"14px 18px", borderBottom:`1px solid ${C.border}` }}>
               <h3 style={{ fontSize:14, fontWeight:700, color:C.text }}>سفارشات من ({fa(orders.length)})</h3>
             </div>
@@ -4461,7 +4639,7 @@ function ReportsModule({ me, showToast }) {
       </div>
 
       {/* ─── جدول ─── */}
-      <div style={{ ...cardStyle, overflow:"auto" }}>
+      <div style={{ ...cardStyle, overflow:"auto" }} className="grid-table">
         <div style={{ minWidth:800 }}>
           <div style={{ display:"grid", gridTemplateColumns:"60px 1fr 90px 100px 1fr 120px 130px 100px", borderBottom:`1px solid ${C.border}` }}>
             {["#","مشتری","شهر","تلفن","محصولات","مبلغ","وضعیت","تاریخ"].map((h,i)=>(
@@ -6697,8 +6875,12 @@ function WhatsAppInbox({ me, showToast }) {
               {messages.map((msg, i) => (
                 <tr key={msg.id} className="tr-hover" style={{ borderBottom:`1px solid ${C.border}` }}>
                   <td style={tdStyle}>{fa(page * PAGE_SIZE + i + 1)}</td>
-                  <td style={{...tdStyle, direction:"ltr", textAlign:"right", fontFamily:"monospace", fontSize:12}}>
-                    {fa(msg.sender_phone || "—")}
+                  <td style={{...tdStyle, direction:"rtl", textAlign:"right", fontSize:12}}>
+                    {msg.customer_name ? (
+                      <span><span style={{color:C.text, fontWeight:600}}>{msg.customer_name}</span><br /><span style={{direction:"ltr", display:"inline-block", fontFamily:"monospace", fontSize:11, color:C.textMuted}}>{fa(msg.sender_phone)}</span></span>
+                    ) : (
+                      <span style={{direction:"ltr", display:"inline-block", fontFamily:"monospace"}}>{fa(msg.sender_phone || "—")}</span>
+                    )}
                   </td>
                   <td style={{...tdStyle, maxWidth:400, whiteSpace:"pre-wrap", wordBreak:"break-word"}}>
                     {msg.message_body || "—"}
@@ -6737,7 +6919,7 @@ function WhatsAppInbox({ me, showToast }) {
                 style={{ background:"none", border:"none", cursor:"pointer", color:C.textDim, fontSize:18 }}>✕</button>
             </div>
             <div style={{ fontSize:12, color:C.textMuted, marginBottom:12 }}>
-              شماره: {fa(linkRow.sender_phone)} · {fa(linkRow.message_body?.slice(0,50))}{linkRow.message_body?.length>50?'...':''}
+              {(linkRow.customer_name ? `👤 ${linkRow.customer_name} · ` : '') + `📞 ${fa(linkRow.sender_phone)}`} · {fa(linkRow.message_body?.slice(0,50))}{linkRow.message_body?.length>50?'...':''}
             </div>
             <input value={linkQuery} onChange={e => { const v=e.target.value; setLinkQuery(v); searchCustomers(v); }}
               style={{ width:"100%", padding:"10px 14px", borderRadius:8, border:`1px solid ${C.border}`,
@@ -6781,18 +6963,25 @@ function AIDrafts({ me, showToast }) {
   const [loading, setLoading] = useState(true);
   const [loadErr, setLoadErr] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("pending");
+  const [statusFilter, setStatusFilter] = useState("draft");
   const [detail, setDetail] = useState(null);
   const [acting, setActing] = useState(false);
   const [actErr, setActErr] = useState("");
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [rawNotes, setRawNotes] = useState("");
+  const [processing, setProcessing] = useState(false);
+
+  // سازگار با هر دو اسکیمای فاز ۱ (status) و legacy (approval_status)
+  const statusOf = function(d) { return String(d.status || d.approval_status || "DRAFT").toUpperCase(); };
 
   const load = async function() {
     setLoading(true);
     setLoadErr("");
     try {
-      const q = statusFilter === "all" ? "" : "?approval_status=eq." + statusFilter.toUpperCase();
-      const data = await api("GET", "ai-drafts" + q);
-      setDrafts(Array.isArray(data) ? data : []);
+      const data = await api("GET", "ai-drafts");
+      const arr = Array.isArray(data) ? data : [];
+      // فیلتر سمت کلاینت تا با هر دو اسکیمای دیتابیس سازگار بماند
+      setDrafts(statusFilter === "all" ? arr : arr.filter(function(d){ return statusOf(d) === statusFilter.toUpperCase(); }));
     } catch(e) {
       setLoadErr("خطا در بارگذاری: " + (e.message || ""));
       showToast("خطا در بارگذاری پیش‌نویس‌ها", "error");
@@ -6808,7 +6997,13 @@ function AIDrafts({ me, showToast }) {
     if (!detail || acting) return;
     setActing(true); setActErr("");
     try {
-      await api("POST", "ai-drafts/" + detail.id + "/" + (decision === "approve" ? "approve" : "reject"));
+      try {
+        // مسیر جدید موتور Hermes 3 (فاز ۱) — approve باعث ایجاد صورت‌جلسه رسمی می‌شود
+        await api("POST", "ai-agent/drafts/" + detail.id + "/" + (decision === "approve" ? "approve" : "reject"));
+      } catch (e) {
+        // fallback به هندلر legacy در صورت ناسازگاری اسکیمای production
+        await api("POST", "ai-drafts/" + detail.id + "/" + (decision === "approve" ? "approve" : "reject"));
+      }
       showToast(decision === "approve" ? "✅ پیش‌نویس تایید شد" : "✅ پیش‌نویس رد شد");
       setDetail(null);
       setRefreshing(true);
@@ -6819,6 +7014,18 @@ function AIDrafts({ me, showToast }) {
     } finally {
       setActing(false);
     }
+  };
+
+  const processNotes = async function() {
+    if (!rawNotes.trim() || processing) return;
+    setProcessing(true);
+    try {
+      await api("POST", "ai-agent/process-notes", { rawNotes: rawNotes.trim() });
+      showToast("پیش‌نویس توسط موتور Hermes 3 ساخته شد");
+      setRawNotes(""); setNotesOpen(false);
+      setRefreshing(true); load();
+    } catch(e) { showToast("❌ " + (e.message || "خطا"), "error"); }
+    finally { setProcessing(false); }
   };
 
   if (loading) return (
@@ -6839,6 +7046,7 @@ function AIDrafts({ me, showToast }) {
   );
 
   const STATUS_MAP = {
+    DRAFT:    { label:"در انتظار", color:C.warning },
     PENDING:  { label:"در انتظار", color:C.warning },
     APPROVED: { label:"تایید شده", color:C.success },
     REJECTED: { label:"رد شده",   color:C.danger },
@@ -6856,11 +7064,11 @@ function AIDrafts({ me, showToast }) {
       </div>
     );
   };
-  const filters = [["pending","در انتظار"],["approved","تایید شده"],["rejected","رد شده"],["all","همه"]];
+  const filters = [["draft","در انتظار"],["approved","تایید شده"],["rejected","رد شده"],["all","همه"]];
   const renderDetail = function() {
     if (!detail) return null;
     const d = detail;
-    const st = STATUS_MAP[d.approval_status] || { label:d.approval_status||"—", color:C.textMuted };
+    const st = STATUS_MAP[statusOf(d)] || { label:statusOf(d)||"—", color:C.textMuted };
     return (
       <div>
         <div onClick={function(){ setDetail(null); }} style={{ position:"fixed", inset:0, background:"#000a", zIndex:200 }} />
@@ -6873,6 +7081,10 @@ function AIDrafts({ me, showToast }) {
           <Field label="وضعیت" value={<span style={{ color:st.color, fontWeight:700 }}>{st.label}</span>} />
           <Field label="نوع پیش‌نویس" value={d.draft_type} />
           <Field label="موجودیت" value={(d.entity_type || "") + (d.entity_id ? " (" + d.entity_id + ")" : "")} />
+          {d.summary != null && d.summary !== "" && <Field label="خلاصه" value={d.summary} />}
+          {Array.isArray(d.decisions) && d.decisions.length > 0 && <Field label="تصمیم‌ها" value={d.decisions.join(" | ")} />}
+          {Array.isArray(d.action_items) && d.action_items.length > 0 && <Field label="اقدام‌ها" value={d.action_items.map(function(a){ return (a.title || a.description || JSON.stringify(a)); }).join(" | ")} />}
+          {d.rejection_reason ? <Field label="دلیل رد" value={d.rejection_reason} /> : null}
           <Field label="متن ورودی" value={d.input_text} />
           <Field label="متن خروجی" value={d.output_text} />
           <Field label="ایجاد کننده" value={d.created_by} />
@@ -6881,7 +7093,7 @@ function AIDrafts({ me, showToast }) {
           <Field label="ایجاد شده" value={d.created_at} />
           <Field label="بروزرسانی" value={d.updated_at} />
           {actErr && <p style={{ color:C.danger, fontSize:12, marginTop:8 }}>{actErr}</p>}
-          {d.approval_status === "PENDING" && (
+          {statusOf(d) === "DRAFT" && (
             <div style={{ display:"flex", gap:10, marginTop:14 }}>
               <Btn label={acting ? "..." : "✓ تایید"} onClick={function(){ act("approve"); }} disabled={acting} color={C.success} />
               <Btn label={acting ? "..." : "✕ رد"} onClick={function(){ act("reject"); }} disabled={acting} danger />
@@ -6900,6 +7112,7 @@ function AIDrafts({ me, showToast }) {
           <p style={{ fontSize:12, color:C.textDim }}>بررسی و تایید/رد پیش‌نویس‌های تولید شده توسط هوش مصنوعی</p>
         </div>
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <Btn label="پردازش متن جلسه" icon="cpu" small onClick={function(){ setNotesOpen(true); }} />
           <Btn label={refreshing?"...":"بروزرسانی"} icon="refresh" small outline onClick={function(){ setRefreshing(true); load(); }} disabled={refreshing||loading} />
           <span style={{ fontSize:11, color:C.textDim }}>{fa(drafts.length)} پیش‌نویس</span>
         </div>
@@ -6939,7 +7152,7 @@ function AIDrafts({ me, showToast }) {
             </thead>
             <tbody>
               {drafts.map(function(d){
-                const st = STATUS_MAP[d.approval_status] || { label:d.approval_status||"—", color:C.textMuted };
+                const st = STATUS_MAP[statusOf(d)] || { label:statusOf(d)||"—", color:C.textMuted };
                 return (
                   <tr key={d.id} style={{ borderTop:"1px solid "+C.border }}>
                     <td style={tdStyle}><span style={{ color:st.color, fontWeight:700, fontSize:12 }}>{st.label}</span></td>
@@ -6960,6 +7173,668 @@ function AIDrafts({ me, showToast }) {
       )}
 
       {renderDetail()}
+
+      {notesOpen && (
+        <div style={{ position:"fixed", inset:0, zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", background:"#000a" }} onClick={function(){ setNotesOpen(false); }}>
+          <div onClick={function(e){ e.stopPropagation(); }} style={{ background:C.surface, border:"1px solid "+C.border, borderRadius:16, padding:20, width:"min(560px,92vw)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+              <h3 style={{ fontSize:15, color:C.text }}>پردازش متن جلسه — Hermes 3</h3>
+              <button onClick={function(){ setNotesOpen(false); }} style={{ background:"transparent", border:"none", color:C.textMuted, cursor:"pointer", fontSize:18 }}>✕</button>
+            </div>
+            <div style={{ fontSize:11, color:C.textDim, marginBottom:8 }}>
+              متن خام جلسه را وارد کنید؛ پیش‌نویس با وضعیت «در انتظار» (DRAFT) ذخیره و منتظر تأیید شما می‌ماند.
+            </div>
+            <textarea rows={6} value={rawNotes} onChange={function(e){ setRawNotes(e.target.value); }} placeholder="متن خام جلسه را اینجا وارد کنید..." style={Object.assign({}, iStyle, { minHeight:120 }) } />
+            <div style={{ display:"flex", gap:10, marginTop:14 }}>
+              <Btn label={processing?"در حال پردازش...":"تولید پیش‌نویس"} icon="cpu" onClick={processNotes} disabled={processing||!rawNotes.trim()} />
+              <Btn label="انصراف" outline onClick={function(){ setNotesOpen(false); }} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ TASKS MODULE (فاز ۱) ══════════════════════════ */
+const TASK_STATUS_META = {
+  PENDING_ACK:    { label:"در انتظار تأیید",  color:C.warning,  bg:C.warningDim },
+  ACKNOWLEDGED:   { label:"تأیید شد",         color:C.info,     bg:C.infoDim },
+  IN_PROGRESS:    { label:"در حال انجام",     color:C.blue,     bg:C.blueDim },
+  PENDING_REVIEW: { label:"در انتظار بررسی",  color:C.indigo,   bg:C.indigoDim },
+  APPROVED:       { label:"تأیید نهایی",      color:C.success,  bg:C.successDim },
+  REJECTED:       { label:"رد شد",            color:C.danger,   bg:C.dangerDim },
+  BLOCKED:        { label:"مسدود",            color:C.danger,   bg:C.dangerDim },
+};
+const TASK_PRIORITY_META = {
+  LOW:{ label:"کم", color:C.textMuted }, MEDIUM:{ label:"متوسط", color:C.blue },
+  HIGH:{ label:"زیاد", color:C.warning }, CRITICAL:{ label:"بحرانی", color:C.danger },
+};
+const TASK_STATUS_ORDER = ["PENDING_ACK","ACKNOWLEDGED","IN_PROGRESS","PENDING_REVIEW","APPROVED","REJECTED","BLOCKED"];
+
+function TasksModule({ me, showToast }) {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadErr, setLoadErr] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 12;
+  const [detail, setDetail] = useState(null);
+  const [detailEv, setDetailEv] = useState([]);
+  const [acting, setActing] = useState("");
+  const [evOpen, setEvOpen] = useState(null);
+  const [evForm, setEvForm] = useState({ evidenceType:"TEXT", notes:"", contentUrl:"" });
+  const [evSaving, setEvSaving] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ title:"", description:"", priority:"MEDIUM", dueDate:"" });
+  const [createSaving, setCreateSaving] = useState(false);
+
+  // بارگذاری فقط هنگام باز شدن صفحه / تغییر فیلتر (یک‌بار در mount)
+  const load = async function() {
+    setLoading(true); setLoadErr("");
+    try {
+      const q = statusFilter ? "?status=" + statusFilter : "";
+      const data = await api("GET", "tasks" + q);
+      setTasks(Array.isArray(data) ? data : []);
+    } catch(e) {
+      setLoadErr("خطا در بارگذاری: " + (e.message || ""));
+      showToast("خطا در بارگذاری تسک‌ها", "error");
+    } finally { setLoading(false); setRefreshing(false); setPage(0); }
+  };
+  useEffect(function(){ load(); }, [statusFilter]);
+
+  const openDetail = async function(id) {
+    setDetail({ id: id }); setDetailEv([]);
+    try {
+      const d = await api("GET", "tasks/" + id);
+      setDetail(d.task || d);
+      setDetailEv(Array.isArray(d.evidences) ? d.evidences : []);
+    } catch(e) { setDetail(null); showToast("خطا: " + (e.message || ""), "error"); }
+  };
+
+  const changeStatus = async function(t, newStatus) {
+    if (acting) return;
+    setActing(t.id);
+    try {
+      await api("PATCH", "tasks/" + t.id + "/status", { newStatus: newStatus, actorId: me.id });
+      showToast("وضعیت تسک به «" + (TASK_STATUS_META[newStatus] || { label:newStatus }).label + "» تغییر کرد");
+      if (detail && detail.id === t.id) openDetail(t.id);
+      setRefreshing(true); load();
+    } catch(e) { showToast("❌ " + (e.message || "خطا"), "error"); }
+    finally { setActing(""); }
+  };
+
+  const submitEvidence = async function() {
+    if (evSaving || !evOpen) return;
+    setEvSaving(true);
+    try {
+      await api("POST", "tasks/" + evOpen.id + "/evidence", {
+        evidenceType: evForm.evidenceType,
+        notes: evForm.notes || undefined,
+        contentUrl: evForm.contentUrl || undefined,
+      });
+      showToast("شاهد ثبت شد");
+      const tid = evOpen.id;
+      setEvOpen(null); setEvForm({ evidenceType:"TEXT", notes:"", contentUrl:"" });
+      if (detail && detail.id === tid) openDetail(tid);
+      setRefreshing(true); load();
+    } catch(e) { showToast("❌ " + (e.message || "خطا"), "error"); }
+    finally { setEvSaving(false); }
+  };
+
+  const createTask = async function() {
+    if (!createForm.title.trim() || createSaving) return;
+    setCreateSaving(true);
+    try {
+      await api("POST", "tasks", {
+        title: createForm.title.trim(),
+        description: createForm.description.trim() || undefined,
+        priority: createForm.priority,
+        dueDate: createForm.dueDate || undefined,
+      });
+      showToast("تسک ساخته شد");
+      setCreateOpen(false); setCreateForm({ title:"", description:"", priority:"MEDIUM", dueDate:"" });
+      setRefreshing(true); load();
+    } catch(e) { showToast("❌ " + (e.message || "خطا"), "error"); }
+    finally { setCreateSaving(false); }
+  };
+
+  if (loading && !refreshing) return (
+    <div style={{ animation:"fadeUp 0.3s ease", textAlign:"center", padding:40 }}>
+      <Spinner />
+      <p style={{ marginTop:12, fontSize:13, color:C.textMuted }}>در حال بارگذاری تسک‌ها...</p>
+    </div>
+  );
+  if (loadErr) return (
+    <div style={{ animation:"fadeUp 0.3s ease", textAlign:"center", padding:40 }}>
+      <div style={{ background:C.dangerDim, border:"1px solid "+C.danger, borderRadius:12, padding:24, maxWidth:400, margin:"0 auto" }}>
+        <p style={{ fontSize:14, color:C.danger, marginBottom:8, fontWeight:600 }}>⚠️ خطا در بارگذاری</p>
+        <p style={{ fontSize:12, color:C.textMuted, marginBottom:16 }}>{loadErr}</p>
+        <Btn label="تلاش مجدد" icon="refresh" onClick={load} />
+      </div>
+    </div>
+  );
+
+  const pages = Math.max(1, Math.ceil(tasks.length / PAGE_SIZE));
+  const safePage = Math.min(page, pages - 1);
+  const rows = tasks.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+  const nextStatuses = function(st) {
+    if (st === "PENDING_ACK") return [["ACKNOWLEDGED","تأیید دریافت"]];
+    if (st === "ACKNOWLEDGED") return [["IN_PROGRESS","شروع انجام"]];
+    if (st === "IN_PROGRESS") return [["PENDING_REVIEW","ارسال به بررسی"],["BLOCKED","مسدود کردن"]];
+    if (st === "PENDING_REVIEW") return [["APPROVED","تأیید نهایی"],["REJECTED","رد"]];
+    return [["IN_PROGRESS","بازگشایی"]];
+  };
+
+  const prioTag = function(p) {
+    const m = TASK_PRIORITY_META[p] || { label:p||"—", color:C.textMuted };
+    return <span style={{ color:m.color, fontWeight:700, fontSize:12 }}>{m.label}</span>;
+  };
+
+  return (
+    <div style={{ animation:"fadeUp 0.3s ease" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, flexWrap:"wrap", gap:10 }}>
+        <div>
+          <h2 style={{ fontSize:16, color:C.text, fontWeight:600, marginBottom:2 }}>وظایف AI</h2>
+          <p style={{ fontSize:12, color:C.textDim }}>پیگیری تسک‌های موتور Hermes 3 — ثبت شاهد و گردش وضعیت</p>
+        </div>
+        <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+          <Btn label="تسک جدید" icon="plus" small onClick={function(){ setCreateOpen(true); }} />
+          <Btn label={refreshing?"...":"بروزرسانی"} icon="refresh" small outline onClick={function(){ setRefreshing(true); load(); }} disabled={refreshing||loading} />
+          <span style={{ fontSize:11, color:C.textDim }}>{fa(tasks.length)} تسک</span>
+        </div>
+      </div>
+
+      <div style={{ display:"flex", gap:6, marginBottom:14, flexWrap:"wrap" }}>
+        <button onClick={function(){ setStatusFilter(""); }}
+          style={{ padding:"6px 12px", borderRadius:10, cursor:"pointer", fontSize:12, fontWeight:600,
+            border:"1px solid "+(statusFilter===""?C.primary:C.border),
+            background: statusFilter===""?C.primaryDim:"transparent", color: statusFilter===""?C.primary:C.textMuted }}>
+          همه
+        </button>
+        {TASK_STATUS_ORDER.map(function(s){
+          const active = statusFilter === s;
+          return (
+            <button key={s} onClick={function(){ setStatusFilter(active ? "" : s); }}
+              style={{ padding:"6px 12px", borderRadius:10, cursor:"pointer", fontSize:12, fontWeight:600,
+                border:"1px solid "+(active?C.primary:C.border),
+                background: active?C.primaryDim:"transparent", color: active?C.primary:C.textMuted }}>
+              {TASK_STATUS_META[s].label}
+            </button>
+          );
+        })}
+      </div>
+
+      {tasks.length === 0 ? (
+        <div style={{ textAlign:"center", padding:40, color:C.textMuted, fontSize:13 }}>
+          تسکی با این وضعیت یافت نشد.
+        </div>
+      ) : (
+        <div className="ui-table-wrap">
+          <table className="ui-table">
+            <thead>
+              <tr>
+                <th>عنوان</th>
+                <th>اولویت</th>
+                <th>وضعیت</th>
+                <th>مسئول</th>
+                <th>مهلت</th>
+                <th>تاریخ ایجاد</th>
+                <th className="ui-col-actions">عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(function(t){
+                const st = TASK_STATUS_META[t.status] || { label:t.status||"—", color:C.textMuted };
+                return (
+                  <tr key={t.id}>
+                    <td style={{ maxWidth:280 }} title={t.title}>{t.title || "—"}</td>
+                    <td>{prioTag(t.priority)}</td>
+                    <td><span style={{ color:st.color, fontWeight:700, fontSize:12 }}>{st.label}</span></td>
+                    <td>{t.assignee_id ? String(t.assignee_id).slice(0,8) + "…" : "—"}</td>
+                    <td>{t.due_date ? String(t.due_date).slice(0,10) : "—"}</td>
+                    <td>{t.created_at ? String(t.created_at).slice(0,16).replace("T"," ") : "—"}</td>
+                    <td className="ui-col-actions">
+                      <Btn label="جزئیات" icon="eye" small outline onClick={function(){ openDetail(t.id); }} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tasks.length > PAGE_SIZE && (
+        <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:12, marginTop:14 }}>
+          <Btn label="قبلی" small outline disabled={safePage===0} onClick={function(){ setPage(safePage-1); }} />
+          <span style={{ fontSize:12, color:C.textMuted }}>{fa(safePage+1)} / {fa(pages)}</span>
+          <Btn label="بعدی" small outline disabled={safePage>=pages-1} onClick={function(){ setPage(safePage+1); }} />
+        </div>
+      )}
+
+      {/* ─── مودال جزئیات ─── */}
+      {detail && detail.id && (
+        <div>
+          <div onClick={function(){ setDetail(null); }} style={{ position:"fixed", inset:0, background:"#000a", zIndex:200 }} />
+          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:"min(640px,92vw)", maxHeight:"86vh", overflowY:"auto", background:C.surface, border:"1px solid "+C.border, borderRadius:16, padding:20, zIndex:201 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+              <h3 style={{ fontSize:16, color:C.text }}>جزئیات تسک</h3>
+              <button onClick={function(){ setDetail(null); }} style={{ background:"transparent", border:"none", color:C.textMuted, cursor:"pointer", fontSize:18 }}>✕</button>
+            </div>
+            {!detail.title ? (
+              <div style={{ textAlign:"center", padding:24 }}><Spinner /></div>
+            ) : (
+              <div>
+                <div style={{ padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+                  <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>عنوان</div>
+                  <div style={{ color:C.text, fontSize:13, fontWeight:700 }}>{detail.title}</div>
+                </div>
+                <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+                  <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>وضعیت</div>
+                  <div style={{ color:(TASK_STATUS_META[detail.status]||{color:C.text}).color, fontSize:13, fontWeight:700 }}>{(TASK_STATUS_META[detail.status]||{label:detail.status||"—"}).label}</div>
+                </div>
+                <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+                  <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>اولویت</div>
+                  <div style={{ color:C.text, fontSize:13 }}>{prioTag(detail.priority)}</div>
+                </div>
+                {detail.description ? (
+                  <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+                    <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>توضیحات</div>
+                    <div style={{ flex:1, color:C.text, fontSize:13, whiteSpace:"pre-wrap", wordBreak:"break-word" }}>{detail.description}</div>
+                  </div>
+                ) : null}
+                {detail.assignee_id ? (
+                  <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+                    <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>مسئول</div>
+                    <div style={{ color:C.text, fontSize:13 }}>{detail.assignee_id}</div>
+                  </div>
+                ) : null}
+                {detail.order_id ? (
+                  <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+                    <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>سفارش</div>
+                    <div style={{ color:C.text, fontSize:13 }}>{detail.order_id}</div>
+                  </div>
+                ) : null}
+                {detail.customer_id ? (
+                  <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+                    <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>مشتری</div>
+                    <div style={{ color:C.text, fontSize:13 }}>{detail.customer_id}</div>
+                  </div>
+                ) : null}
+                {detail.due_date ? (
+                  <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+                    <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>مهلت</div>
+                    <div style={{ color:C.text, fontSize:13 }}>{String(detail.due_date).slice(0,10)}</div>
+                  </div>
+                ) : null}
+                <div style={{ display:"flex", gap:8, padding:"8px 0", borderBottom:"1px solid "+C.border }}>
+                  <div style={{ width:120, color:C.textMuted, fontSize:12, flexShrink:0 }}>تاریخ ایجاد</div>
+                  <div style={{ color:C.text, fontSize:13 }}>{String(detail.created_at||"").slice(0,19).replace("T"," ")}</div>
+                </div>
+
+                <div style={{ marginTop:12, fontSize:13, fontWeight:700, color:C.textMuted }}>شواهد ({fa(detailEv.length)})</div>
+                {detailEv.length === 0 ? (
+                  <div style={{ fontSize:12, color:C.textDim, padding:"8px 0" }}>هنوز شاهدی ثبت نشده است.</div>
+                ) : (
+                  detailEv.map(function(ev){
+                    return (
+                      <div key={ev.id} style={{ padding:"8px 10px", marginBottom:6, background:C.surfaceAlt, borderRadius:8, fontSize:12 }}>
+                        <div style={{ display:"flex", gap:8 }}>
+                          <span style={{ color:C.primary, fontWeight:700 }}>{ev.evidence_type || "TEXT"}</span>
+                          <span style={{ color:C.textDim }}>{String(ev.created_at||"").slice(0,16).replace("T"," ")}</span>
+                        </div>
+                        {ev.notes ? <div style={{ color:C.text, marginTop:3, whiteSpace:"pre-wrap" }}>{ev.notes}</div> : null}
+                        {ev.content_url ? <div style={{ marginTop:3 }}><a href={ev.content_url} target="_blank" rel="noreferrer" style={{ color:C.blue, fontSize:12 }}>{ev.content_url}</a></div> : null}
+                      </div>
+                    );
+                  })
+                )}
+
+                <div style={{ display:"flex", gap:10, marginTop:14, flexWrap:"wrap" }}>
+                  {nextStatuses(detail.status).map(function(ns){
+                    return (
+                      <Btn key={ns[0]} label={acting===detail.id ? "..." : ns[1]} small
+                        onClick={function(){ changeStatus(detail, ns[0]); }} disabled={acting!==""}
+                        color={ns[0]==="APPROVED" ? C.success : ns[0]==="REJECTED"||ns[0]==="BLOCKED" ? C.danger : C.primary} />
+                    );
+                  })}
+                  <Btn label="ثبت شاهد" icon="plus" small outline onClick={function(){ setEvOpen(detail); setEvForm({ evidenceType:"TEXT", notes:"", contentUrl:"" }); }} />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── مودال ثبت شاهد ─── */}
+      {evOpen && (
+        <div>
+          <div onClick={function(){ setEvOpen(null); }} style={{ position:"fixed", inset:0, background:"#000a", zIndex:220 }} />
+          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:"min(520px,92vw)", background:C.surface, border:"1px solid "+C.border, borderRadius:16, padding:20, zIndex:221 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+              <h3 style={{ fontSize:15, color:C.text }}>ثبت شاهد — تسک</h3>
+              <button onClick={function(){ setEvOpen(null); }} style={{ background:"transparent", border:"none", color:C.textMuted, cursor:"pointer", fontSize:18 }}>✕</button>
+            </div>
+            <Fld label="نوع شاهد">
+              <select value={evForm.evidenceType} onChange={function(e){ setEvForm(Object.assign({}, evForm, { evidenceType:e.target.value })); }} style={iStyle}>
+                <option value="TEXT">متن / گزارش</option>
+                <option value="URL">لینک</option>
+                <option value="IMAGE">تصویر</option>
+                <option value="FILE">فایل</option>
+              </select>
+            </Fld>
+            <Fld label="توضیحات شاهد">
+              <textarea rows={3} value={evForm.notes} onChange={function(e){ setEvForm(Object.assign({}, evForm, { notes:e.target.value })); }} placeholder="خلاصه پیشرفت یا توضیح..." style={Object.assign({}, iStyle, { minHeight:80 }) } />
+            </Fld>
+            <Fld label="لینک مدرک (اختیاری)">
+              <input type="text" value={evForm.contentUrl} onChange={function(e){ setEvForm(Object.assign({}, evForm, { contentUrl:e.target.value })); }} placeholder="https://..." style={iStyle} />
+            </Fld>
+            <div style={{ display:"flex", gap:10, marginTop:14 }}>
+              <Btn label={evSaving?"در حال ثبت...":"ثبت شاهد"} icon="check" onClick={submitEvidence} disabled={evSaving} />
+              <Btn label="انصراف" outline onClick={function(){ setEvOpen(null); }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── مودال تسک جدید ─── */}
+      {createOpen && (
+        <div>
+          <div onClick={function(){ setCreateOpen(false); }} style={{ position:"fixed", inset:0, background:"#000a", zIndex:240 }} />
+          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:"min(520px,92vw)", background:C.surface, border:"1px solid "+C.border, borderRadius:16, padding:20, zIndex:241 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+              <h3 style={{ fontSize:15, color:C.text }}>تسک جدید</h3>
+              <button onClick={function(){ setCreateOpen(false); }} style={{ background:"transparent", border:"none", color:C.textMuted, cursor:"pointer", fontSize:18 }}>✕</button>
+            </div>
+            <Fld label="عنوان (الزامی)">
+              <input type="text" value={createForm.title} onChange={function(e){ setCreateForm(Object.assign({}, createForm, { title:e.target.value })); }} placeholder="عنوان تسک..." style={iStyle} />
+            </Fld>
+            <Fld label="توضیحات">
+              <textarea rows={3} value={createForm.description} onChange={function(e){ setCreateForm(Object.assign({}, createForm, { description:e.target.value })); }} placeholder="شرح تسک..." style={Object.assign({}, iStyle, { minHeight:80 }) } />
+            </Fld>
+            <div style={{ display:"flex", gap:10 }}>
+              <div style={{ flex:1 }}>
+                <Fld label="اولویت">
+                  <select value={createForm.priority} onChange={function(e){ setCreateForm(Object.assign({}, createForm, { priority:e.target.value })); }} style={iStyle}>
+                    <option value="LOW">کم</option>
+                    <option value="MEDIUM">متوسط</option>
+                    <option value="HIGH">زیاد</option>
+                    <option value="CRITICAL">بحرانی</option>
+                  </select>
+                </Fld>
+              </div>
+              <div style={{ flex:1 }}>
+                <Fld label="مهلت (اختیاری)">
+                  <input type="date" value={createForm.dueDate} onChange={function(e){ setCreateForm(Object.assign({}, createForm, { dueDate:e.target.value })); }} style={iStyle} />
+                </Fld>
+              </div>
+            </div>
+            <div style={{ display:"flex", gap:10, marginTop:14 }}>
+              <Btn label={createSaving?"در حال ایجاد...":"ایجاد تسک"} icon="plus" onClick={createTask} disabled={createSaving||!createForm.title.trim()} />
+              <Btn label="انصراف" outline onClick={function(){ setCreateOpen(false); }} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ AUDIT LOGS MODULE (فاز ۱) ═════════════════════ */
+const AUDIT_ACTION_LABELS = {
+  STATUS_CHANGED:"تغییر وضعیت", LOGIN:"ورود", LOGOUT:"خروج", CREATE:"ایجاد",
+  UPDATE:"به‌روزرسانی", DELETE:"حذف", APPROVE:"تایید", REJECT:"رد", SEND:"ارسال",
+};
+
+function AuditLogsModule({ me, showToast }) {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadErr, setLoadErr] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [filters, setFilters] = useState({ entity_type:"", actor_id:"", action:"" });
+  const [limit, setLimit] = useState(100);
+  const [expanded, setExpanded] = useState(null);
+
+  const load = async function() {
+    setLoading(true); setLoadErr("");
+    try {
+      const qp = [];
+      if (filters.entity_type) qp.push("entity_type=" + encodeURIComponent(filters.entity_type));
+      if (filters.actor_id) qp.push("actor_id=" + encodeURIComponent(filters.actor_id));
+      if (filters.action) qp.push("action=" + encodeURIComponent(filters.action));
+      qp.push("limit=" + limit);
+      const data = await api("GET", "audit-logs" + (qp.length ? "?" + qp.join("&") : ""));
+      setLogs(Array.isArray(data) ? data : []);
+    } catch(e) {
+      setLoadErr("خطا در بارگذاری: " + (e.message || ""));
+      showToast("خطا در بارگذاری لاگ‌ها", "error");
+    } finally { setLoading(false); setRefreshing(false); }
+  };
+  useEffect(function(){ load(); }, [JSON.stringify(filters), limit]);
+
+  const inpStyle = Object.assign({}, iStyle, { width:"100%", padding:"8px 12px" });
+
+  if (loading && !refreshing) return (
+    <div style={{ animation:"fadeUp 0.3s ease", textAlign:"center", padding:40 }}>
+      <Spinner />
+      <p style={{ marginTop:12, fontSize:13, color:C.textMuted }}>در حال بارگذاری لاگ‌ها...</p>
+    </div>
+  );
+  if (loadErr) return (
+    <div style={{ animation:"fadeUp 0.3s ease", textAlign:"center", padding:40 }}>
+      <div style={{ background:C.dangerDim, border:"1px solid "+C.danger, borderRadius:12, padding:24, maxWidth:400, margin:"0 auto" }}>
+        <p style={{ fontSize:14, color:C.danger, marginBottom:8, fontWeight:600 }}>⚠️ خطا در بارگذاری</p>
+        <p style={{ fontSize:12, color:C.textMuted, marginBottom:16 }}>{loadErr}</p>
+        <Btn label="تلاش مجدد" icon="refresh" onClick={load} />
+      </div>
+    </div>
+  );
+
+  const changesText = function(ch) {
+    if (ch == null) return "—";
+    try { return JSON.stringify(typeof ch === "string" ? JSON.parse(ch) : ch, null, 2); }
+    catch(e) { return String(ch); }
+  };
+
+  return (
+    <div style={{ animation:"fadeUp 0.3s ease" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, flexWrap:"wrap", gap:10 }}>
+        <div>
+          <h2 style={{ fontSize:16, color:C.text, fontWeight:600, marginBottom:2 }}>لاگ عملیات</h2>
+          <p style={{ fontSize:12, color:C.textDim }}>ثبت‌های حسابرسی سیستم (جدیدترین اول — حداکثر ۱۰۰ رکورد)</p>
+        </div>
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <Btn label={refreshing?"...":"بروزرسانی"} icon="refresh" small outline onClick={function(){ setRefreshing(true); load(); }} disabled={refreshing||loading} />
+          <span style={{ fontSize:11, color:C.textDim }}>{fa(logs.length)} رکورد</span>
+        </div>
+      </div>
+
+      <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap", alignItems:"flex-end" }}>
+        <div style={{ width:140 }}>
+          <Fld label="موجودیت (entity_type)">
+            <input type="text" value={filters.entity_type} onChange={function(e){ setFilters(Object.assign({}, filters, { entity_type:e.target.value })); }} placeholder="مثلاً task" style={inpStyle} />
+          </Fld>
+        </div>
+        <div style={{ width:180 }}>
+          <Fld label="بازیگر (actor_id)">
+            <input type="text" value={filters.actor_id} onChange={function(e){ setFilters(Object.assign({}, filters, { actor_id:e.target.value })); }} placeholder="UUID کاربر..." style={inpStyle} />
+          </Fld>
+        </div>
+        <div style={{ width:170 }}>
+          <Fld label="عملیات (action)">
+            <input type="text" value={filters.action} onChange={function(e){ setFilters(Object.assign({}, filters, { action:e.target.value })); }} placeholder="مثلاً STATUS_CHANGED" style={inpStyle} />
+          </Fld>
+        </div>
+        <div style={{ width:110 }}>
+          <Fld label="تعداد">
+            <select value={limit} onChange={function(e){ setLimit(Number(e.target.value)); }} style={inpStyle}>
+              <option value={50}>۵۰</option>
+              <option value={100}>۱۰۰</option>
+              <option value={250}>۲۵۰</option>
+              <option value={500}>۵۰۰</option>
+            </select>
+          </Fld>
+        </div>
+        <Btn label="اعمال فیلتر" icon="search" small onClick={function(){ setRefreshing(true); load(); }} />
+      </div>
+
+      {logs.length === 0 ? (
+        <div style={{ textAlign:"center", padding:40, color:C.textMuted, fontSize:13 }}>
+          لاگی با این فیلتر یافت نشد.
+        </div>
+      ) : (
+        <div className="ui-table-wrap">
+          <table className="ui-table">
+            <thead>
+              <tr>
+                <th>عملیات</th>
+                <th>موجودیت</th>
+                <th>شناسه موجودیت</th>
+                <th>بازیگر</th>
+                <th>تغییرات</th>
+                <th>زمان</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map(function(l){
+                const actionLabel = AUDIT_ACTION_LABELS[l.action_type] || l.action || l.action_type || "—";
+                const open = expanded === l.id;
+                return (
+                  <tr key={l.id} onClick={function(){ setExpanded(open ? null : l.id); }} style={{ cursor:"pointer" }}>
+                    <td><span style={{ color:C.primary, fontWeight:700, fontSize:12 }}>{actionLabel}</span></td>
+                    <td>{l.entity_type || "—"}</td>
+                    <td>{l.entity_id ? String(l.entity_id).slice(0,10) + "…" : "—"}</td>
+                    <td>{l.actor_id ? String(l.actor_id).slice(0,10) + "…" : "—"}</td>
+                    <td>
+                      {l.changes ? (
+                        <span style={{ color: open ? C.text : C.primary, fontSize:11 }}>
+                          {open ? "▼ " + changesText(l.changes) : "◀ مشاهده"}
+                        </span>
+                      ) : "—"}
+                    </td>
+                    <td>{l.created_at ? String(l.created_at).slice(0,19).replace("T"," ") : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ APPEARANCE PANEL ══════════════════════════════ */
+function AppearancePanel({ me, showToast }) {
+  const [cfg, setCfg] = useState(function(){ return LayoutEngine.get(); });
+  const set = function(k, v) {
+    const next = Object.assign({}, cfg, { [k]: v });
+    setCfg(next);
+    LayoutEngine.save(next);
+    LayoutEngine.apply(next);
+  };
+  const reset = function() {
+    const d = LayoutEngine.reset();
+    setCfg(d);
+    showToast("تنظیمات ظاهری به حالت پیش‌فرض بازگشت");
+  };
+
+  const Card = function({ icon, title, desc, children }) {
+    return (
+      <div style={{ background:C.surface, border:"1px solid "+C.border, borderRadius:16, padding:18, marginBottom:14 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
+          <Ic name={icon} size={18} color={C.primary} />
+          <h3 style={{ fontSize:14, fontWeight:700, color:C.text }}>{title}</h3>
+        </div>
+        {desc && <p style={{ fontSize:11, color:C.textDim, marginBottom:12 }}>{desc}</p>}
+        <div style={{ paddingTop:4 }}>{children}</div>
+      </div>
+    );
+  };
+  const Seg = function({ options, value, onChange }) {
+    return (
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+        {options.map(function(o){
+          const active = o[0] === value;
+          return (
+            <button key={o[0]} onClick={function(){ onChange(o[0]); }}
+              style={{ padding:"7px 14px", borderRadius:10, cursor:"pointer", fontSize:12, fontWeight:600,
+                border:"1px solid "+(active?C.primary:C.border),
+                background: active?C.primaryDim:"transparent", color: active?C.primary:C.textMuted }}>
+              {o[1]}
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+  const Toggle = function({ label, value, onChange }) {
+    return (
+      <label style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, padding:"8px 0", cursor:"pointer", userSelect:"none" }}>
+        <span style={{ fontSize:12, color:C.textMuted, fontWeight:600 }}>{label}</span>
+        <div onClick={function(){ onChange(!value); }} style={{ width:40, height:22, borderRadius:11, background:value?C.primary:C.border, position:"relative", transition:"0.2s", flexShrink:0 }}>
+          <div style={{ width:18, height:18, borderRadius:"50%", background:"#fff", position:"absolute", top:2, transition:"0.2s", left:value?20:2 }} />
+        </div>
+      </label>
+    );
+  };
+  const SliderRow = function({ label, value, min, max, step, unit, onChange }) {
+    return (
+      <div style={{ marginBottom:12 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+          <span style={{ fontSize:12, color:C.textMuted, fontWeight:600 }}>{label}</span>
+          <span style={{ fontSize:12, color:C.primary, fontWeight:700 }}>{fa(value)} {unit}</span>
+        </div>
+        <input type="range" min={min} max={max} step={step} value={value}
+          onChange={function(e){ onChange(Number(e.target.value)); }}
+          style={{ width:"100%", accentColor:C.primary, border:"none", padding:0, background:"transparent" }} />
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ animation:"fadeUp 0.3s ease", maxWidth:720 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, flexWrap:"wrap", gap:10 }}>
+        <div>
+          <h2 style={{ fontSize:16, color:C.text, fontWeight:600, marginBottom:2 }}>ظاهر و چیدمان</h2>
+          <p style={{ fontSize:12, color:C.textDim }}>تغییرات بلافاصله روی همین صفحه اعمال می‌شود و در مرورگر ذخیره می‌ماند.</p>
+        </div>
+        <Btn label="بازنشانی به پیش‌فرض" icon="refresh" small outline onClick={reset} />
+      </div>
+
+      <Card icon="rows" title="چگالی رابط" desc="فاصله‌گذاری و ارتفاع ردیف‌های جدول و کارت‌ها">
+        <Seg options={[["compact","فشرده"],["standard","استاندارد"],["comfortable","راحت"]]} value={cfg.density} onChange={function(v){ set("density", v); }} />
+      </Card>
+
+      <Card icon="maximize" title="اندازه کنترل‌ها" desc="ارتفاع دکمه‌ها و فیلدها و شعاع گوشه‌ها">
+        <SliderRow label="ارتفاع دکمه/اینپوت" value={cfg.controlHeight} min={32} max={56} step={2} unit="px" onChange={function(v){ set("controlHeight", v); }} />
+        <SliderRow label="شعاع گوشه‌ها" value={cfg.radius} min={0} max={24} step={2} unit="px" onChange={function(v){ set("radius", v); }} />
+      </Card>
+
+      <Card icon="layout" title="نوار کناری" desc="کشویی فقط در موبایل مجاز است؛ در دسکتاپ باز یا جمع‌شده">
+        <Seg options={[["expanded","باز (۳۲۰px)"],["collapsed","جمع‌شده (۶۴px)"],["drawer","کشویی"]]} value={cfg.sidebarMode} onChange={function(v){ set("sidebarMode", v); }} />
+        {cfg.sidebarMode === "expanded" && (
+          <div style={{ marginTop:12 }}>
+            <SliderRow label="عرض حالت باز" value={cfg.sidebarWidth} min={240} max={400} step={8} unit="px" onChange={function(v){ set("sidebarWidth", v); }} />
+          </div>
+        )}
+        {cfg.sidebarMode === "drawer" && (
+          <div style={{ fontSize:11, color:C.warning, marginTop:10 }}>حالت کشویی برای دسکتاپ توصیه نمی‌شود؛ در دسکتاپ از حالت «باز» استفاده کنید.</div>
+        )}
+      </Card>
+
+      <Card icon="table" title="جدول‌ها" desc="تنظیمات نمایش جدول‌های استاندارد (وظایف، لاگ، پیش‌نویس‌ها)">
+        <Toggle label="سرستون چسبان (sticky header)" value={cfg.tableStickyHeader} onChange={function(v){ set("tableStickyHeader", v); }} />
+        <Toggle label="ستون عملیات چسبان" value={cfg.tableStickyActions} onChange={function(v){ set("tableStickyActions", v); }} />
+        <Toggle label="خطوط افقی بین ردیف‌ها" value={cfg.tableGridlines} onChange={function(v){ set("tableGridlines", v); }} />
+        <Toggle label="شکستن متن طولانی در سلول" value={cfg.tableWrap} onChange={function(v){ set("tableWrap", v); }} />
+      </Card>
+
+      <Card icon="minimize" title="عرض محتوا" desc="عرض حداکثر بدنه صفحات">
+        <Seg options={[["fluid","تمام عرض"],["boxed1200","محدود ۱۲۰۰px"],["boxed1440","محدود ۱۴۴۰px"]]} value={cfg.containerWidth} onChange={function(v){ set("containerWidth", v); }} />
+      </Card>
     </div>
   );
 }
@@ -6983,6 +7858,10 @@ const NAV = [
     { key:"whatsapp",  label:"واتساپ Broadcast", icon:"chat"      },
     { key:"inbox",     label:"صندوق پیام‌ها",    icon:"inbox"     },
   ]},
+  { section:"پیش‌نویس‌های AI (Hermes 3)", items:[
+    { key:"tasks",    label:"وظایف AI",             icon:"columns", saOnly:true  },
+    { key:"aidrafts", label:"پیش‌نویس‌های هوشمند",  icon:"cpu",      saOnly:false },
+  ]},
   { section:"سیستم", items:[
     { key:"portal-registrations", label:"درخواست‌های پورتال", icon:"portal", saOnly:true  },
     { key:"reports",   label:"گزارشات",         icon:"chart",    saOnly:false },
@@ -6992,7 +7871,8 @@ const NAV = [
     { key:"settings",  label:"تنظیمات سیستم",   icon:"settings", saOnly:true  },
     { key:"org-chart", label:"چارت سازمانی",    icon:"orgChart", saOnly:true  },
     { key:"rules",     label:"قوانین AI",       icon:"cpu",      saOnly:false },
-    { key:"aidrafts",  label:"پیش‌نویس‌های هوشمند", icon:"cpu", saOnly:false },
+    { key:"appearance", label:"ظاهر و چیدمان",  icon:"layout",   saOnly:false },
+    { key:"auditlogs", label:"لاگ عملیات",      icon:"activity", saOnly:true  },
   ]},
 ];
 
@@ -7307,13 +8187,16 @@ function Sidebar({ tab, setTab, me, onLogout, onChangePassword, isMobile, open, 
     borderLeft:`1px solid ${C.border}`,
     display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto",
     transform: open ? "translateX(0)" : "translateX(110%)",
-    transition:"transform 0.28s ease",
-    boxShadow:"-6px 0 32px #0008"
+    visibility: open ? "visible" : "hidden",
+    pointerEvents: open ? "auto" : "none",
+    transition:"transform 0.28s ease, visibility 0.28s ease",
+    boxShadow: open ? "-6px 0 32px #0008" : "none"
   } : {
-    width:220, height:"100vh",
+    width:"var(--ui-sidebar-width, 320px)", height:"100vh",
     background:`linear-gradient(180deg, ${C.surface} 0%, #161616 100%)`,
     borderLeft:`1px solid ${C.border}`, borderRight:`2px solid #D4880E11`,
-    display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto"
+    display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto",
+    transition:"width 0.2s ease"
   };
   return (
     <aside style={asideStyle}>
@@ -7348,13 +8231,13 @@ function Sidebar({ tab, setTab, me, onLogout, onChangePassword, isMobile, open, 
                 <button key={item.key} onClick={() => !locked && handleNav(item.key)} style={{
                   display:"flex", alignItems:"center", gap:10, width:"100%", padding:"9px 12px",
                   borderRadius:10, border:"none", cursor:locked?"not-allowed":"pointer", fontFamily:FF,
-                  fontSize:13, marginBottom:2, textAlign:"right",
+                  fontSize:13, marginBottom:2, textAlign:"right", whiteSpace:"nowrap", overflow:"hidden",
                   background:active?C.primaryDim:"transparent",
                   color:locked?C.textMuted:active?C.primary:C.textDim,
                   transition:"all 0.15s"
                 }}>
                   <Ic name={item.icon} size={16} color={locked?C.textMuted:active?C.primary:C.textDim} />
-                  <span style={{ flex:1 }}>{item.label}</span>
+                  <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis" }}>{item.label}</span>
                   {locked && <Ic name="lock" size={12} color={C.textMuted} />}
                 </button>
               );
@@ -7408,6 +8291,32 @@ function App() {
   const [changePwdSuccess, setChangePwdSuccess] = useState("");
   const winW = useWindowWidth();
   const isMobile = winW < 900;
+  useEffect(() => { if (!isMobile) setSidebarOpen(false); }, [isMobile]);
+
+  // Boot: restore session from localStorage token
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) return;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp * 1000 < Date.now()) {
+        localStorage.removeItem("adminToken");
+        return;
+      }
+      setMe({
+        id: payload.id,
+        name: payload.name || payload.username,
+        username: payload.username,
+        role: payload.system_role,
+        system_role: payload.system_role,
+        avatar: null,
+        permissions: payload.permissions || [],
+        type: "admin"
+      });
+    } catch(e) {
+      localStorage.removeItem("adminToken");
+    }
+  }, []);
 
   const showToast = (msg, type="success") => {
     const id = Date.now();
@@ -7462,7 +8371,7 @@ function App() {
   if (me.type==="customer") return <CustomerPortal me={me} onLogout={logout} />;
 
   const modules = {
-    dashboard: <Dashboard  me={me} showToast={showToast} onNavigate={setTab} />,
+    dashboard: <Dashboard  me={me} showToast={showToast} onNavigate={setTab} isMobile={isMobile} />,
     financial: <FinancialModule me={me} showToast={showToast} />,
     crm:       <CRMModule  me={me} showToast={showToast} />,
     scorpion:  <ScorpionModule  showToast={showToast} />,
@@ -7470,7 +8379,10 @@ function App() {
     opsboard:  <OrderOpsBoard   me={me} showToast={showToast} />,
     products:  <ProductsModule  me={me} showToast={showToast} />,
     rules:     <RulesModule     me={me} showToast={showToast} />,
+    tasks:     <TasksModule     me={me} showToast={showToast} />,
+    auditlogs: <AuditLogsModule me={me} showToast={showToast} />,
     aidrafts:  <AIDrafts        me={me} showToast={showToast} />,
+    appearance:<AppearancePanel me={me} showToast={showToast} />,
     marketing: <MarketingModule   me={me} showToast={showToast} />,
     whatsapp:  <WhatsAppBroadcast me={me} showToast={showToast} />,
     inbox:     <WhatsAppInbox me={me} showToast={showToast} />,
