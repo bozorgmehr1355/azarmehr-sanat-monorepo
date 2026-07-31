@@ -148,10 +148,11 @@ module.exports = async (req, res) => {
     }
 
     // ── گام A: ایجاد پروژه ───────────────────────────────────────────────────
-    // title از نام مشتری (یا شماره سفارش) ساخته می‌شود؛ manager_id = ادمین درخواست‌دهنده
+    // عنوان بر مبنای شماره سفارش ساخته می‌شود (یک مشتری ممکن است چندین سفارش
+    // داشته باشد)؛ نام مشتری در توضیحات ذخیره می‌شود. manager_id = ادمین درخواست‌دهنده
     const customerName = order.crm_customers?.name || null;
-    const projectTitle = `پروژه فروش ${customerName || '#' + parsedId}`;
-    const projectDescription = order.note || `سفارش شماره ${parsedId}`;
+    const projectTitle = `سفارش شماره ${parsedId}`;
+    const projectDescription = order.note || (customerName ? `مشتری: ${customerName}` : '');
 
     const { data: project, error: projectError } = await supabase
       .from('projects')
