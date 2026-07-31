@@ -3101,6 +3101,30 @@ function OrdersModule({ me, showToast }) {
 
   const custMap = Object.fromEntries((customers||[]).map(c=>[c.id,c]));
 
+  // استایل‌های مشترک هدر و سلول جدول
+  const thStyle = {
+    textAlign: "right",
+    padding: "calc(var(--ui-table-cell-padding) + 3px) 10px",
+    background: C.surfaceAlt,
+    color: C.textMuted,
+    fontSize: 11,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+    letterSpacing: "0.2px",
+    borderBottom: "1px solid " + C.border
+  };
+  const tdStyle = {
+    textAlign: "right",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    padding: "var(--ui-table-cell-padding) 10px",
+    color: C.text,
+    verticalAlign: "middle",
+    minHeight: "var(--ui-table-row-height)",
+    borderBottom: "var(--ui-table-gridlines) solid " + C.border
+  };
+
   const exportOrdersCSV = () => {
     var header = ["شماره","مشتری","تلفن","نوع","مبلغ","وضعیت","تاریخ ثبت"];
     var dataRows = filtered.map(function(o) {
@@ -3197,36 +3221,60 @@ function OrdersModule({ me, showToast }) {
       {filtered.length===0
         ? <Empty text="سفارشی یافت نشد" icon="📋" />
         : (<>
-          {/* دسکتاپ */}
-          <div style={{...cardStyle, display:"block" }} className="orders-desktop grid-table">
-            <div style={{ display:"grid", gridTemplateColumns:"60px 2fr 110px 80px 80px 120px 130px 130px" }}>
-              {["#","مشتری","تاریخ","نوع","کانال","مبلغ","وضعیت",""].map((h,i)=>(
-                <div key={i} style={{ padding:"10px 14px", fontSize:11, color:C.textMuted, fontWeight:700, borderBottom:`1px solid ${C.border}` }}>{h}</div>
-              ))}
-              {filtered.map((o,i)=>{
-                const cust = custMap[o.customer_id];
-                const rowBg = i%2===0?C.surface:C.surfaceAlt;
-                const brd = i<filtered.length-1?`1px solid ${C.border}`:"none";
-                return (
-                  <React.Fragment key={o.id}>
-                    <div style={{ padding:"12px 14px", fontSize:12, color:C.text, fontWeight:500, borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>#{fa(o.id)}</div>
-                    <div style={{ padding:"12px 14px", fontSize:13, fontWeight:600, color:C.text, borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>{cust?.name||o.customer_name||"—"}</div>
-                    <div style={{ padding:"12px 14px", fontSize:11, color:C.textMuted, borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>{o.created_at ? new Date(o.created_at).toLocaleDateString("fa-IR") : "—"}</div>
-                    <div style={{ padding:"12px 14px", borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>
-                      <span style={{ fontSize:11, padding:"3px 8px", borderRadius:5, background:o.order_type==="custom"?C.indigoDim:C.cyanDim, color:o.order_type==="custom"?C.indigo:C.cyan }}>{o.order_type==="custom"?"سفارشی":"انبار"}</span>
-                    </div>
-                    <div style={{ padding:"12px 14px", fontSize:11, color:C.textMuted, borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>
-                      {o.sales_channel==="retail"?"خرد":o.sales_channel==="wholesale"?"عمده":"—"}
-                    </div>
-                    <div style={{ padding:"12px 14px", fontSize:13, fontWeight:600, color:C.primary, borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>{shortCur(o.total_amount)}</div>
-                    <div style={{ padding:"12px 14px", borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}><Tag status={o.order_status} /></div>
-                    <div style={{ padding:"8px 14px", borderBottom:brd, background:rowBg, display:"flex", alignItems:"center" }}>
-                      <Btn label="جزئیات" icon="eye" small outline onClick={() => setSelected(o)} />
-                    </div>
-                  </React.Fragment>
-                );
-              })}
-            </div>
+{/* دسکتاپ — جدول HTML استاندارد ۷ ستونی */}
+          <div style={{...cardStyle, display:"block", overflow:"auto" }} className="orders-desktop">
+            <table className="orders-table-fix" style={{
+              tableLayout: "fixed",
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: 12
+            }}>
+              <colgroup>
+                <col style={{ width: "8%" }} />
+                <col style={{ width: "22%" }} />
+                <col style={{ width: "14%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "16%" }} />
+                <col style={{ width: "16%" }} />
+                <col style={{ width: "12%" }} />
+              </colgroup>
+              <thead>
+                <tr style={{ background: C.surfaceAlt }}>
+                  <th style={thStyle}>#</th>
+                  <th style={thStyle}>مشتری</th>
+                  <th style={thStyle}>تاریخ</th>
+                  <th style={thStyle}>نوع</th>
+                  <th style={thStyle}>مبلغ</th>
+                  <th style={thStyle}>وضعیت</th>
+                  <th style={thStyle}>عملیات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((o,i)=>{
+                  const cust = custMap[o.customer_id];
+                  const rowBg = i%2===0?C.surface:C.surfaceAlt;
+                  return (
+                    <tr key={o.id} style={{ background: rowBg }}>
+                      <td style={tdStyle}>#{fa(o.id)}</td>
+                      <td style={tdStyle}>{cust?.name||o.customer_name||"—"}</td>
+                      <td style={tdStyle}>{o.created_at ? new Date(o.created_at).toLocaleDateString("fa-IR") : "—"}</td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          fontSize:11, padding:"3px 8px", borderRadius:5,
+                          background: o.order_type==="custom"?C.indigoDim:C.cyanDim,
+                          color: o.order_type==="custom"?C.indigo:C.cyan
+                        }}>{o.order_type==="custom"?"سفارشی":"انبار"}</span>
+                      </td>
+                      <td style={{...tdStyle, fontSize:13, fontWeight:600, color:C.primary}}>{shortCur(o.total_amount)}</td>
+                      <td style={tdStyle}><Tag status={o.order_status} /></td>
+                      <td style={tdStyle}>
+                        <Btn label="جزئیات" icon="eye" small outline onClick={() => setSelected(o)} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
           {/* موبایل — کارت */}
           <div style={{ flexDirection:"column", gap:10 }} className="orders-mobile">
@@ -8705,6 +8753,30 @@ function OrdersModule({ me, showToast }) {
 
   const custMap = Object.fromEntries((customers||[]).map(c=>[c.id,c]));
 
+  // استایل‌های مشترک هدر و سلول جدول
+  const thStyle = {
+    textAlign: "right",
+    padding: "calc(var(--ui-table-cell-padding) + 3px) 10px",
+    background: C.surfaceAlt,
+    color: C.textMuted,
+    fontSize: 11,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+    letterSpacing: "0.2px",
+    borderBottom: "1px solid " + C.border
+  };
+  const tdStyle = {
+    textAlign: "right",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    padding: "var(--ui-table-cell-padding) 10px",
+    color: C.text,
+    verticalAlign: "middle",
+    minHeight: "var(--ui-table-row-height)",
+    borderBottom: "var(--ui-table-gridlines) solid " + C.border
+  };
+
   const exportOrdersCSV = () => {
     var header = ["شماره","مشتری","تلفن","نوع","مبلغ","وضعیت","تاریخ ثبت"];
     var dataRows = filtered.map(function(o) {
@@ -9219,6 +9291,7 @@ window.__ORDERS_LOADED__ = true;
 </script>
 </body>
 </html>
+
 
 
 
