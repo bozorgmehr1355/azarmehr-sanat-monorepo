@@ -162,27 +162,97 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ channel, title }) => {
   );
 };
 
-const OrderDetails: React.FC<{ order: any; onBack: () => void }> = ({ order, onBack }) => (
+const OrderDetails: React.FC<{ order: any; onBack: () => void }> = ({ order, onBack }) => {
+  const [converting, setConverting] = useState(false);
+  const [converted, setConverted] = useState(false);
+  const [convertMsg, setConvertMsg] = useState<{ type: 'ok' | 'err' | 'info'; text: string } | null>(null);
+
+  const convertToProject = async () => {
+    setConverting(true);
+    setConvertMsg(null);
+    try {
+      const data = await apiFetch('/api/crm-order-to-project', {
+        method: 'POST',
+        body: JSON.stringify({ order_id: order.id }),
+      });
+      setConverted(true);
+      const projectTitle = data?.project?.title || 'پروژه';
+      const stages = data?.total_stages ?? data?.tasks?.length ?? 8;
+      setConvertMsg({
+        type: 'ok',
+        text: `پروژه «${projectTitle}» با ${stages} مرحله کاری ایجاد شد.`,
+      });
+    } catch (e: any) {
+      if (e?.status === 409) {
+        setConvertMsg({
+          type: 'info',
+          text: e?.message || 'برای این سفارش قبلاً پروژه / مراحل کاری ایجاد شده است.',
+        });
+      } else {
+        setConvertMsg({ type: 'err', text: e?.message || 'خطا در تبدیل سفارش به پروژه' });
+      }
+    } finally {
+      setConverting(false);
+    }
+  };
+
+  return (
   <Card>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
       <h3 style={{ margin: 0, color: '#f0f6fc', fontSize: 17 }}>
         {order.order_no || `سفارش #${order.id}`}
       </h3>
-      <button
-        onClick={onBack}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button
+          onClick={convertToProject}
+          disabled={converting || converted}
+          title="ایجاد پروژه و ۸ مرحله کاری برای این سفارش"
+          style={{
+            background: converting || converted ? '#2a4a75' : '#1f6feb',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            padding: '7px 16px',
+            cursor: converting || converted ? 'default' : 'pointer',
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          {converting ? 'در حال تبدیل...' : converted ? 'تبدیل شد ✓' : 'تبدیل به پروژه'}
+        </button>
+        <button
+          onClick={onBack}
+          style={{
+            background: '#21262d',
+            color: '#c9d1d9',
+            border: '1px solid #30363d',
+            borderRadius: 8,
+            padding: '7px 14px',
+            cursor: 'pointer',
+            fontSize: 13,
+          }}
+        >
+          ← بازگشت
+        </button>
+      </div>
+    </div>
+
+    {convertMsg && (
+      <div
         style={{
-          background: '#21262d',
-          color: '#c9d1d9',
-          border: '1px solid #30363d',
+          marginBottom: 16,
+          padding: '10px 14px',
           borderRadius: 8,
-          padding: '7px 14px',
-          cursor: 'pointer',
           fontSize: 13,
+          background: convertMsg.type === 'ok' ? '#12261a' : convertMsg.type === 'info' ? '#1c2129' : '#2d1517',
+          color: convertMsg.type === 'ok' ? '#3fb950' : convertMsg.type === 'info' ? '#c9d1d9' : '#f85149',
+          border: `1px solid ${convertMsg.type === 'ok' ? '#238636' : convertMsg.type === 'info' ? '#30363d' : '#da3633'}`,
         }}
       >
-        ← بازگشت
-      </button>
-    </div>
+        {convertMsg.text}
+      </div>
+    )}
+
 
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 16 }}>
       <Field label="مشتری" value={order.crm_customers?.name || order.customer_name || '—'} />
@@ -223,7 +293,8 @@ const OrderDetails: React.FC<{ order: any; onBack: () => void }> = ({ order, onB
       </>
     )}
   </Card>
-);
+  );
+};
 
 const Field: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <div style={{ background: '#0d1117', border: '1px solid #21262d', borderRadius: 8, padding: '10px 14px' }}>
