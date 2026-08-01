@@ -4,6 +4,7 @@ import {
   Card, Loading, ErrorBox, PageHeader, RefreshButton, faNum, faMoney, StatusBadge,
   ORDER_STATUS_LABELS, faDate,
 } from '../../shared/ui';
+import { TaskBoard } from './TaskBoard';
 
 interface OrdersViewProps {
   channel?: 'wholesale' | 'retail';
@@ -17,6 +18,61 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ channel, title }) => {
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [details, setDetails] = useState<any>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formMsg, setFormMsg] = useState('');
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [form, setForm] = useState({
+    customer_id: '',
+    order_type: channel === 'retail' ? 'retail' : channel === 'wholesale' ? 'wholesale' : 'wholesale',
+    payment_type: 'cash',
+    total_amount: '',
+    note: '',
+  });
+
+  // دریافت لیست مشتریان برای فرم ثبت سفارش
+  const loadCustomers = useCallback(async () => {
+    try {
+      const data = await apiFetch('/api/crm-customers?limit=500');
+      setCustomers(Array.isArray(data) ? data : []);
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    loadCustomers();
+  }, [loadCustomers]);
+
+  const submitOrder = async () => {
+    setSaving(true);
+    setFormMsg('');
+    try {
+      if (!form.customer_id) {
+        setFormMsg('✗ انتخاب مشتری الزامی است');
+        setSaving(false);
+        return;
+      }
+      const body: any = {
+        customer_id: Number(form.customer_id),
+        order_type: form.order_type,
+        sales_channel: form.order_type,
+        payment_type: form.payment_type || 'cash',
+        note: form.note || undefined,
+      };
+      if (form.total_amount) body.total_amount = Number(form.total_amount);
+      await apiFetch('/api/crm-orders', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      setFormMsg('✓ سفارش با موفقیت ثبت شد');
+      setShowForm(false);
+      setForm({ ...form, customer_id: '', total_amount: '', note: '' });
+      load();
+    } catch (e: any) {
+      setFormMsg(`✗ ${e?.message || 'خطا در ثبت سفارش'}`);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -30,7 +86,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ channel, title }) => {
       if (search.trim()) {
         const q = search.trim();
         list = list.filter((o) =>
-          (o.order_no || '').includes(q) ||
+          (o.tracking_code || o.order_no || '').includes(q) ||
           (o.crm_customers?.name || o.customer_name || '').includes(q) ||
           (o.customer_phone || '').includes(q)
         );
@@ -65,8 +121,115 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ channel, title }) => {
       <PageHeader
         title={title || 'مدیریت سفارشات'}
         subtitle={channel ? `سفارش‌های کانال ${channel === 'wholesale' ? 'عمده‌فروشی' : 'خرده‌فروشی'}` : 'لیست زنده سفارشات از دیتابیس'}
-        actions={<RefreshButton onClick={load} />}
+        actions={
+          <>
+            <button
+              onClick={() => setShowForm((s) => !s)}
+              style={{
+                background: '#238636',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                padding: '8px 16px',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              {showForm ? 'بستن فرم' : '+ سفارش جدید'}
+            </button>
+            <RefreshButton onClick={load} />
+          </>
+        }
       />
+
+      {showForm && (
+        <Card style={{ marginBottom: 16 }}>
+          <h4 style={{ margin: '0 0 14px', color: '#f0f6fc', fontSize: 15 }}>ثبت سفارش جدید</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>مشتری *</div>
+              <select
+                value={form.customer_id}
+                onChange={(e) => setForm({ ...form, customer_id: e.target.value })}
+                style={inputStyle}
+              >
+                <option value="">انتخاب مشتری...</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name || '—'} {c.phone ? `(${faNum(c.phone)})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>نوع سفارش</div>
+              <select
+                value={form.order_type}
+                onChange={(e) => setForm({ ...form, order_type: e.target.value })}
+                style={inputStyle}
+              >
+                <option value="wholesale">عمده‌فروشی</option>
+                <option value="retail">خرده‌فروشی</option>
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>نوع پرداخت</div>
+              <select
+                value={form.payment_type}
+                onChange={(e) => setForm({ ...form, payment_type: e.target.value })}
+                style={inputStyle}
+              >
+                <option value="cash">نقدی</option>
+                <option value="credit">اعتباری</option>
+                <option value="mixed">ترکیبی</option>
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>مبلغ کل (تومان)</div>
+              <input
+                placeholder="اختیاری"
+                value={form.total_amount}
+                onChange={(e) => setForm({ ...form, total_amount: e.target.value })}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>توضیحات</div>
+              <input
+                placeholder="اختیاری"
+                value={form.note}
+                onChange={(e) => setForm({ ...form, note: e.target.value })}
+                style={inputStyle}
+              />
+            </div>
+          </div>
+          <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={submitOrder}
+              disabled={saving}
+              style={{
+                background: saving ? '#2a5a35' : '#238636',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                padding: '9px 20px',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              {saving ? 'در حال ثبت...' : 'ثبت سفارش'}
+            </button>
+            {formMsg && <span style={{ fontSize: 13, color: formMsg.startsWith('✓') ? '#3fb950' : '#f85149' }}>{formMsg}</span>}
+          </div>
+          {form.order_type === 'retail' && (
+            <p style={{ fontSize: 12, color: '#8b949e', margin: '10px 0 0' }}>
+              سفارش خرده‌فروشی مستقیماً به فاکتور نهایی تبدیل می‌شود (بدون پروژه و مراحل کاری).
+            </p>
+          )}
+        </Card>
+      )}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <input
@@ -118,7 +281,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ channel, title }) => {
                     <th style={{ padding: '12px 10px' }}>مشتری</th>
                     <th style={{ padding: '12px 10px' }}>مبلغ کل</th>
                     <th style={{ padding: '12px 10px' }}>وضعیت</th>
-                    <th style={{ padding: '12px 10px' }}>کانال</th>
+                    <th style={{ padding: '12px 10px' }}>نوع</th>
                     <th style={{ padding: '12px 10px' }}>تاریخ</th>
                   </tr>
                 </thead>
@@ -132,7 +295,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ channel, title }) => {
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
                       <td style={{ padding: '12px 10px', fontWeight: 600, color: '#f0f6fc' }}>
-                        {o.order_no || `#${o.id}`}
+                        {o.tracking_code || o.order_no || `#${o.id}`}
                       </td>
                       <td style={{ padding: '12px 10px' }}>
                         {o.crm_customers?.name || o.customer_name || '—'}
@@ -147,7 +310,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ channel, title }) => {
                         <StatusBadge status={o.order_status || o.status} />
                       </td>
                       <td style={{ padding: '12px 10px', color: '#8b949e' }}>
-                        {(o.sales_channel || '') === 'retail' ? 'خرده' : 'عمده'}
+                        {(o.order_type || o.sales_channel || '') === 'retail' ? 'خرده' : 'عمده'}
                       </td>
                       <td style={{ padding: '12px 10px', color: '#8b949e' }}>{faDate(o.created_at)}</td>
                     </tr>
@@ -167,6 +330,11 @@ const OrderDetails: React.FC<{ order: any; onBack: () => void }> = ({ order, onB
   const [converted, setConverted] = useState(false);
   const [convertMsg, setConvertMsg] = useState<{ type: 'ok' | 'err' | 'info'; text: string } | null>(null);
 
+  const isRetail = (order.order_type || order.sales_channel) === 'retail';
+  const isFinalized = isRetail
+    ? converted || (order.order_status || '') === 'proforma_issued'
+    : converted;
+
   const convertToProject = async () => {
     setConverting(true);
     setConvertMsg(null);
@@ -176,20 +344,27 @@ const OrderDetails: React.FC<{ order: any; onBack: () => void }> = ({ order, onB
         body: JSON.stringify({ order_id: order.id }),
       });
       setConverted(true);
-      const projectTitle = data?.project?.title || 'پروژه';
-      const stages = data?.total_stages ?? data?.tasks?.length ?? 8;
-      setConvertMsg({
-        type: 'ok',
-        text: `پروژه «${projectTitle}» با ${stages} مرحله کاری ایجاد شد.`,
-      });
+      if (data?.mode === 'retail') {
+        setConvertMsg({
+          type: 'ok',
+          text: `فاکتور نهایی «${data.invoice_number || '—'}» برای این سفارش صادر شد (مسیر خرده‌فروشی).`,
+        });
+      } else {
+        const projectTitle = data?.project?.title || 'پروژه';
+        const stages = data?.total_stages ?? data?.tasks?.length ?? 8;
+        setConvertMsg({
+          type: 'ok',
+          text: `پروژه «${projectTitle}» با ${stages} مرحله کاری ایجاد شد.`,
+        });
+      }
     } catch (e: any) {
       if (e?.status === 409) {
         setConvertMsg({
           type: 'info',
-          text: e?.message || 'برای این سفارش قبلاً پروژه / مراحل کاری ایجاد شده است.',
+          text: e?.message || 'برای این سفارش قبلاً پروژه / فاکتور ایجاد شده است.',
         });
       } else {
-        setConvertMsg({ type: 'err', text: e?.message || 'خطا در تبدیل سفارش به پروژه' });
+        setConvertMsg({ type: 'err', text: e?.message || 'خطا در تبدیل سفارش' });
       }
     } finally {
       setConverting(false);
@@ -200,25 +375,29 @@ const OrderDetails: React.FC<{ order: any; onBack: () => void }> = ({ order, onB
   <Card>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
       <h3 style={{ margin: 0, color: '#f0f6fc', fontSize: 17 }}>
-        {order.order_no || `سفارش #${order.id}`}
+        {order.tracking_code || order.order_no || `سفارش #${order.id}`}
       </h3>
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         <button
           onClick={convertToProject}
-          disabled={converting || converted}
-          title="ایجاد پروژه و ۸ مرحله کاری برای این سفارش"
+          disabled={converting || isFinalized}
+          title={isRetail ? 'صدور فاکتور نهایی برای این سفارش خرده‌فروشی' : 'ایجاد پروژه و ۸ مرحله کاری برای این سفارش'}
           style={{
-            background: converting || converted ? '#2a4a75' : '#1f6feb',
+            background: converting || isFinalized ? '#2a4a75' : '#1f6feb',
             color: '#fff',
             border: 'none',
             borderRadius: 8,
             padding: '7px 16px',
-            cursor: converting || converted ? 'default' : 'pointer',
+            cursor: converting || isFinalized ? 'default' : 'pointer',
             fontSize: 13,
             fontWeight: 600,
           }}
         >
-          {converting ? 'در حال تبدیل...' : converted ? 'تبدیل شد ✓' : 'تبدیل به پروژه'}
+          {converting
+            ? 'در حال انجام...'
+            : isFinalized
+              ? (isRetail ? 'فاکتور صادر شد ✓' : 'تبدیل شد ✓')
+              : (isRetail ? 'صدور فاکتور نهایی' : 'تبدیل به پروژه')}
         </button>
         <button
           onClick={onBack}
@@ -259,6 +438,7 @@ const OrderDetails: React.FC<{ order: any; onBack: () => void }> = ({ order, onB
       <Field label="تلفن" value={order.customer_phone || order.crm_customers?.phone || '—'} />
       <Field label="وضعیت" value={<StatusBadge status={order.order_status || order.status} />} />
       <Field label="مبلغ کل" value={faMoney(order.total_amount || order.amount) + ' تومان'} />
+      <Field label="نوع سفارش" value={(order.order_type || order.sales_channel || '—') === 'retail' ? 'خرده‌فروشی' : (order.order_type || order.sales_channel || '—') === 'wholesale' ? 'عمده‌فروشی' : (order.order_type || order.sales_channel || '—')} />
       <Field label="کانال فروش" value={(order.sales_channel || '—') === 'retail' ? 'خرده‌فروشی' : order.sales_channel === 'wholesale' ? 'عمده‌فروشی' : order.sales_channel} />
       <Field label="نوع پرداخت" value={order.payment_type || '—'} />
       <Field label="تاریخ ثبت" value={faDate(order.created_at)} />
@@ -292,6 +472,10 @@ const OrderDetails: React.FC<{ order: any; onBack: () => void }> = ({ order, onB
         </table>
       </>
     )}
+
+    {!isRetail && (
+      <TaskBoard orderId={order.id} />
+    )}
   </Card>
   );
 };
@@ -302,3 +486,14 @@ const Field: React.FC<{ label: string; value: React.ReactNode }> = ({ label, val
     <div style={{ fontSize: 13, color: '#f0f6fc' }}>{value}</div>
   </div>
 );
+
+const inputStyle: React.CSSProperties = {
+  padding: '9px 12px',
+  background: '#0d1117',
+  border: '1px solid #30363d',
+  borderRadius: 8,
+  color: '#f0f6fc',
+  fontSize: 13,
+  width: '100%',
+  boxSizing: 'border-box',
+};

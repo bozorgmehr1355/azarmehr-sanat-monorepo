@@ -1,7 +1,8 @@
 const { supabase, cors, requireAuth, requireAdmin, requireSuperAdmin } = require('./_lib');
 
 // فیلدهایی که نباید از client مستقیم نوشته شوند
-const BLOCKED = new Set(['id', 'created_at', 'deleted_at', 'approved_by', 'user_id']);
+// customer_code: فقط توسط دیتابیس (سیکوئنس) تولید می‌شود
+const BLOCKED = new Set(['id', 'created_at', 'deleted_at', 'approved_by', 'user_id', 'customer_code']);
 
 const VALID_GRADES = new Set(['standard', 'silver', 'gold', 'vip']);
 const VALID_SEGMENTS = new Set(['A', 'B', 'C']);
@@ -63,7 +64,7 @@ module.exports = async (req, res) => {
 
       if (id) query = query.eq('id', id);
       if (search) {
-        query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%,store_name.ilike.%${search}%`);
+        query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%,store_name.ilike.%${search}%,customer_code.ilike.%${search}%`);
       }
 
       query = query.order('created_at', { ascending: false })

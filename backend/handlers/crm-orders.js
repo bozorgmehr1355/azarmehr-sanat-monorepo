@@ -1,8 +1,8 @@
 const { supabase, cors, requireAuth, requireAdmin, requireSuperAdmin } = require('./_lib');
 
 // فیلدهایی که در schema وجود ندارند یا نباید از client نوشته شوند
-const BLOCKED_POST = new Set(['id', 'deleted_at', 'assigned_to', 'payment_status', 'order_number', 'items', 'workflow_status', 'current_owner']);
-const BLOCKED_PUT  = new Set(['id', 'created_at', 'deleted_at', 'customer_id', 'assigned_to', 'payment_status', 'order_number', 'items', 'workflow_status', 'current_owner']);
+const BLOCKED_POST = new Set(['id', 'deleted_at', 'assigned_to', 'payment_status', 'order_number', 'items', 'workflow_status', 'current_owner', 'tracking_code']);
+const BLOCKED_PUT  = new Set(['id', 'created_at', 'deleted_at', 'customer_id', 'assigned_to', 'payment_status', 'order_number', 'items', 'workflow_status', 'current_owner', 'tracking_code']);
 
 // ─── helper: ایجاد خودکار پروژه پس از تأیید سفارش ───
 async function autoCreateProject(orderId, adminUserId) {
@@ -28,6 +28,17 @@ async function autoCreateProject(orderId, adminUserId) {
   if (ordErr || !order) return;
 
   const customerName = order.crm_customers?.name || '';
+
+  // ── Phase 2: تفکیک چرخه حیات — retail پروژه/مراحل کاری نمی‌گیرد ──────────
+  // مسیر retail مستقیم به فاکتور نهایی (crm_invoices) می‌رود؛ بنابراین
+  // autoCreateProject فقط برای سفارشات wholesale مجاز است.
+  // اگر order_type معتبر نبود (سفارش قدیمی با 'stock'/NULL)، sales_channel مرجع است.
+  const rawType = order.order_type || order.sales_channel || 'wholesale';
+  const orderType = (rawType === 'retail' || rawType === 'wholesale')
+    ? rawType
+    : (order.sales_channel === 'retail' ? 'retail' : 'wholesale');
+  if (orderType === 'retail') return;
+
   const orderLabel = order.order_number || `#${order.id}`;
   const title = customerName
     ? `پروژه ${customerName} - ${orderLabel}`
@@ -63,6 +74,7 @@ const VALID_PROFORMA_STATUSES = new Set(['draft', 'issued', 'approved', 'rejecte
 const VALID_PAYMENT_TYPES = new Set(['cash', 'credit', 'mixed']);
 const VALID_SALES_CHANNELS = new Set(['retail', 'wholesale']);
 const VALID_SOURCE_APPS = new Set(['admin-panel', 'wholesale-portal', 'website']);
+const VALID_ORDER_TYPES = new Set(['retail', 'wholesale']);
 const VALID_ORDER_STATUSES = new Set([
   'registered', 'pending_review', 'confirmed', 'proforma_issued',
   'pending_payment', 'payment_confirmed', 'in_production',
@@ -85,6 +97,16 @@ function mapOrderFields(body) {
   }
   if (out.sales_channel !== undefined && !VALID_SALES_CHANNELS.has(out.sales_channel)) {
     delete out.sales_channel;
+  }
+  // ── Phase 2: اعتبارسنجی order_type و همگام‌سازی با sales_channel ──────────
+  if (out.order_type !== undefined && !VALID_ORDER_TYPES.has(out.order_type)) {
+    delete out.order_type;
+  }
+  if (out.order_type === undefined && out.sales_channel !== undefined) {
+    out.order_type = out.sales_channel;
+  }
+  if (out.sales_channel === undefined && out.order_type !== undefined) {
+    out.sales_channel = out.order_type;
   }
   if (out.source_app !== undefined && !VALID_SOURCE_APPS.has(out.source_app)) {
     delete out.source_app;

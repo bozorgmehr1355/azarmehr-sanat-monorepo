@@ -14,6 +14,21 @@ const STAGE_WORKFLOW_MAP = {
   shipping:         "shipping" // آخرین مرحله — تغییری نمی‌کند
 };
 
+// ─── وضعیت‌های مجاز تسک ───────────────────────────────────────────────────────
+const VALID_STATUSES = ["pending", "done", "rejected", "blocked", "returned"];
+
+// وضعیت‌هایی که نیازمند «دلیل توقف» (stopped_reason) اجباری هستند
+const STOP_STATUSES = ["blocked", "returned"];
+
+// برچسب فارسی وضعیت‌ها (برای تاریخچه)
+const STATUS_LABELS = {
+  pending:   "در انتظار",
+  done:      "تکمیل‌شده",
+  rejected:  "ردشده",
+  blocked:   "متوقف",
+  returned:  "برگشت‌خورده"
+};
+
 module.exports = async (req, res) => {
   if (cors(req, res)) return;
 
@@ -60,7 +75,7 @@ module.exports = async (req, res) => {
       requireAdmin(req);
       const admin = requireAuth(req);
 
-      const { id, status, notes } = req.body || {};
+      const { id, status, notes, stop_reason } = req.body || {};
 
       // ── Validate ───────────────────────────────────────────────────────
       const parsedId = Number(id);
@@ -68,8 +83,20 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: "id معتبر نیست" });
       }
 
-      if (!status || !["pending", "done", "rejected"].includes(status)) {
-        return res.status(400).json({ error: "status باید pending, done یا rejected باشد" });
+      if (!status || !VALID_STATUSES.includes(status)) {
+        return res.status(400).json({ error: "status باید pending, done, rejected, blocked یا returned باشد" });
+      }
+
+      // تغییر وضعیت به blocked/returned ← دلیل توقف اجباری است
+      const isStop = STOP_STATUSES.includes(status);
+      const reason = (stop_reason !== undefined && stop_reason !== null)
+        ? String(stop_reason).trim()
+        : (notes !== undefined && notes !== null ? String(notes).trim() : "");
+
+      if (isStop && !reason) {
+        return res.status(400).json({
+          error: `برای تغییر وضعیت به «${STATUS_LABELS[status]}» وارد کردن دلیل توقف الزامی است`
+        });
       }
 
       if (notes !== undefined && notes !== null && typeof notes !== "string") {
@@ -89,15 +116,13 @@ module.exports = async (req, res) => {
 
       const now = new Date().toISOString();
 
-      // ── آپدیت task ────────────────────────────────────────────────────
-      const updateFields = { status };
-      if (status === "done" || status === "rejected") {
-        updateFields.completed_at = now;
-      }
-      if (notes) {
-        // اضافه کردن یادداشت به details
-        updateFields.details = supabase.sql`jsonb_set(COALESCE(details, '{}'), '{notes}', to_jsonb(${notes}::text))`;
-      }
+      // ── محاسبه ستون‌های رصد زمان ──────────────────────────────────────
+      // started_at: اولین لحظه‌ای که کار روی تسک شروع می‌شود (خروج از pending)
+      const isStarting = task.status === "pending" && status !== "pending";
+      const startedAt = isStarting && !task.started_at ? now : (task.started_at || null);
+
+      // stopped_reason: برای blocked/returned ذخیره می‌شود؛ برای بقیه پاک می‌شود
+      const stoppedReason = isStop ? reason : null;
 
       // برای سادگی از دو مرحله استفاده می‌کنیم (read + write)
       // در فاز بعدی: تبدیل به RPC
@@ -111,11 +136,13 @@ module.exports = async (req, res) => {
         .update({
           status,
           completed_at: (status === "done" || status === "rejected") ? now : null,
+          started_at: startedAt,
+          stopped_reason: stoppedReason,
           details: updatedDetails
         })
         .eq("id", parsedId)
         .eq("status", task.status) // optimistic lock
-        .select("id, order_id, stage, assignee, status, details, order_index, created_at, completed_at")
+        .select("id, order_id, stage, assignee, status, details, order_index, created_at, completed_at, started_at, stopped_reason")
         .single();
 
       if (updateError) {
@@ -127,7 +154,11 @@ module.exports = async (req, res) => {
         return res.status(409).json({ error: "وضعیت مرحله در این لحظه تغییر کرده است" });
       }
 
-      // ── ثبت در crm_order_history ──────────────────────────────────────
+      // ── ثبت در crm_order_history (سازگاری) ────────────────────────────
+      const historyNotes = isStop
+        ? (reason ? `توقف مرحله ${task.stage} — دلیل: ${reason}` : `توقف مرحله ${task.stage} (${STATUS_LABELS[status]})`)
+        : (notes || `وضعیت مرحله ${task.stage} به ${STATUS_LABELS[status] || status} تغییر یافت`);
+
       await supabase
         .from("crm_order_history")
         .insert({
@@ -135,7 +166,21 @@ module.exports = async (req, res) => {
           from_status: task.stage,
           to_status: `${task.stage}:${status}`,
           changed_by: admin.username || admin.id?.toString() || "system",
-          notes: notes || `وضعیت مرحله ${task.stage} به ${status} تغییر یافت`,
+          notes: historyNotes,
+          created_at: now
+        });
+
+      // ── ثبت در crm_order_status_log (تاریخچه اختصاصی تسک‌ها) ───────────
+      await supabase
+        .from("crm_order_status_log")
+        .insert({
+          task_id: parsedId,
+          order_id: task.order_id,
+          stage: task.stage,
+          from_status: task.status,
+          to_status: status,
+          reason: isStop ? reason : null,
+          changed_by: (typeof admin.id === "number" || /^\d+$/.test(String(admin.id || ""))) ? Number(admin.id) : null,
           created_at: now
         });
 

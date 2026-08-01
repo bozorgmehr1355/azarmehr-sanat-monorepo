@@ -147,10 +147,100 @@ module.exports = async (req, res) => {
       });
     }
 
-    // ── گام A: ایجاد پروژه ───────────────────────────────────────────────────
+    // ── تعیین مسیر چرخه حیات ─────────────────────────────────────────────────
+    // wholesale → پروژه + ۸ مرحله کاری (crm_order_tasks)
+    // retail    → فاکتور نهایی (crm_invoices) مستقیم، بدون پروژه و مراحل کاری
+    // اگر order_type معتبر نبود (مثلاً 'stock' یا NULL در سفارش‌های قدیمی)،
+    // از sales_channel استفاده می‌شود تا مایگریشن order_type نادیده گرفته نشود.
+    const rawOrderType = order.order_type || order.sales_channel || 'wholesale';
+    const orderType = (rawOrderType === 'retail' || rawOrderType === 'wholesale')
+      ? rawOrderType
+      : (order.sales_channel === 'retail' ? 'retail' : 'wholesale');
+    const customerName = order.crm_customers?.name || null;
+
+    if (orderType === 'retail') {
+      // ── مسیر خرده‌فروشی: ساخت فاکتور نهایی ──────────────────────────────────
+      // گارد تکراری: آیا فاکتوری برای این سفارش ساخته شده؟
+      const { data: existingInvoice, error: invoiceCheckError } = await supabase
+        .from('crm_invoices')
+        .select('id')
+        .eq('order_id', parsedId)
+        .limit(1);
+
+      if (invoiceCheckError) {
+        return res.status(500).json({
+          error: `خطا در بررسی فاکتور قبلی: ${invoiceCheckError.message}`
+        });
+      }
+
+      if (existingInvoice && existingInvoice.length > 0) {
+        return res.status(409).json({
+          error: 'برای این سفارش قبلاً فاکتور نهایی ایجاد شده است',
+          order_id: parsedId
+        });
+      }
+
+      const invoiceNumber = order.tracking_code
+        ? `INV-${order.tracking_code.replace(/^ORD-/, '')}`
+        : `INV-${parsedId}`;
+
+      const invoicePayload = {
+        order_id: parsedId,
+        customer_id: order.customer_id || null,
+        invoice_number: invoiceNumber,
+        invoice_type: 'official',
+        total: order.total_amount || order.amount || 0,
+        notes: order.note || (customerName ? `مشتری: ${customerName}` : ''),
+        issue_date: new Date().toISOString()
+      };
+
+      const { data: invoice, error: invoiceError } = await supabase
+        .from('crm_invoices')
+        .insert(invoicePayload)
+        .select()
+        .single();
+
+      if (invoiceError) {
+        return res.status(500).json({
+          error: invoiceError.message || 'خطا در ایجاد فاکتور نهایی'
+        });
+      }
+
+      // وضعیت سفارش → آماده صدور فاکتور (مسیر retail مستقیم به فاکتور می‌رود)
+      if (order.order_status !== 'proforma_issued') {
+        await supabase
+          .from('crm_orders')
+          .update({ order_status: 'proforma_issued' })
+          .eq('id', parsedId);
+      }
+
+      // ── ثبت در تاریخچه (بهترین‌تلاش) ────────────────────────────────────────
+      await supabase
+        .from('crm_order_history')
+        .insert({
+          order_id: parsedId,
+          from_status: order.workflow_status || 'submitted',
+          to_status: order.workflow_status || 'submitted',
+          changed_by: admin.username || admin.id?.toString() || 'system',
+          notes: `مسیر خرده‌فروشی: فاکتور نهایی «${invoiceNumber}» برای سفارش #${parsedId} صادر شد (بدون پروژه/مراحل کاری)`,
+          created_at: new Date().toISOString()
+        });
+
+      return res.status(201).json({
+        ok: true,
+        converted: true,
+        mode: 'retail',
+        order_id: parsedId,
+        order_type: 'retail',
+        invoice: invoice,
+        invoice_number: invoiceNumber,
+        workflow_status: order.workflow_status || 'submitted'
+      });
+    }
+
+    // ── مسیر عمده‌فروشی (wholesale) ───────────────────────────────────────────
     // عنوان بر مبنای شماره سفارش ساخته می‌شود (یک مشتری ممکن است چندین سفارش
     // داشته باشد)؛ نام مشتری در توضیحات ذخیره می‌شود. manager_id = ادمین درخواست‌دهنده
-    const customerName = order.crm_customers?.name || null;
     const projectTitle = `سفارش شماره ${parsedId}`;
     const projectDescription = order.note || (customerName ? `مشتری: ${customerName}` : '');
 
@@ -229,6 +319,7 @@ module.exports = async (req, res) => {
     return res.status(201).json({
       ok: true,
       converted: true,
+      mode: 'wholesale',
       order_id: parsedId,
       workflow_status: workflowStatus,
       payment_type: paymentType,
