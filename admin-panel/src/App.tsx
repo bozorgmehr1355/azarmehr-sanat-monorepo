@@ -1,16 +1,17 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { Layout } from './shared/Layout';
+import { MainLayout } from './components/layout/MainLayout';
+import { navigationIndex } from './types/navigation';
 import { getStoredUser, logout } from './config/api';
 import { LoginScreen } from './modules/LoginScreen';
 import { DashboardView } from './modules/dashboard/DashboardView';
 import { OrdersView } from './modules/orders/OrdersView';
-import { CRMView } from './modules/crm/CRMView';
 import { MessengerView } from './modules/messenger/MessengerView';
 import { SystemControlView } from './modules/system/SystemControlView';
 import { WarrantyView } from './modules/warranty/WarrantyView';
 import { FinanceView } from './modules/finance/FinanceView';
 import { ProjectsView } from './modules/projects/ProjectsView';
 import { ProductsView } from './modules/products/ProductsView';
+import { CustomersPage } from './pages/CustomersPage';
 
 // ماژول‌هایی که endpoint فعال روی بک‌اند دپلوی‌شده ندارند
 const ComingSoon: React.FC<{ title: string; note?: string }> = ({ title, note }) => (
@@ -55,7 +56,7 @@ export const App: React.FC = () => {
       case 'retail':
         return <OrdersView channel="retail" title="خرده‌فروشی" />;
       case 'crm':
-        return <CRMView />;
+        return <CustomersPage />;
       case 'projects':
         return <ProjectsView />;
       case 'products':
@@ -83,10 +84,18 @@ export const App: React.FC = () => {
     setUser(null);
   };
 
+  const pageTitle = navigationIndex[activeTab]?.label || 'پنل مدیریت';
+
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} user={user} onLogout={handleLogout}>
+    <MainLayout
+      activeItemId={activeTab}
+      onNavigate={setActiveTab}
+      user={user}
+      onLogout={handleLogout}
+      pageTitle={pageTitle}
+    >
       {renderView()}
-    </Layout>
+    </MainLayout>
   );
 };
 
