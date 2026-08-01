@@ -10,6 +10,7 @@ import { SystemControlView } from './modules/system/SystemControlView';
 import { WarrantyView } from './modules/warranty/WarrantyView';
 import { FinanceView } from './modules/finance/FinanceView';
 import { ProjectsView } from './modules/projects/ProjectsView';
+import { ProductsView } from './modules/products/ProductsView';
 
 // ماژول‌هایی که endpoint فعال روی بک‌اند دپلوی‌شده ندارند
 const ComingSoon: React.FC<{ title: string; note?: string }> = ({ title, note }) => (
@@ -57,6 +58,8 @@ export const App: React.FC = () => {
         return <CRMView />;
       case 'projects':
         return <ProjectsView />;
+      case 'products':
+        return <ProductsView />;
       case 'inbox':
       case 'whatsapp':
         return <MessengerView />;

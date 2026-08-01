@@ -5,7 +5,7 @@ export interface KPICardProps {
   value: string | number;
   subtext?: string;
   color?: string;
-  icon?: string;
+  icon?: React.ReactNode;
   trend?: string;
   onClick?: () => void;
 }
@@ -42,7 +42,7 @@ export const KPICard: React.FC<KPICardProps> = ({
         <span className="text-xs text-[#8b949e] font-medium">{label}</span>
         {icon && (
           <span
-            className="text-sm p-1.5 rounded"
+            className="p-1.5 rounded"
             style={{
               backgroundColor: `${color}22`,
               color: color,

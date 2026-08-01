@@ -15,7 +15,7 @@
 body {
   background-color: var(--bg-main);
   color: var(--text-primary);
-  font-family: 'IRANSansX', 'Roboto', sans-serif;
+  font-family: 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
   direction: rtl;
   margin: 0;
   padding: 0;

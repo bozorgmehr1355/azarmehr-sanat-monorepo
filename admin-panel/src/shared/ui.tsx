@@ -1,4 +1,16 @@
 import React from 'react';
+import {
+  UserGroupIcon,
+  ShoppingCart01Icon,
+  Money01Icon,
+  Clock01Icon,
+  Shield01Icon,
+  DeliveryBox01Icon,
+  GlobalIcon,
+  Link01Icon,
+  Alert02Icon,
+  RefreshIcon,
+} from 'hugeicons-react';
 
 // ─── کامپوننت‌های UI مشترک ───
 
@@ -38,7 +50,10 @@ export const ErrorBox: React.FC<{ message: string; onRetry?: () => void }> = ({ 
       gap: 12,
     }}
   >
-    <span>⚠️ {message}</span>
+    <span className="flex items-center gap-2">
+      <span className="shrink-0">{Icons.alert}</span>
+      {message}
+    </span>
     {onRetry && (
       <button
         onClick={onRetry}
@@ -77,6 +92,7 @@ export const RefreshButton: React.FC<{ onClick: () => void; loading?: boolean }>
   <button
     onClick={onClick}
     disabled={loading}
+    className="inline-flex items-center gap-2"
     style={{
       background: '#21262d',
       color: '#c9d1d9',
@@ -86,9 +102,11 @@ export const RefreshButton: React.FC<{ onClick: () => void; loading?: boolean }>
       cursor: loading ? 'not-allowed' : 'pointer',
       fontSize: 13,
       fontWeight: 600,
+      transition: 'all 0.15s ease',
     }}
   >
-    {loading ? 'در حال بارگذاری...' : '↻ تازه‌سازی'}
+    <RefreshIcon className="w-4 h-4" />
+    {loading ? 'در حال بارگذاری...' : 'تازه‌سازی'}
   </button>
 );
 
@@ -121,6 +139,20 @@ export const faDate = (iso?: string | null): string => {
     return '—';
   }
 };
+
+// ─── آیکون‌های Hugeicons (مشترک) ───
+
+export const Icons = {
+  users: <UserGroupIcon className="w-4 h-4" />,
+  cart: <ShoppingCart01Icon className="w-4 h-4" />,
+  money: <Money01Icon className="w-4 h-4" />,
+  clock: <Clock01Icon className="w-4 h-4" />,
+  shield: <Shield01Icon className="w-4 h-4" />,
+  box: <DeliveryBox01Icon className="w-4 h-4" />,
+  globe: <GlobalIcon className="w-4 h-4" />,
+  link: <Link01Icon className="w-4 h-4" />,
+  alert: <Alert02Icon className="w-4 h-4" />,
+} as const;
 
 // ─── برچسب‌های فارسی وضعیت ───
 

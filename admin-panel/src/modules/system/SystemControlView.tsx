@@ -1,7 +1,7 @@
 ﻿import React, { useCallback, useEffect, useState } from 'react';
 import { resolveApiBase } from '../../config/api';
 import { apiFetch } from '../../config/api';
-import { Card, Loading, ErrorBox, PageHeader, RefreshButton, faNum, faDate, StatusBadge } from '../../shared/ui';
+import { Card, Loading, ErrorBox, PageHeader, RefreshButton, faNum, faDate, StatusBadge, Icons } from '../../shared/ui';
 
 export const SystemControlView: React.FC = () => {
   const [apiBase, setApiBase] = useState(resolveApiBase());
@@ -33,9 +33,9 @@ export const SystemControlView: React.FC = () => {
     try {
       const res = await fetch(`${apiBase}/api/health`, { method: 'GET' });
       const data = await res.json().catch(() => null);
-      setHealth(data?.ok ? `✅ بک‌اند فعال — ${data.routes?.length || 0} مسیر` : `⚠️ پاسخ غیرمنتظره (${res.status})`);
+      setHealth(data?.ok ? `بک‌اند فعال — ${data.routes?.length || 0} مسیر` : `پاسخ غیرمنتظره (${res.status})`);
     } catch {
-      setHealth('❌ بک‌اند در دسترس نیست');
+      setHealth('بک‌اند در دسترس نیست');
     }
   }, [apiBase]);
 
@@ -73,7 +73,10 @@ export const SystemControlView: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginBottom: 20 }}>
         {/* تنظیمات API */}
         <Card>
-          <h3 style={{ fontSize: 16, color: '#f59e0b', margin: '0 0 16px' }}>🌐 تنظیمات اتصال API</h3>
+          <h3 className="flex items-center gap-2" style={{ fontSize: 16, color: '#f59e0b', margin: '0 0 16px' }}>
+            <span>{Icons.globe}</span>
+            تنظیمات اتصال API
+          </h3>
           <label style={{ display: 'block', fontSize: 12, color: '#8b949e', marginBottom: 6 }}>
             آدرس بیس API (API Base URL):
           </label>
@@ -103,11 +106,14 @@ export const SystemControlView: React.FC = () => {
 
         {/* وضعیت سرویس‌ها */}
         <Card>
-          <h3 style={{ fontSize: 16, color: '#3b82f6', margin: '0 0 16px' }}>🔌 وضعیت اتصال سرویس‌ها</h3>
+          <h3 className="flex items-center gap-2" style={{ fontSize: 16, color: '#3b82f6', margin: '0 0 16px' }}>
+            <span>{Icons.link}</span>
+            وضعیت اتصال سرویس‌ها
+          </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #21262d', paddingBottom: 8 }}>
               <span>بک‌اند (azarmehr-backend):</span>
-              <span style={{ color: health.startsWith('✅') ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+              <span style={{ color: health.startsWith('بک‌اند فعال') ? '#10b981' : health ? '#ef4444' : '#8b949e', fontWeight: 600 }}>
                 {health || 'در حال بررسی...'}
               </span>
             </div>
@@ -139,7 +145,10 @@ export const SystemControlView: React.FC = () => {
       </div>
 
       {/* کاربران */}
-      <h3 style={{ fontSize: 16, color: '#f0f6fc', margin: '0 0 12px' }}>👥 کاربران سیستم</h3>
+      <h3 className="flex items-center gap-2" style={{ fontSize: 16, color: '#f0f6fc', margin: '0 0 12px' }}>
+        <span className="text-[#8b949e]">{Icons.users}</span>
+        کاربران سیستم
+      </h3>
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {usersLoading ? (
           <Loading label="در حال دریافت کاربران..." />

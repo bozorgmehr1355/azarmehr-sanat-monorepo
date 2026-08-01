@@ -1,4 +1,24 @@
 ﻿import React, { useState } from 'react';
+import {
+  DashboardSquare01Icon,
+  Wallet01Icon,
+  WarehouseIcon,
+  Store01Icon,
+  ShoppingCart01Icon,
+  PackageIcon,
+  UserSearch01Icon,
+  UserGroupIcon,
+  Folder01Icon,
+  InboxIcon,
+  SparklesIcon,
+  WhatsappIcon,
+  Cash01Icon,
+  Shield01Icon,
+  Settings01Icon,
+  Menu01Icon,
+  Cancel01Icon,
+  Logout01Icon,
+} from 'hugeicons-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,35 +39,36 @@ const SidebarContent: React.FC<{
     {
       title: 'اصلی',
       items: [
-        { id: 'dashboard', label: 'داشبورد', icon: <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg> },
-        { id: 'finance', label: 'مالی و حسابداری', icon: <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+        { id: 'dashboard', label: 'داشبورد', icon: <DashboardSquare01Icon className="w-5 h-5 text-blue-400" /> },
+        { id: 'finance', label: 'مالی و حسابداری', icon: <Wallet01Icon className="w-5 h-5 text-emerald-400" /> },
       ]
     },
     {
       title: 'مشتریان و فروش',
       items: [
-        { id: 'wholesale', label: 'عمده‌فروشی (B2B)', icon: <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h5m-5 0V10" /></svg> },
-        { id: 'retail', label: 'خرده‌فروشی', icon: <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg> },
-        { id: 'orders', label: 'مدیریت سفارشات', icon: <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
-        { id: 'leads', label: 'لیدها و پیگیری‌ها', icon: <svg className="w-5 h-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
-        { id: 'crm', label: 'ارتباط با مشتری (CRM)', icon: <svg className="w-5 h-5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
-        { id: 'projects', label: 'پروژه‌ها', icon: <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg> },
+        { id: 'wholesale', label: 'عمده‌فروشی (B2B)', icon: <WarehouseIcon className="w-5 h-5 text-indigo-400" /> },
+        { id: 'retail', label: 'خرده‌فروشی', icon: <Store01Icon className="w-5 h-5 text-cyan-400" /> },
+        { id: 'orders', label: 'مدیریت سفارشات', icon: <ShoppingCart01Icon className="w-5 h-5 text-amber-400" /> },
+        { id: 'products', label: 'مدیریت محصولات', icon: <PackageIcon className="w-5 h-5 text-lime-400" /> },
+        { id: 'leads', label: 'لیدها و پیگیری‌ها', icon: <UserSearch01Icon className="w-5 h-5 text-rose-400" /> },
+        { id: 'crm', label: 'ارتباط با مشتری (CRM)', icon: <UserGroupIcon className="w-5 h-5 text-violet-400" /> },
+        { id: 'projects', label: 'پروژه‌ها', icon: <Folder01Icon className="w-5 h-5 text-blue-400" /> },
       ]
     },
     {
       title: 'ارتباطات و هوش مصنوعی',
       items: [
-        { id: 'inbox', label: 'صندوق پیام‌ها', icon: <svg className="w-5 h-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> },
-        { id: 'ai-agent', label: 'دستیار هوشمند (AI)', icon: <svg className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> },
-        { id: 'whatsapp', label: 'ارسال انبوه واتساپ', icon: <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> },
+        { id: 'inbox', label: 'صندوق پیام‌ها', icon: <InboxIcon className="w-5 h-5 text-teal-400" /> },
+        { id: 'ai-agent', label: 'دستیار هوشمند (AI)', icon: <SparklesIcon className="w-5 h-5 text-purple-400" /> },
+        { id: 'whatsapp', label: 'ارسال انبوه واتساپ', icon: <WhatsappIcon className="w-5 h-5 text-green-400" /> },
       ]
     },
     {
       title: 'تنظیمات و پشتیبانی',
       items: [
-        { id: 'tankhahyar', label: 'تنخواه یار', icon: <svg className="w-5 h-5 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> },
-        { id: 'warranty', label: 'گارانتی و خدمات', icon: <svg className="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg> },
-        { id: 'settings', label: 'تنظیمات سیستم', icon: <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
+        { id: 'tankhahyar', label: 'تنخواه یار', icon: <Cash01Icon className="w-5 h-5 text-sky-400" /> },
+        { id: 'warranty', label: 'گارانتی و خدمات', icon: <Shield01Icon className="w-5 h-5 text-orange-400" /> },
+        { id: 'settings', label: 'تنظیمات سیستم', icon: <Settings01Icon className="w-5 h-5 text-slate-400" /> },
       ]
     }
   ];
@@ -71,7 +92,7 @@ const SidebarContent: React.FC<{
               className="md:hidden w-8 h-8 rounded-md bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"
               aria-label="بستن منو"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              <Cancel01Icon className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -125,7 +146,7 @@ const SidebarContent: React.FC<{
               title="خروج از سیستم"
               className="shrink-0 w-7 h-7 rounded-md bg-slate-800 hover:bg-red-600/80 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              <Logout01Icon className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -181,7 +202,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
               className="md:hidden w-9 h-9 shrink-0 rounded-md bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-center"
               aria-label="باز کردن منو"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              <Menu01Icon className="w-5 h-5" />
             </button>
             <div className="text-xs text-slate-400 font-medium truncate">
               سیستم مدیریت عملیاتی آذرمهر

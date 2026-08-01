@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>پنل مدیریت</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#0d1117; color:#c9d1d9; font-family:sans-serif; }
+        #root { display:flex; height:100vh; }
+        nav { width:220px; background:#161b22; padding:20px 12px; border-right:1px solid #30363d; display:flex; flex-direction:column; }
+        nav h3 { color:#f0f6fc; margin-bottom:24px; font-size:18px; }
+        nav button { display:block; width:100%; padding:10px 12px; margin-bottom:4px; background:transparent; color:#fff; border:none; border-radius:6px; cursor:pointer; text-align:right; font-size:14px; transition:0.15s; }
+        nav button.active { background:#d4880e; font-weight:bold; }
+        nav button.danger { background:#da3633; margin-top:auto; }
+        main { flex:1; padding:24px; overflow-y:auto; }
+        .page { color:#c9d1d9; font-size:20px; padding:20px; }
+        .page-icon { font-size:40px; display:block; margin-bottom:12px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "https://esm.sh/react@18",
+                "react-dom/client": "https://esm.sh/react-dom@18/client"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import React from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { useState } from 'react';
+
+        const pages = {
+            dashboard: { label: 'داشبورد', icon: '📊', content: 'صفحه داشبورد - خلاصه اطلاعات' },
+            crm: { label: 'مدیریت مشتریان', icon: '👥', content: 'مدیریت اطلاعات مشتریان' },
+            orders: { label: 'سفارشات', icon: '📦', content: 'لیست و مدیریت سفارشات' },
+            messenger: { label: 'پیام‌رسان', icon: '💬', content: 'پیام‌رسان داخلی' },
+            tankhah: { label: 'تنخواه', icon: '💰', content: 'مدیریت تنخواه‌ها' },
+            system: { label: 'کنترل سیستم', icon: '⚙️', content: 'تنظیمات و کنترل سیستم' },
+        };
+
+        function App() {
+            const [tab, setTab] = useState('dashboard');
+
+            return React.createElement('div', { style: { display: 'flex', height: '100vh', background: '#0d1117', color: '#c9d1d9' } },
+                React.createElement('nav', null,
+                    React.createElement('h3', null, '📊 منو'),
+                    Object.keys(pages).map(key =>
+                        React.createElement('button', {
+                            key: key,
+                            onClick: () => setTab(key),
+                            className: tab === key ? 'active' : ''
+                        }, pages[key].label)
+                    ),
+                    React.createElement('button', {
+                        className: 'danger',
+                        onClick: () => {
+                            localStorage.removeItem('adminToken');
+                            location.reload();
+                        }
+                    }, '🚪 خروج')
+                ),
+                React.createElement('main', null,
+                    React.createElement('div', { className: 'page' },
+                        React.createElement('span', { className: 'page-icon' }, pages[tab]?.icon || '📄'),
+                        React.createElement('h2', null, pages[tab]?.label || 'صفحه پیدا نشد'),
+                        React.createElement('p', { style: { marginTop: 12, opacity: 0.7 } }, pages[tab]?.content || 'محتوای صفحه')
+                    )
+                )
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>

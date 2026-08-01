@@ -162,6 +162,7 @@ export const CRMView: React.FC = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ color: '#8b949e', textAlign: 'right', borderBottom: '1px solid #30363d' }}>
+                  <th style={{ padding: '12px 10px' }}>کد مشتری</th>
                   <th style={{ padding: '12px 10px' }}>نام</th>
                   <th style={{ padding: '12px 10px' }}>تلفن</th>
                   <th style={{ padding: '12px 10px' }}>شهر</th>
@@ -175,6 +176,7 @@ export const CRMView: React.FC = () => {
               <tbody>
                 {customers.map((c) => (
                   <tr key={c.id} style={{ borderBottom: '1px solid #21262d' }}>
+                    <td style={{ padding: '12px 10px', fontWeight: 600, color: '#58a6ff' }}>{c.customer_code || `#${c.id}`}</td>
                     <td style={{ padding: '12px 10px', fontWeight: 600, color: '#f0f6fc' }}>{c.name || '—'}</td>
                     <td style={{ padding: '12px 10px', direction: 'ltr', textAlign: 'right' }}>{faNum(c.phone || c.mobile || '—')}</td>
                     <td style={{ padding: '12px 10px' }}>{c.city || '—'}</td>

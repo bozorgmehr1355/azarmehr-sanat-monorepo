@@ -99,7 +99,7 @@ export const MessengerView: React.FC = () => {
                 }}
               >
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f6fc' }}>
-                  {o.order_no || `#${o.id}`}
+                  {o.tracking_code || o.order_no || `#${o.id}`}
                 </div>
                 <div style={{ fontSize: 12, color: '#8b949e', marginTop: 2 }}>
                   {o.crm_customers?.name || o.customer_name || 'مشتری'}
@@ -117,7 +117,7 @@ export const MessengerView: React.FC = () => {
           <Card style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 220px)' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #30363d', background: '#1c2129' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f6fc' }}>
-                گفتگوی سفارش {selectedOrder.order_no || `#${selectedOrder.id}`}
+                گفتگوی سفارش {selectedOrder.tracking_code || selectedOrder.order_no || `#${selectedOrder.id}`}
               </div>
               <div style={{ fontSize: 12, color: '#8b949e', marginTop: 2 }}>
                 {selectedOrder.crm_customers?.name || selectedOrder.customer_name || ''} — {faNum(selectedOrder.customer_phone || selectedOrder.crm_customers?.phone || '')}

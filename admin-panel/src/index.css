@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import './styles/tokens.css';
 
+@theme {
+  --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
   color-scheme: dark;
 }
@@ -10,6 +14,45 @@ body {
   padding: 0;
   background-color: var(--bg-main, #0d1117);
   color: #c9d1d9;
-  font-family: IRANSansX, Roboto, system-ui, -apple-system, sans-serif;
+  font-family: "Vazirmatn", ui-sans-serif, system-ui, -apple-system, sans-serif;
   direction: rtl;
+}
+
+/* ─── اسکرول‌بار تمیز (دسکتاپ) ─── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 8px;
+  border: 2px solid #0d1117;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* ─── انتخاب متن و فوکوس ─── */
+::selection {
+  background: rgba(59, 130, 246, 0.35);
+  color: #f0f6fc;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.6);
+  outline-offset: 1px;
 }

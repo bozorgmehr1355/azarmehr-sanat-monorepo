@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../../config/api';
-import { Card, Loading, ErrorBox, PageHeader, RefreshButton, faNum, faMoney, StatusBadge } from '../../shared/ui';
+import { Card, Loading, ErrorBox, PageHeader, RefreshButton, faNum, faMoney, StatusBadge, Icons } from '../../shared/ui';
 
 interface KpiCardProps {
   label: string;
   value: string;
   subtext: string;
   color: string;
-  icon: string;
+  icon: React.ReactNode;
 }
 
 const KpiCard: React.FC<KpiCardProps> = ({ label, value, subtext, color, icon }) => (
@@ -24,7 +24,12 @@ const KpiCard: React.FC<KpiCardProps> = ({ label, value, subtext, color, icon })
   >
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <span style={{ fontSize: 13, color: '#8b949e' }}>{label}</span>
-      <span style={{ fontSize: 20 }}>{icon}</span>
+      <span
+        className="w-9 h-9 flex items-center justify-center rounded-lg"
+        style={{ color, backgroundColor: `${color}22` }}
+      >
+        {icon}
+      </span>
     </div>
     <div style={{ fontSize: 24, fontWeight: 700, color }}>{value}</div>
     <div style={{ fontSize: 12, color: '#8b949e' }}>{subtext}</div>
@@ -105,16 +110,19 @@ export const DashboardView: React.FC = () => {
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-        <KpiCard icon="👥" label="کل مشتریان" value={faNum(stats.customers)} subtext={`عمده: ${faNum(stats.customersWholesale)} | خرده: ${faNum(stats.customersRetail)}`} color="#3b82f6" />
-        <KpiCard icon="🛒" label="کل سفارشات" value={faNum(stats.orders)} subtext={`در انتظار بررسی: ${faNum(stats.ordersPending)}`} color="#10b981" />
-        <KpiCard icon="💰" label="ارزش کل سفارشات" value={faMoney(stats.revenue) + ' تومان'} subtext="مجموع total_amount سفارشات" color="#d97706" />
-        <KpiCard icon="⚠️" label="پرداخت‌های در انتظار" value={faNum(stats.paymentsPending)} subtext="نیاز به بررسی و تأیید" color="#f59e0b" />
-        <KpiCard icon="🛡️" label="ادعاهای گارانتی" value={faNum(stats.guaranteeClaims)} subtext={`در انتظار: ${faNum(stats.guaranteePending)}`} color="#06b6d4" />
-        <KpiCard icon="📦" label="سفارشات تازه" value={faNum(stats.ordersRegistered)} subtext="با وضعیت ثبت‌شده" color="#8b5cf6" />
+        <KpiCard icon={Icons.users} label="کل مشتریان" value={faNum(stats.customers)} subtext={`عمده: ${faNum(stats.customersWholesale)} | خرده: ${faNum(stats.customersRetail)}`} color="#3b82f6" />
+        <KpiCard icon={Icons.cart} label="کل سفارشات" value={faNum(stats.orders)} subtext={`در انتظار بررسی: ${faNum(stats.ordersPending)}`} color="#10b981" />
+        <KpiCard icon={Icons.money} label="ارزش کل سفارشات" value={faMoney(stats.revenue) + ' تومان'} subtext="مجموع total_amount سفارشات" color="#d97706" />
+        <KpiCard icon={Icons.clock} label="پرداخت‌های در انتظار" value={faNum(stats.paymentsPending)} subtext="نیاز به بررسی و تأیید" color="#f59e0b" />
+        <KpiCard icon={Icons.shield} label="ادعاهای گارانتی" value={faNum(stats.guaranteeClaims)} subtext={`در انتظار: ${faNum(stats.guaranteePending)}`} color="#06b6d4" />
+        <KpiCard icon={Icons.box} label="سفارشات تازه" value={faNum(stats.ordersRegistered)} subtext="با وضعیت ثبت‌شده" color="#8b5cf6" />
       </div>
 
       <Card>
-        <h3 style={{ fontSize: 16, color: '#f0f6fc', margin: '0 0 16px', fontWeight: 700 }}>🕘 آخرین سفارشات</h3>
+        <h3 className="flex items-center gap-2" style={{ fontSize: 16, color: '#f0f6fc', margin: '0 0 16px', fontWeight: 700 }}>
+          <span className="text-[#8b949e]">{Icons.clock}</span>
+          آخرین سفارشات
+        </h3>
         {stats.recentOrders.length === 0 ? (
           <p style={{ color: '#8b949e', fontSize: 13 }}>سفارشی ثبت نشده است.</p>
         ) : (
@@ -132,7 +140,7 @@ export const DashboardView: React.FC = () => {
               {stats.recentOrders.map((o) => (
                 <tr key={o.id} style={{ borderBottom: '1px solid #21262d' }}>
                   <td style={{ padding: '10px 8px', fontWeight: 600, color: '#f0f6fc' }}>
-                    {o.order_no || `#${o.id}`}
+                    {o.tracking_code || o.order_no || `#${o.id}`}
                   </td>
                   <td style={{ padding: '10px 8px' }}>{o.crm_customers?.name || o.customer_name || '—'}</td>
                   <td style={{ padding: '10px 8px' }}>{faMoney(o.total_amount || o.amount)}</td>
