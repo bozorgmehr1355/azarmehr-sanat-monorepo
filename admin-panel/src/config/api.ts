@@ -1,18 +1,35 @@
 // پیکربندی API و احراز هویت پنل ادمین
 
+function normalizeApiBase(value: unknown): string {
+  if (!value || typeof value !== 'string') return '';
+  return value.trim().replace(/\/+$/, '');
+}
+
 export const resolveApiBase = (): string => {
+  // ۱. متغیر محیطی Vite (بالاترین اولویت — برای production)
+  const envBase = normalizeApiBase(import.meta.env.VITE_API_BASE_URL);
+  if (envBase) return envBase;
+
+  // ۲. متغیر سراسری window (برای override دستی)
   if (typeof window !== 'undefined' && (window as any).AZARMEHR_API_BASE) {
-    return (window as any).AZARMEHR_API_BASE;
+    return normalizeApiBase((window as any).AZARMEHR_API_BASE);
   }
+
+  // ۳. پارامتر URL ?apiBase=...
   if (typeof window !== 'undefined' && window.location) {
     const urlParams = new URLSearchParams(window.location.search);
     const paramBase = urlParams.get('apiBase');
-    if (paramBase) return paramBase;
+    if (paramBase) return normalizeApiBase(paramBase);
 
+    // ۴. localStorage (برای تنظیم دائمی توسط کاربر)
     const storedBase = localStorage.getItem('AZARMEHR_API_BASE');
-    if (storedBase) return storedBase;
+    if (storedBase) return normalizeApiBase(storedBase);
   }
-  return 'https://azarmehr-backend.vercel.app';
+
+  // ۵. پیش‌فرض: same-origin (مسیر نسبی)
+  // در development، Vite proxy درخواست /api را به backend می‌فرستد.
+  // در production، باید VITE_API_BASE_URL ست شود.
+  return '';
 };
 
 // ─── مدیریت نشست (توکن و کاربر) ───
