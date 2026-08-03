@@ -1,5 +1,6 @@
 const { supabase, cors, requireAuth, requireAdmin, requireSuperAdmin } = require('./_lib');
 const { writeAuditLog } = require('./_audit');
+const { normalizeTaskPriority } = require('../services/validation');
 
 // ─── ثابت‌های وضعیت (منبع واحد حقیقت - SSOT) ───
 // TERMINAL = همه حالت‌های پایانی که دیگر ترنزیشن ندارند
@@ -171,29 +172,30 @@ async function getTask(taskId, res) {
 
 // ─── ایجاد وظیفه ──────────────────────────────────────────
 async function createTask(req, res) {
-  requireAdmin(req);
-  const me = requireAuth(req);
-  const { project_id, title, description, assigned_to, priority, due_date } = req.body || {};
+   requireAdmin(req);
+   const me = requireAuth(req);
+   const { project_id, title, description, assigned_to, priority, due_date } = req.body || {};
 
-  if (!project_id) return res.status(400).json({ error: 'project_id الزامی است' });
-  if (!title) return res.status(400).json({ error: 'عنوان وظیفه الزامی است' });
+   if (!project_id) return res.status(400).json({ error: 'project_id الزامی است' });
+   if (!title) return res.status(400).json({ error: 'عنوان وظیفه الزامی است' });
 
-  const status = 'ASSIGNED';
+   const status = 'ASSIGNED';
+   const normalizedPriority = normalizeTaskPriority(priority) || 'medium';
 
-  const { data, error } = await supabase
-    .from('project_tasks')
-    .insert({
-      project_id,
-      title,
-      description: description || '',
-      assigned_to: assigned_to || null,
-      creator_id: me.id,
-      priority: priority || 'medium',
-      due_date: due_date || null,
-      status
-    })
-    .select()
-    .single();
+   const { data, error } = await supabase
+     .from('project_tasks')
+     .insert({
+       project_id,
+       title,
+       description: description || '',
+       assigned_to: assigned_to || null,
+       creator_id: me.id,
+       priority: normalizedPriority,
+       due_date: due_date || null,
+       status
+     })
+     .select()
+     .single();
 
   if (error) return res.status(500).json({ error: error.message });
 
@@ -216,11 +218,13 @@ async function updateTask(taskId, req, res) {
   const me = requireAuth(req);
   const { id, ...rest } = req.body || {};
 
-  const allowed = ['title', 'description', 'assigned_to', 'priority', 'due_date'];
-  const payload = {};
-  for (const [k, v] of Object.entries(rest)) {
-    if (allowed.includes(k)) payload[k] = v;
-  }
+   const allowed = ['title', 'description', 'assigned_to', 'priority', 'due_date'];
+   const payload = {};
+   for (const [k, v] of Object.entries(rest)) {
+     if (allowed.includes(k)) {
+       payload[k] = k === 'priority' ? normalizeTaskPriority(v) : v;
+     }
+   }
 
   if (Object.keys(payload).length === 0) {
     return res.status(400).json({ error: 'هیچ فیلدی برای آپدیت ارسال نشده' });

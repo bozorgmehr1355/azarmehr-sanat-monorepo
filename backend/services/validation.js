@@ -62,7 +62,20 @@ const taskStatusValues = [
   'BLOCKED',
 ];
 
-const taskPriorityValues = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+const taskPriorityValues = ['low', 'medium', 'high', 'critical'];
+
+/**
+ * Normalize a priority value to the canonical lowercase form.
+ * Accepts both uppercase and lowercase inputs.
+ * Returns undefined for empty/null/undefined values.
+ * @param {unknown} value
+ * @returns {string|undefined}
+ */
+function normalizeTaskPriority(value) {
+  if (value == null || (typeof value === 'string' && value.trim() === '')) return undefined;
+  if (typeof value !== 'string') return undefined;
+  return value.trim().toLowerCase();
+}
 
 const taskCreateSchema = z.object({
   title: z.string().min(1, 'عنوان تسک الزامی است'),
@@ -170,6 +183,7 @@ function validateUuid(value, label) {
 module.exports = {
   validate,
   validateUuid,
+  normalizeTaskPriority,
   UUID,
   taskCreateSchema,
   taskStatusSchema,

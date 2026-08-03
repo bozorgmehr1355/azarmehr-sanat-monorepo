@@ -23,6 +23,7 @@ const {
   taskStatusSchema,
   evidenceSchema,
   tasksQuerySchema,
+  normalizeTaskPriority,
 } = require('../services/validation');
 
 module.exports = async (req, res) => {
@@ -89,17 +90,17 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       requireAdmin(req);
       const me = requireAuth(req);
-      const body = validate(taskCreateSchema, req.body || {});
-      const task = await createTask({
-        title: body.title,
-        description: body.description || null,
-        assignee_id: body.assigneeId || null,
-        created_by: body.createdBy || me.id,
-        customer_id: body.customerId || null,
-        order_id: body.orderId || null,
-        due_date: body.dueDate || null,
-        priority: body.priority || 'MEDIUM',
-      });
+       const body = validate(taskCreateSchema, req.body || {});
+       const task = await createTask({
+         title: body.title,
+         description: body.description || null,
+         assignee_id: body.assigneeId || null,
+         created_by: body.createdBy || me.id,
+         customer_id: body.customerId || null,
+         order_id: body.orderId || null,
+         due_date: body.dueDate || null,
+         priority: normalizeTaskPriority(body.priority) || 'medium',
+       });
       return res.status(201).json(task);
     }
 

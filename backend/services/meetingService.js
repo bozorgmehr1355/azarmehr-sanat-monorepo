@@ -5,6 +5,7 @@
  */
 
 const { supabase } = require('../handlers/_lib');
+const { normalizeTaskPriority } = require('../services/validation');
 
 /**
  * ثبت صورت‌جلسه جدید
@@ -106,20 +107,20 @@ async function convertActionItemToTask(meetingId, actionItemIndex, assigneeId) {
     throw err;
   }
 
-  // ۳) ایجاد تسک رسمی با وضعیت اولیه PENDING_ACK
-  const { data: task, error: taskError } = await supabase
-    .from('tasks')
-    .insert({
-      title,
-      description: item.description || null,
-      status: 'PENDING_ACK',
-      priority: item.priority || 'MEDIUM',
-      assignee_id: assigneeId || null,
-      due_date: item.due_date || null,
-      created_by: meeting.created_by,
-    })
-    .select()
-    .single();
+   // ۳) ایجاد تسک رسمی با وضعیت اولیه PENDING_ACK
+   const { data: task, error: taskError } = await supabase
+     .from('tasks')
+     .insert({
+       title,
+       description: item.description || null,
+       status: 'PENDING_ACK',
+       priority: normalizeTaskPriority(item.priority) || 'medium',
+       assignee_id: assigneeId || null,
+       due_date: item.due_date || null,
+       created_by: meeting.created_by,
+     })
+     .select()
+     .single();
 
   if (taskError) {
     throw new Error(`تبدیل اکشن‌آیتم به تسک ناموفق بود: ${taskError.message}`);
