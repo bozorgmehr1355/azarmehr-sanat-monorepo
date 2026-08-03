@@ -38,3 +38,5 @@ api/._backup_handlers/
 
 # Runtime artifacts
 server_pid.txt
+
+.env*

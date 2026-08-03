@@ -1,0 +1,22 @@
+﻿// admin-panel/src/App.jsx
+import React from 'react';
+
+export default function App() {
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      fontSize: 24,
+      color: '#fff',
+      background: '#0d1117',
+      flexDirection: 'column'
+    }}>
+      <h1>✅ React کار می‌کند!</h1>
+      <p style={{ fontSize: 16, opacity: 0.8, marginTop: 8 }}>
+        اگر این متن را می‌بینی، همه چیز درست است.
+      </p>
+    </div>
+  );
+}

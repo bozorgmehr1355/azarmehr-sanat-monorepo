@@ -6,6 +6,7 @@ import { LoginScreen } from './modules/LoginScreen';
 import { DashboardView } from './modules/dashboard/DashboardView';
 import { OrdersView } from './modules/orders/OrdersView';
 import { MessengerView } from './modules/messenger/MessengerView';
+import { DataCleanupView } from './modules/cleanup/DataCleanupView';
 import { SystemControlView } from './modules/system/SystemControlView';
 import { WarrantyView } from './modules/warranty/WarrantyView';
 import { FinanceView } from './modules/finance/FinanceView';
@@ -64,6 +65,8 @@ export const App: React.FC = () => {
       case 'inbox':
       case 'whatsapp':
         return <MessengerView />;
+      case 'data-cleanup':
+        return <DataCleanupView />;
       case 'warranty':
         return <WarrantyView />;
       case 'settings':

@@ -57,6 +57,7 @@ export const navigationModules: SidebarGroup[] = [
     items: [
       { id: 'ai-agent', label: 'دستیار هوشمند (AI)', route: '/ai-agent' },
       { id: 'inbox', label: 'ارتباطات و پیام‌ها', route: '/inbox' },
+      { id: 'data-cleanup', label: 'پاکسازی داده', route: '/data-cleanup' },
       { id: 'reports', label: 'گزارش‌ها و تحلیل', route: '/reports' },
       { id: 'settings', label: 'تنظیمات سیستم', route: '/settings' },
     ],

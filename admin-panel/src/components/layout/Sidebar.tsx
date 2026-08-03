@@ -9,6 +9,7 @@ import {
   Shield01Icon,
   SparklesIcon,
   InboxIcon,
+  Eraser01Icon,
   Chart01Icon,
   Settings01Icon,
   Logout01Icon,
@@ -30,6 +31,7 @@ const MODULE_ICONS: Record<string, React.ReactNode> = {
   warranty: <Shield01Icon className="w-5 h-5 text-orange-400" />,
   'ai-agent': <SparklesIcon className="w-5 h-5 text-purple-400" />,
   inbox: <InboxIcon className="w-5 h-5 text-teal-400" />,
+  'data-cleanup': <Eraser01Icon className="w-5 h-5 text-cyan-400" />,
   reports: <Chart01Icon className="w-5 h-5 text-pink-400" />,
   settings: <Settings01Icon className="w-5 h-5 text-slate-400" />,
 };

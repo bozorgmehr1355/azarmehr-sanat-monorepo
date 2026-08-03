@@ -343,25 +343,64 @@ const OrderDetails: React.FC<{ order: any; onBack: () => void }> = ({ order, onB
         method: 'POST',
         body: JSON.stringify({ order_id: order.id }),
       });
+
       setConverted(true);
+
       if (data?.mode === 'retail') {
         setConvertMsg({
           type: 'ok',
           text: `فاکتور نهایی «${data.invoice_number || '—'}» برای این سفارش صادر شد (مسیر خرده‌فروشی).`,
         });
       } else {
+        // Wholesale path — use the new response contract
         const projectTitle = data?.project?.title || 'پروژه';
         const stages = data?.total_stages ?? data?.tasks?.length ?? 8;
+
+        const parts: string[] = [];
+
+        if (data?.projectCreated) {
+          parts.push(`پروژه «${projectTitle}» ایجاد شد`);
+        } else if (data?.projectAlreadyExists) {
+          parts.push(`پروژه قبلاً وجود داشت`);
+        }
+
+        if (data?.orderWorkflowCreated) {
+          parts.push(`${stages} مرحله کاری ایجاد شد`);
+        } else if (data?.orderWorkflowSkipped) {
+          parts.push(`مراحل کاری از قبل وجود داشت`);
+        }
+
+        const msg = parts.length > 0 ? parts.join(' — ') : 'تبدیل سفارش به پروژه انجام شد';
+
         setConvertMsg({
           type: 'ok',
-          text: `پروژه «${projectTitle}» با ${stages} مرحله کاری ایجاد شد.`,
+          text: msg,
+        });
+      }
+
+      // Show warnings if any
+      if (data?.warnings && data.warnings.length > 0) {
+        data.warnings.forEach((w: string, i: number) => {
+          setTimeout(() => {
+            setConvertMsg({ type: 'info', text: `هشدار: ${w}` });
+          }, i * 500);
         });
       }
     } catch (e: any) {
-      if (e?.status === 409) {
+      if (e?.status === 400) {
+        setConvertMsg({
+          type: 'err',
+          text: e?.message || 'ورودی نامعتبر است',
+        });
+      } else if (e?.status === 404) {
+        setConvertMsg({
+          type: 'err',
+          text: e?.message || 'سفارش پیدا نشد',
+        });
+      } else if (e?.status === 409) {
         setConvertMsg({
           type: 'info',
-          text: e?.message || 'برای این سفارش قبلاً پروژه / فاکتور ایجاد شده است.',
+          text: e?.message || 'برای این سفارش قبلاً پروژه ایجاد شده است',
         });
       } else {
         setConvertMsg({ type: 'err', text: e?.message || 'خطا در تبدیل سفارش' });

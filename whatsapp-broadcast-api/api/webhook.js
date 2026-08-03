@@ -1820,33 +1820,41 @@ module.exports = async function handler(req, res) {
             replyText = ai.reply || getAutoReply('FALLBACK');
             replyType = ai.replyType || 'fallback';
           }
-          // PRODUCT_QUERY / catch-all → موتور جستجوی محصول + AI
+          // PRODUCT_QUERY / catch-all → Q&A Match اول، سپس موتور جستجوی محصول + AI
           else {
-            console.log(`[ProductAI] START | msg="${redactBody(messageBody)}" | customer=${effectiveStatus} | phone=${redactPhone(cleanPhone)}`);
-            const products = await searchProducts(messageBody);
-            const signalResult = await detectAndSearchProducts(messageBody);
-            const allProducts = products.length > 0 ? products : (signalResult.products || []);
-            console.log(`[ProductAI] Found ${allProducts.length} product(s) for ${redactPhone(cleanPhone)}`);
-
-            const ai = await aiReply(messageBody, cleanPhone, effectiveStatus, {
-              products: allProducts.length > 0 ? allProducts : undefined,
-            });
-
-            if (ai.reply) {
-              replyText = ai.reply;
-              replyType = ai.replyType;
-              console.log(`[ProductAI] AI response for ${redactPhone(cleanPhone)}`);
-            } else if (ai.limitReached) {
-              replyText = 'در حال حاضر به سقف پاسخگویی هوشمند رسیده‌ایم. لطفاً بعداً تلاش کنید یا با پشتیبانی تماس بگیرید.';
-              replyType = 'ai_limit';
-            } else if (allProducts.length > 0) {
-              replyText = buildProductReply(allProducts, effectiveStatus);
-              replyType = 'product_search';
-              console.log(`[ProductAI] Fallback to product list for ${redactPhone(cleanPhone)}`);
+            // Q&A Match — در صورت تطابق، پاسخ مستقیم ارسال می‌شود (قبل از موتور جستجوی محصول)
+            const qaMatchResult = await askQAMatch(messageBody);
+            if (qaMatchResult) {
+              replyText = qaMatchResult;
+              replyType = 'qa_match';
+              console.log(`[QA-Match] PRODUCT_QUERY answered for ${redactPhone(cleanPhone)}`);
             } else {
-              replyText = getAutoReply('FALLBACK');
-              replyType = 'fallback';
-              await logSearchMiss(messageBody, cleanPhone);
+              console.log(`[ProductAI] START | msg="${redactBody(messageBody)}" | customer=${effectiveStatus} | phone=${redactPhone(cleanPhone)}`);
+              const products = await searchProducts(messageBody);
+              const signalResult = await detectAndSearchProducts(messageBody);
+              const allProducts = products.length > 0 ? products : (signalResult.products || []);
+              console.log(`[ProductAI] Found ${allProducts.length} product(s) for ${redactPhone(cleanPhone)}`);
+
+              const ai = await aiReply(messageBody, cleanPhone, effectiveStatus, {
+                products: allProducts.length > 0 ? allProducts : undefined,
+              });
+
+              if (ai.reply) {
+                replyText = ai.reply;
+                replyType = ai.replyType;
+                console.log(`[ProductAI] AI response for ${redactPhone(cleanPhone)}`);
+              } else if (ai.limitReached) {
+                replyText = 'در حال حاضر به سقف پاسخگویی هوشمند رسیده‌ایم. لطفاً بعداً تلاش کنید یا با پشتیبانی تماس بگیرید.';
+                replyType = 'ai_limit';
+              } else if (allProducts.length > 0) {
+                replyText = buildProductReply(allProducts, effectiveStatus);
+                replyType = 'product_search';
+                console.log(`[ProductAI] Fallback to product list for ${redactPhone(cleanPhone)}`);
+              } else {
+                replyText = getAutoReply('FALLBACK');
+                replyType = 'fallback';
+                await logSearchMiss(messageBody, cleanPhone);
+              }
             }
           }
         }

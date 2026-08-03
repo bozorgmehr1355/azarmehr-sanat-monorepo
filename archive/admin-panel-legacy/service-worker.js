@@ -1,4 +1,4 @@
-const CACHE = "azarmehr-admin-v1";
+const CACHE = "azarmehr-wholesale-v3";
 
 const STATIC_URLS = [
   "/",

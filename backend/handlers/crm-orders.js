@@ -1,4 +1,5 @@
 const { supabase, cors, requireAuth, requireAdmin, requireSuperAdmin } = require('./_lib');
+const { createProjectCore } = require('../services/projectControl/createProjectCore');
 
 // فیلدهایی که در schema وجود ندارند یا نباید از client نوشته شوند
 const BLOCKED_POST = new Set(['id', 'deleted_at', 'assigned_to', 'payment_status', 'order_number', 'items', 'workflow_status', 'current_owner', 'tracking_code']);
@@ -8,9 +9,9 @@ const BLOCKED_PUT  = new Set(['id', 'created_at', 'deleted_at', 'customer_id', '
 async function autoCreateProject(orderId, adminUserId) {
   const numericOrderId = Number(orderId);
 
-  // بررسی: آیا پروژه قبلاً ایجاد شده؟
+  // بررسی: آیا پروژه قبلاً ایجاد شده؟ (در جدول جدید)
   const { data: existing, error: exErr } = await supabase
-    .from('projects')
+    .from('project_control_projects')
     .select('id')
     .eq('order_id', numericOrderId)
     .limit(1);
@@ -29,7 +30,7 @@ async function autoCreateProject(orderId, adminUserId) {
 
   const customerName = order.crm_customers?.name || '';
 
-  // ── Phase 2: تفکیک چرخه حیات — retail پروژه/مراحل کاری نمی‌گیرد ──────────
+  // ── Phase 2: تفکیک چرخه حیات — retail پروژه/مراحل کاری نمی‌گیرد ──
   // مسیر retail مستقیم به فاکتور نهایی (crm_invoices) می‌رود؛ بنابراین
   // autoCreateProject فقط برای سفارشات wholesale مجاز است.
   // اگر order_type معتبر نبود (سفارش قدیمی با 'stock'/NULL)، sales_channel مرجع است.
@@ -44,27 +45,29 @@ async function autoCreateProject(orderId, adminUserId) {
     ? `پروژه ${customerName} - ${orderLabel}`
     : `پروژه ${orderLabel}`;
 
-  // ایجاد پروژه
-  const { data: project, error: projErr } = await supabase
-    .from('projects')
-    .insert({
-      order_id: numericOrderId,
-      title,
-      description: `پروژه خودکار ایجاد شده از سفارش #${order.id}`,
-      manager_id: adminUserId,
-      status: 'active'
-    })
-    .select()
-    .single();
+  // استفاده از سرویس مشترک ایجاد پروژه
+  const result = await createProjectCore({
+    code: `PRJ-${numericOrderId}`,
+    title,
+    description: `پروژه خودکار ایجاد شده از سفارش #${order.id}`,
+    client: customerName,
+    manager_id: adminUserId,
+    priority: 'normal',
+    risk_level: 'low',
+    order_id: numericOrderId,
+    created_by: adminUserId,
+    wbsItems: [],
+    tasks: [],
+  });
 
-  if (projErr || !project) return;
+  if (result.error) return;
 
-  // مدیر سفارش را به عنوان عضو پروژه اضافه کن
+  // عضو تیم پروژه (مدیر سفارش)
   if (adminUserId) {
     try {
       await supabase
-        .from('project_members')
-        .insert({ project_id: project.id, user_id: adminUserId, role: 'manager' });
+        .from('project_control_project_members')
+        .insert({ project_control_project_id: result.project.id, user_id: adminUserId, role: 'manager' });
     } catch (_) {} // ignore duplicate
   }
 }

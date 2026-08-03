@@ -21,7 +21,7 @@ const { supabase, cors } = require('./_lib');
 // ============================================================================
 // Constants
 // ============================================================================
-const CONFIDENCE_THRESHOLD = 17;
+const CONFIDENCE_THRESHOLD = 25;
 const TIE_DISTANCE = 5;
 
 const FALLBACK_MESSAGE =

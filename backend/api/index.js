@@ -93,6 +93,7 @@ const routes = [
   ['/api/health',                      H('health')],
   ['/api/leads',                        H('leads')],
   ['/api/lead-to-proforma',             H('lead-to-proforma')],
+  ['/api/unified-messages',             H('unified-messages')],
   ['/api/growth/decide',               H('growth-decide')],
   ['/api/growth/drafts',               H('growth-drafts')],
 ];

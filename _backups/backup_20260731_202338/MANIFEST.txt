@@ -1,0 +1,16 @@
+﻿بک‌آپ تهیه شده در تاریخ: 2026/07/31 20:23:39
+مسیر پروژه: F:\azarmehr-sanat-monorepo
+
+فایل‌های بک‌آپ شده:
+admin-panel\dashboard.html
+admin-panel\index.html
+admin-panel\src
+messenger-app\components
+messenger-app\index.html
+wholesale-portal\index.html
+wholesale-portal\dashboard.html
+backend\handlers
+backend\api
+backend\server.js
+
+تعداد کل آیتم‌ها: 10

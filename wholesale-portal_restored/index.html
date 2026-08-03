@@ -1,0 +1,2868 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F0F0F" />
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#D4880E">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="پرتال عمده">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <title>پورتال عمده‌فروشی — آذرمهر صنعت</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js" crossorigin="anonymous"></script>
+  <style>
+    /* ─── Fonts ─── */
+    @font-face { font-family:'IRANSans'; font-style:normal; font-weight:400; src:url('https://cdn.sqp.ir/Plugins/fonts/IRANSansWeb/IRANSansWeb.woff2') format('woff2'); }
+    @font-face { font-family:'IRANSans'; font-style:normal; font-weight:700; src:url('https://cdn.sqp.ir/Plugins/fonts/IRANSansWeb/IRANSansWeb_Bold.woff2') format('woff2'); }
+
+    /* ─── Design Tokens (CSS Custom Properties) ─── */
+    :root {
+      --color-bg: #0F0F0F;
+      --color-surface: #1C1C1C;
+      --color-surface-alt: #232323;
+      --color-surface-hover: #2A2A2A;
+      --color-border: #303030;
+      --color-border-light: #3E3E3E;
+      --color-primary: #D4880E;
+      --color-primary-dim: #D4880E18;
+      --color-primary-hover: #E8960F;
+      --color-text: #F4F6F9;
+      --color-text-muted: #C0C8D4;
+      --color-text-dim: #98A0AE;
+      --color-success: #10B981;
+      --color-success-dim: #10B98118;
+      --color-warning: #F59E0B;
+      --color-warning-dim: #F59E0B18;
+      --color-danger: #EF4444;
+      --color-danger-dim: #EF444418;
+      --color-info: #3B82F6;
+      --color-info-dim: #3B82F618;
+      --color-purple: #8B5CF6;
+      --color-purple-dim: #8B5CF618;
+
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 12px;
+      --space-lg: 16px;
+      --space-xl: 20px;
+      --space-xxl: 24px;
+      --space-xxxl: 32px;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+
+      --font-xs: 10px;
+      --font-sm: 11px;
+      --font-base: 12px;
+      --font-md: 13px;
+      --font-lg: 15px;
+      --font-xl: 18px;
+      --font-xxl: 20px;
+      --font-hero: 28px;
+
+      --btn-h-sm: 32px;
+      --btn-h-md: 36px;
+      --btn-h-lg: 40px;
+      --btn-h-xl: 44px;
+
+      --z-dropdown: 100;
+      --z-sticky: 200;
+      --z-overlay: 900;
+      --z-modal: 1000;
+      --z-toast: 1100;
+
+      --transition-fast: all 0.15s ease;
+      --transition-base: all 0.2s ease;
+      --transition-slow: all 0.3s ease;
+    }
+
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body, #root { height:100%; width:100%; }
+    body { background:var(--color-bg); direction:rtl; font-family:'Vazirmatn',Tahoma,sans-serif; color:var(--color-text); }
+    ::-webkit-scrollbar { width:4px; height:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#2C2C2C; border-radius:2px; }
+    input, textarea, select, button { outline:none; font-family:inherit; }
+
+    /* ─── Form Elements ─── */
+    input:focus, textarea:focus, select:focus { border-color:var(--color-primary) !important; box-shadow:0 0 0 2px #D4880E44 !important; }
+    select { accent-color:var(--color-primary); -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3e%3cpath fill='%2398A0AE' d='M1 1l5 5 5-5'/%3e%3c/svg%3e"); background-repeat:no-repeat; background-position:left 12px center; background-size:12px 8px; padding-left:32px !important; cursor:pointer; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    input[type=number] { -moz-appearance:textfield; }
+
+    /* ─── Animations ─── */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes glowPulse { 0%,100% { box-shadow:0 20px 60px #0008, 0 0 30px #D4880E2B; } 50% { box-shadow:0 20px 60px #0008, 0 0 50px #D4880E55; } }
+    @keyframes logoPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.06); } }
+    @keyframes toastIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+    @keyframes skeleton { 0% { opacity:0.5; } 50% { opacity:0.8; } 100% { opacity:0.5; } }
+  </style>
+</head>
+<body>
+<div id="root"><!-- app --></div>
+<script>
+window.__BABEL_ERRORS = [];
+window.onerror = function(msg, url, line, col, err) {
+  var detail = msg + ' | url=' + url + ' line=' + line + ' col=' + col;
+  if (err && err.stack) detail += '\n' + err.stack;
+  window.__BABEL_ERRORS.push(detail);
+  var e = document.getElementById('babel-error');
+  if (!e) { e = document.createElement('pre'); e.id = 'babel-error'; e.style.cssText = 'background:#300;color:#f44;padding:16px;margin:0;font-size:12px;white-space:pre-wrap;position:fixed;top:0;left:0;right:0;z-index:9999;max-height:50vh;overflow:auto;'; document.body.prepend(e); }
+  e.textContent += '\n' + detail;
+};
+</script>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN SYSTEM — Azarmehr Sanat Shared Tokens (SSOT)
+   ═══════════════════════════════════════════════════════════════ */
+const C = {
+  bg:'#0F0F0F', surface:'#1C1C1C', surfaceAlt:'#232323',
+  surfaceHover:'#2A2A2A', border:'#303030', borderLight:'#3E3E3E',
+  primary:'#D4880E', primaryDim:'#D4880E18', primaryHover:'#E8960F',
+  text:'#F4F6F9', textMuted:'#C0C8D4', textDim:'#98A0AE',
+  success:'#10B981', successDim:'#10B98118',
+  warning:'#F59E0B', warningDim:'#F59E0B18',
+  danger:'#EF4444',  dangerDim:'#EF444418',
+  info:'#3B82F6', infoDim:'#3B82F618',
+  purple:'#8B5CF6', purpleDim:'#8B5CF618',
+};
+const FF = "'Vazirmatn', Tahoma, sans-serif";
+const SP = { xs:4, sm:8, md:12, lg:16, xl:20, xxl:24, xxxl:32 };
+const RD = { sm:8, md:12, lg:16 };
+const FZ = { xs:12, sm:12, base:14, md:16, lg:18, xl:20, xxl:22, hero:28 };
+const IZ = { xs:14, sm:16, md:18, lg:20, xl:22, xxl:24 };
+const BH = { sm:32, md:36, lg:40, xl:44 };
+const ZI = { dropdown:100, sticky:200, overlay:900, modal:1000, toast:1100 };
+const GRADE_PRICE_MAP = { standard:'price_standard', silver:'price_silver', gold:'price_gold', vip:'price_vip' };
+
+/* ═══════════════════════════════════════ CONFIG ══════════════════════════════════════ */
+/* API base resolution — override via ?apiBase= , window.AZARMEHR_API_BASE, or
+   localStorage.AZARMEHR_API_BASE. Defaults to the current production backend (no new hardcoded URL). */
+const API_BASE = (() => {
+  const src = new URLSearchParams(location.search).get('apiBase')
+    || window.AZARMEHR_API_BASE
+    || localStorage.getItem('AZARMEHR_API_BASE')
+    || "https://azarmehr-backend.vercel.app/api";
+  return src.replace(/\/+$/, '');
+})();
+const WHATSAPP_API_BASE = (() => {
+  const src = new URLSearchParams(location.search).get('whatsappApiBase')
+    || window.AZARMEHR_WHATSAPP_API_BASE
+    || localStorage.getItem('AZARMEHR_WHATSAPP_API_BASE')
+    || "https://whatsapp-broadcast-api.vercel.app";
+  return src.replace(/\/+$/, '');
+})();
+
+/* ═══════════════════════════════════════ HELPERS ═════════════════════════════════════ */
+const fa  = (n) => String(n).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+const cur = (n) => fa(Number(n||0).toLocaleString()) + " ریال";
+const shortCur = (n) => { const v=Number(n||0); return v>=1e9 ? fa((v/1e9).toFixed(1))+" م" : v>=1e6 ? fa((v/1e6).toFixed(1))+" م" : fa(v.toLocaleString()); };
+
+function decodeJwt(token) {
+  try { return JSON.parse(atob(token.split('.')[1])); } catch { return null; }
+}
+
+async function apiCall(endpoint, options = {}) {
+  const token = localStorage.getItem('az_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  };
+  const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'خطا در ارتباط با سرور' }));
+    throw new Error(err.error || 'خطا');
+  }
+  return res.json();
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleDateString("fa-IR");
+}
+
+function formatPrice(num) {
+  if (!num) return '—';
+  return fa(Number(num).toLocaleString()) + ' ریال';
+}
+
+/* ═══════════════════════════════════════ USER TYPE SELECTION ════════════════════════ */
+function UserTypeSelection({ onSelect }) {
+  return (
+    <div style={{ position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center", background:C.bg, padding:16 }}>
+      <div style={{ background:C.surface, borderRadius:24, padding:"36px 36px 40px", width:"100%", maxWidth:380, border:`1px solid ${C.border}`, textAlign:"center", animation:"glowPulse 3s infinite" }}>
+        <div style={{ textAlign:"center", marginBottom:12 }}>
+          <div style={{ width:112, height:112, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 4px", animation:"logoPulse 3s ease-in-out infinite" }}>
+            <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCA3NjggNzY4IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3NjggNzY4OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8Zz4NCgk8Zz4NCgkJPGc+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTU2LDQzNS40Yy0xOC45LTE2LjctNDguNS00Mi45LTY3LjQtNTkuNWMtMS43LDEzLjktMy42LDI3LjYtNS43LDQxLjRjMTYsMTQuMSw0OC43LDQzLjEsNjQuNiw1Ny4xDQoJCQkJYy0xLjIsNS41LTE5LjEsODgtMTkuMSw4OHMzNi4yLTc2LjUsNTAuMi0xMDYuOWwtMjEuNy0xOS4xTDU1Niw0MzUuNEw1NTYsNDM1LjR6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTgzLjksMTY4Ljl2OTYuNmMtNC4yLDMuNy0yNy44LDI0LjYtMzEuNCwyNy44Yy0wLjItMC4xLTU0LjMtNDgtNTQuNS00OC4ydjBjLTMuOS0xOS43LTE4LjgtOTYuMS0xOS43LTEwMQ0KCQkJCWMwLjEsMC4yLDcwLjYsMTE3LjQsNzAuNiwxMTcuNnYtODAuOWMtMC4xLTAuMi02Ny4yLTExMS44LTY3LjMtMTEyTDU4My45LDE2OC45TDU4My45LDE2OC45eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM4NiwzNzcuOWMtMjEsMTguNi01My4xLDQ3LTczLjksNjUuM2MyLjQsMTMuNCw0LjksMjYuNyw3LjYsMzkuNmMxOC40LTE2LjMsNDgtNDIuNSw2Ni4zLTU4LjYNCgkJCQljMTguMiwxNi4xLDQ3LjksNDIuNCw2Ni4zLDU4LjZjMi44LTEzLDUuMy0yNi4yLDcuNi0zOS42QzQ1MS40LDQzNS42LDM4NiwzNzcuOSwzODYsMzc3Ljl6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzg2LDU5Ni42Yy0xNC4zLTEyLjctMzQuOC0zMC44LTQ5LjEtNDMuNWMwLjUsMiw0NS43LDEyNy4xLDQ5LjEsMTM0LjNjMy41LTcuMiw0OC42LTEzMi40LDQ5LjEtMTM0LjMNCgkJCQlDNDMzLjEsNTU0LjksMzk2LjgsNTg3LjEsMzg2LDU5Ni42eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTQ2OC4yLDQ5Ni45bDE3LjIsMTUuMnY4OC4xbDAuMi0wLjJjNy4yLTMzLjMsMTcuMi03OS4yLDI0LjUtMTEyLjVsLTMzLjktMzANCgkJCQlDNDczLjcsNDcwLjksNDcxLDQ4NCw0NjguMiw0OTYuOUw0NjguMiw0OTYuOXoiLz4NCgkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01NTEsMzM4LjJjLTEzLjQtMTEuOC01NC42LTQ4LjMtNTQuNi00OC4zcy0xLjksMjguOS0zLjMsNDMuNWMxNi43LDE0LjgsNjEuNCw1NC4zLDYxLjQsNTQuM2wzNC04Mi44DQoJCQkJTDU1MSwzMzguMkw1NTEsMzM4LjJ6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMjg5LDQxNy4yYy0yLjEtMTMuNy00LTI3LjUtNS43LTQxLjRjLTI3LjYsMjQuNC04OS45LDc5LjUtODkuOSw3OS41bDUwLjIsMTA2LjljMCwwLTE4LTgyLjctMTkuMS04OA0KCQkJCUMyNDAuMyw0NjAuMywyNzMuMSw0MzEuMywyODksNDE3LjJMMjg5LDQxNy4yeiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM4Niw1NTVjMTMuMy0xMi43LDMxLTI5LjUsNDQuMy00Mi4yYy01LjYtNS4zLTM5LjYtMzcuNy00NC4zLTQyLjJjLTQuNSw0LjMtMzguOSwzNy00NC4zLDQyLjINCgkJCQlDMzQ3LjksNTE4LjcsMzg0LjcsNTUzLjcsMzg2LDU1NUwzODYsNTU1eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTI2MS45LDQ4Ny42YzcuMywzMy40LDE3LjIsNzkuMiwyNC41LDExMi41bDAuMiwwLjJ2LTg4LjFsMTcuMi0xNS4yYy0yLjktMTIuOS01LjUtMjYtOC0zOS40TDI2MS45LDQ4Ny42DQoJCQkJTDI2MS45LDQ4Ny42eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxNy40LDM4Ny44YzE2LjktMTQuOSw2MS40LTU0LjMsNjEuNC01NC4zcy0yLjQtMjkuMS0zLjMtNDMuNWMtMTMuNSwxMi01NC42LDQ4LjMtNTQuNiw0OC4zDQoJCQkJcy0yNy41LTI0LjQtMzcuNi0zMy4zQzE5Mi40LDMyNi45LDIxNy40LDM4Ny44LDIxNy40LDM4Ny44TDIxNy40LDM4Ny44eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTE4Ny44LDE2OC45djk2LjZjNC4yLDMuNywyNy44LDI0LjYsMzEuNCwyNy44YzAuMi0wLjEsNTQuMy00OCw1NC41LTQ4LjJ2MGMzLjktMTkuNywxOC44LTk2LjEsMTkuNy0xMDENCgkJCQljLTAuMSwwLjItNzAuNiwxMTcuNC03MC42LDExNy42di04MC45YzAuMS0wLjIsNjcuMi0xMTEuOCw2Ny4zLTExMkwxODcuOCwxNjguOUwxODcuOCwxNjguOXoiLz4NCgkJPC9nPg0KCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzk2LjksMTk3LjVMMzg2LDIwOC40bC0xMC45LTEwLjlsLTgxLjgsNzYuOGMyLDQyLjYsNi4xLDg2LjEsMTIuMywxMjguM2MxMi40LTExLDY2LjktNTkuMiw4MC40LTcxLjENCgkJCWMxMy44LDEyLjIsNjcuNyw1OS45LDgwLjQsNzEuMWM2LjEtNDIuMiwxMC4yLTg1LjcsMTIuMy0xMjguM0wzOTYuOSwxOTcuNUwzOTYuOSwxOTcuNXoiLz4NCgk8L2c+DQoJPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIzMjAuMSw2NjUuOCAzMDIuNSw2NzIuNSAyOTAuNiw2MTQuNiAJIi8+DQoJPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIzNjkuNCw2ODguMSAzMDYuNiw2ODcuNSAzNjIuMiw2NjguNCAJIi8+DQo8L2c+DQo8L3N2Zz4NCg==" style={{width:"100%",height:"100%",objectFit:"contain"}} />
+          </div>
+          <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCAyOTcuMSA1Mi41IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyOTcuMSA1Mi41OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjYuOCwyNi42IDMwLjYsMzMuMyAzMC42LDQxLjIgMyw0OS42IDM4LjYsNDkuNiAzOC42LDI2LjggMTQuOCwyMC4xIDE0LjgsMTEuMiAzOC42LDExLjIgMzguNiwyLjggDQoJNi44LDIuOCAiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iNi44LDI2LjYgMzAuNiwzMy4zIDMwLjYsNDEuMiAzLDQ5LjYgMzguNiw0OS42IDM4LjYsMjYuOCAxNC44LDIwLjEgMTQuOCwxMS4yIDM4LjYsMTEuMiAzOC42LDIuOCANCgk2LjgsMi44ICIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSI1NC41LDExLjIgNjguMiwxMS4yIDc2LDEzLjUgNzYsMi44IDQ2LjUsMi44IDQ2LjUsNDkuNiA3OCw0OS42IDU0LjUsNDEuMiAiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iNTQuNSwxMS4yIDY4LjIsMTEuMiA3NiwxMy41IDc2LDIuOCA0Ni41LDIuOCA0Ni41LDQ5LjYgNzgsNDkuNiA1NC41LDQxLjIgIi8+DQo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTYzLjQsMi44TDE2My40LDIuOEwxNjMuNCwyLjh2NDcuN2w3LjktOFYzMi4zbDIzLjgsMFYyLjl2MEwxNjMuNCwyLjh6IE0xODcuMiwxMS4yVjI0bC0xNS45LDQuOFYxMS4ySDE4Ny4yeg0KCSIvPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTE2My40LDIuOEwxNjMuNCwyLjhMMTYzLjQsMi44djQ3LjdsNy45LThWMzIuM2wyMy44LDBWMi45djBMMTYzLjQsMi44eiBNMTg3LjIsMTEuMlYyNGwtMTUuOSw0LjhWMTEuMkgxODcuMnoNCgkiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTU1LjQsMjkuOCAxNTUuNCwyLjggMTU1LjQsMi43IDEyMy43LDIuNyAxMjMuNywyLjcgMTIzLjcsNTAuNCAxMzEuNiw0Mi40IDEzMS42LDExLjEgMTQ3LjUsMTEuMSANCgkxNDcuNSwyNC42IDEzMS43LDI5LjUgMTYwLjIsNTAuNCAxNDYuNiwzMi42ICIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIxNTUuNCwyOS44IDE1NS40LDIuOCAxNTUuNCwyLjcgMTIzLjcsMi43IDEyMy43LDIuNyAxMjMuNyw1MC40IDEzMS42LDQyLjQgMTMxLjYsMTEuMSAxNDcuNSwxMS4xIA0KCTE0Ny41LDI0LjYgMTMxLjcsMjkuNSAxNjAuMiw1MC40IDE0Ni42LDMyLjYgIi8+DQo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNODMuOSw0OS42aDMxLjhWMi44SDgzLjlWNDkuNnogTTkxLjksMTEuMmgxNS45djMwTDkxLjksNDZWMTEuMnoiLz4NCjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik04My45LDQ5LjZoMzEuOFYyLjhIODMuOVY0OS42eiBNOTEuOSwxMS4yaDE1Ljl2MzBMOTEuOSw0NlYxMS4yeiIvPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxOC45LDQ5LjZoMzEuOFYyLjhoLTMxLjhWNDkuNnogTTIyNi45LDExLjJoMTUuOXYzMEwyMjYuOSw0NlYxMS4yeiIvPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxOC45LDQ5LjZoMzEuOFYyLjhoLTMxLjhWNDkuNnogTTIyNi45LDExLjJoMTUuOXYzMEwyMjYuOSw0NlYxMS4yeiIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIyODUuNCwyLjggMjg1LjQsNDEuMSAyODIuNCw0MS4xIDI3Ni4xLDIuOCAyNTguNiwyLjggMjU4LjYsNTAuNSAyNjYuNywyOS42IDI2Ni43LDExLjIgMjcwLDExLjIgDQoJMjc2LjMsNDkuNSAyOTMuMyw0OS41IDI5My4zLDIuOCAiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjg1LjQsMi44IDI4NS40LDQxLjEgMjgyLjQsNDEuMSAyNzYuMSwyLjggMjU4LjYsMi44IDI1OC42LDUwLjUgMjY2LjcsMjkuNiAyNjYuNywxMS4yIDI3MCwxMS4yIA0KCTI3Ni4zLDQ5LjUgMjkzLjMsNDkuNSAyOTMuMywyLjggIi8+DQo8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjIwMy4xLDUwLjUgMjExLDQyLjUgMjExLDEuOSAyMDMuMSwxMC40ICIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIyMDMuMSw1MC41IDIxMSw0Mi41IDIxMSwxLjkgMjAzLjEsMTAuNCAiLz4NCjwvc3ZnPg0K" style={{ width:"35%", maxWidth:100, display:"block", margin:"0 auto 8px" }} />
+        </div>
+        <h1 style={{ fontSize:20, fontWeight:700, color:C.text, marginBottom:8 }}>به فروشگاه عقرب خوش آمدید</h1>
+        <p style={{ fontSize:13, color:C.textDim, marginBottom:28, lineHeight:1.8 }}>
+          لطفاً نوع کاربری خود را انتخاب کنید
+        </p>
+        <button onClick={() => onSelect('wholesale')} style={{ width:"100%", padding:"16px", borderRadius:12, border:`1px solid ${C.border}`, background:C.surfaceAlt, cursor:"pointer", marginBottom:12, display:"flex", alignItems:"center", justifyContent:"center", gap:10, transition:"all 0.2s", fontFamily:FF }}
+          onMouseEnter={e => { e.currentTarget.style.background = C.surfaceHover }} onMouseLeave={e => { e.currentTarget.style.background = C.surfaceAlt }}>
+          <svg width="22" height="22" fill="none" stroke="#D4880E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+          <span style={{ fontSize:15, fontWeight:700, color:C.text }}>مشتری عمده‌فروش</span>
+          <span style={{ fontSize:11, color:C.textDim }}>ورود با نام کاربری</span>
+        </button>
+        <button onClick={() => onSelect('retail')} style={{ width:"100%", padding:"16px", borderRadius:12, border:`1px solid ${C.primary}44`, background:"transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:10, transition:"all 0.2s", fontFamily:FF }}
+          onMouseEnter={e => { e.currentTarget.style.background = C.primaryDim }} onMouseLeave={e => { e.currentTarget.style.background = "transparent" }}>
+          <svg width="22" height="22" fill="none" stroke="#D4880E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span style={{ fontSize:15, fontWeight:700, color:C.primary }}>مشتری خرده‌فروش</span>
+          <span style={{ fontSize:11, color:C.textDim }}>ورود با شماره تماس</span>
+        </button>
+        <button onClick={() => onSelect('warranty')} style={{ width:"100%", padding:"12px", borderRadius:10, border:`1px dashed ${C.primary}55`, background:"transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8, transition:"all 0.2s", fontFamily:FF, marginTop:16 }}
+          onMouseEnter={e => { e.currentTarget.style.background = C.primaryDim; e.currentTarget.style.borderColor = C.primary }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "#D4880E55" }}>
+          <svg width="18" height="18" fill="none" stroke="#D4880E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span style={{ fontSize:13, fontWeight:700, color:C.primary }}>ثبت درخواست گارانتی و مرجوعی</span>
+        </button>
+        <p style={{ fontSize:11, color:C.textDim, marginTop:16, lineHeight:1.6, opacity:0.6 }}>
+          گروه محصولات غذایی عقرب — آذرمهر صنعت
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ RETAIL LOGIN SCREEN ════════════════════════ */
+function RetailLoginScreen({ onLogin, onBack }) {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const iS = { width:"100%", padding:"11px 14px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:10, color:C.text, fontSize:14, fontFamily:FF, boxSizing:"border-box" };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) { setError('نام و نام خانوادگی را وارد کنید'); return; }
+    if (!phone.trim()) { setError('شماره تماس را وارد کنید'); return; }
+    setLoading(true); setError('');
+    try {
+      const res = await fetch(`${API_BASE}/portal-login-retail`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطا در ورود');
+      localStorage.setItem('az_token', data.token);
+      onLogin(data.token, data.user);
+
+      // ── Welcome WhatsApp (non-blocking — fire-and-forget) ─────────────
+      fetch(`${WHATSAPP_API_BASE}/api/send-customer-welcome`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone.trim(), name: name.trim(), customer_id: data.user?.id || null }),
+      }).catch(() => {}); // silently ignore errors
+    } catch (e) {
+      setError(e.message || 'خطا در ارتباط با سرور');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center", background:C.bg, padding:16 }}>
+      <div style={{ background:C.surface, borderRadius:24, padding:"24px 36px 36px", width:"100%", maxWidth:400, border:`1px solid ${C.border}`, animation:"glowPulse 3s infinite" }}>
+        {/* header */}
+        <div style={{ textAlign:"center", marginBottom:20 }}>
+        <div style={{ textAlign:"center", marginBottom:16 }}>
+          <div style={{ width:101, height:101, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 4px", animation:"logoPulse 3s ease-in-out infinite" }}>
+            <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCA3NjggNzY4IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3NjggNzY4OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8Zz4NCgk8Zz4NCgkJPGc+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTU2LDQzNS40Yy0xOC45LTE2LjctNDguNS00Mi45LTY3LjQtNTkuNWMtMS43LDEzLjktMy42LDI3LjYtNS43LDQxLjRjMTYsMTQuMSw0OC43LDQzLjEsNjQuNiw1Ny4xDQoJCQkJYy0xLjIsNS41LTE5LjEsODgtMTkuMSw4OHMzNi4yLTc2LjUsNTAuMi0xMDYuOWwtMjEuNy0xOS4xTDU1Niw0MzUuNEw1NTYsNDM1LjR6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTgzLjksMTY4Ljl2OTYuNmMtNC4yLDMuNy0yNy44LDI0LjYtMzEuNCwyNy44Yy0wLjItMC4xLTU0LjMtNDgtNTQuNS00OC4ydjBjLTMuOS0xOS43LTE4LjgtOTYuMS0xOS43LTEwMQ0KCQkJCWMwLjEsMC4yLDcwLjYsMTE3LjQsNzAuNiwxMTcuNnYtODAuOWMtMC4xLTAuMi02Ny4yLTExMS44LTY3LjMtMTEyTDU4My45LDE2OC45TDU4My45LDE2OC45eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM4NiwzNzcuOWMtMjEsMTguNi01My4xLDQ3LTczLjksNjUuM2MyLjQsMTMuNCw0LjksMjYuNyw3LjYsMzkuNmMxOC40LTE2LjMsNDgtNDIuNSw2Ni4zLTU4LjYNCgkJCQljMTguMiwxNi4xLDQ3LjksNDIuNCw2Ni4zLDU4LjZjMi44LTEzLDUuMy0yNi4yLDcuNi0zOS42QzQ1MS40LDQzNS42LDM4NiwzNzcuOSwzODYsMzc3Ljl6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzg2LDU5Ni42Yy0xNC4zLTEyLjctMzQuOC0zMC44LTQ5LjEtNDMuNWMwLjUsMiw0NS43LDEyNy4xLDQ5LjEsMTM0LjNjMy41LTcuMiw0OC42LTEzMi40LDQ5LjEtMTM0LjMNCgkJCQlDNDMzLjEsNTU0LjksMzk2LjgsNTg3LjEsMzg2LDU5Ni42eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTQ2OC4yLDQ5Ni45bDE3LjIsMTUuMnY4OC4xbDAuMi0wLjJjNy4yLTMzLjMsMTcuMi03OS4yLDI0LjUtMTEyLjVsLTMzLjktMzANCgkJCQlDNDczLjcsNDcwLjksNDcxLDQ4NCw0NjguMiw0OTYuOUw0NjguMiw0OTYuOXoiLz4NCgkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01NTEsMzM4LjJjLTEzLjQtMTEuOC01NC42LTQ4LjMtNTQuNi00OC4zcy0xLjksMjguOS0zLjMsNDMuNWMxNi43LDE0LjgsNjEuNCw1NC4zLDYxLjQsNTQuM2wzNC04Mi44DQoJCQkJTDU1MSwzMzguMkw1NTEsMzM4LjJ6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMjg5LDQxNy4yYy0yLjEtMTMuNy00LTI3LjUtNS43LTQxLjRjLTI3LjYsMjQuNC04OS45LDc5LjUtODkuOSw3OS41bDUwLjIsMTA2LjljMCwwLTE4LTgyLjctMTkuMS04OA0KCQkJCUMyNDAuMyw0NjAuMywyNzMuMSw0MzEuMywyODksNDE3LjJMMjg5LDQxNy4yeiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM4Niw1NTVjMTMuMy0xMi43LDMxLTI5LjUsNDQuMy00Mi4yYy01LjYtNS4zLTM5LjYtMzcuNy00NC4zLTQyLjJjLTQuNSw0LjMtMzguOSwzNy00NC4zLDQyLjINCgkJCQlDMzQ3LjksNTE4LjcsMzg0LjcsNTUzLjcsMzg2LDU1NUwzODYsNTU1eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTI2MS45LDQ4Ny42YzcuMywzMy40LDE3LjIsNzkuMiwyNC41LDExMi41bDAuMiwwLjJ2LTg4LjFsMTcuMi0xNS4yYy0yLjktMTIuOS01LjUtMjYtOC0zOS40TDI2MS45LDQ4Ny42DQoJCQkJTDI2MS45LDQ4Ny42eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxNy40LDM4Ny44YzE2LjktMTQuOSw2MS40LTU0LjMsNjEuNC01NC4zcy0yLjQtMjkuMS0zLjMtNDMuNWMtMTMuNSwxMi01NC42LDQ4LjMtNTQuNiw0OC4zDQoJCQkJcy0yNy41LTI0LjQtMzcuNi0zMy4zQzE5Mi40LDMyNi45LDIxNy40LDM4Ny44LDIxNy40LDM4Ny44TDIxNy40LDM4Ny44eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTE4Ny44LDE2OC45djk2LjZjNC4yLDMuNywyNy44LDI0LjYsMzEuNCwyNy44YzAuMi0wLjEsNTQuMy00OCw1NC41LTQ4LjJ2MGMzLjktMTkuNywxOC44LTk2LjEsMTkuNy0xMDENCgkJCQljLTAuMSwwLjItNzAuNiwxMTcuNC03MC42LDExNy42di04MC45YzAuMS0wLjIsNjcuMi0xMTEuOCw2Ny4zLTExMkwxODcuOCwxNjguOUwxODcuOCwxNjguOXoiLz4NCgkJPC9nPg0KCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzk2LjksMTk3LjVMMzg2LDIwOC40bC0xMC45LTEwLjlsLTgxLjgsNzYuOGMyLDQyLjYsNi4xLDg2LjEsMTIuMywxMjguM2MxMi40LTExLDY2LjktNTkuMiw4MC40LTcxLjENCgkJCWMxMy44LDEyLjIsNjcuNyw1OS45LDgwLjQsNzEuMWM2LjEtNDIuMiwxMC4yLTg1LjcsMTIuMy0xMjguM0wzOTYuOSwxOTcuNUwzOTYuOSwxOTcuNXoiLz4NCgk8L2c+DQoJPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIzMjAuMSw2NjUuOCAzMDIuNSw2NzIuNSAyOTAuNiw2MTQuNiAJIi8+DQoJPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIzNjkuNCw2ODguMSAzMDYuNiw2ODcuNSAzNjIuMiw2NjguNCAJIi8+DQo8L2c+DQo8L3N2Zz4NCg==" style={{width:"100%",height:"100%",objectFit:"contain"}} />
+          </div>
+          <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCAyOTcuMSA1Mi41IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyOTcuMSA1Mi41OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjYuOCwyNi42IDMwLjYsMzMuMyAzMC42LDQxLjIgMyw0OS42IDM4LjYsNDkuNiAzOC42LDI2LjggMTQuOCwyMC4xIDE0LjgsMTEuMiAzOC42LDExLjIgMzguNiwyLjggDQoJNi44LDIuOCAiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iNi44LDI2LjYgMzAuNiwzMy4zIDMwLjYsNDEuMiAzLDQ5LjYgMzguNiw0OS42IDM4LjYsMjYuOCAxNC44LDIwLjEgMTQuOCwxMS4yIDM4LjYsMTEuMiAzOC42LDIuOCANCgk2LjgsMi44ICIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSI1NC41LDExLjIgNjguMiwxMS4yIDc2LDEzLjUgNzYsMi44IDQ2LjUsMi44IDQ2LjUsNDkuNiA3OCw0OS42IDU0LjUsNDEuMiAiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iNTQuNSwxMS4yIDY4LjIsMTEuMiA3NiwxMy41IDc2LDIuOCA0Ni41LDIuOCA0Ni41LDQ5LjYgNzgsNDkuNiA1NC41LDQxLjIgIi8+DQo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTYzLjQsMi44TDE2My40LDIuOEwxNjMuNCwyLjh2NDcuN2w3LjktOFYzMi4zbDIzLjgsMFYyLjl2MEwxNjMuNCwyLjh6IE0xODcuMiwxMS4yVjI0bC0xNS45LDQuOFYxMS4ySDE4Ny4yeg0KCSIvPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTE2My40LDIuOEwxNjMuNCwyLjhMMTYzLjQsMi44djQ3LjdsNy45LThWMzIuM2wyMy44LDBWMi45djBMMTYzLjQsMi44eiBNMTg3LjIsMTEuMlYyNGwtMTUuOSw0LjhWMTEuMkgxODcuMnoNCgkiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTU1LjQsMjkuOCAxNTUuNCwyLjggMTU1LjQsMi43IDEyMy43LDIuNyAxMjMuNywyLjcgMTIzLjcsNTAuNCAxMzEuNiw0Mi40IDEzMS42LDExLjEgMTQ3LjUsMTEuMSANCgkxNDcuNSwyNC42IDEzMS43LDI5LjUgMTYwLjIsNTAuNCAxNDYuNiwzMi42ICIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIxNTUuNCwyOS44IDE1NS40LDIuOCAxNTUuNCwyLjcgMTIzLjcsMi43IDEyMy43LDIuNyAxMjMuNyw1MC40IDEzMS42LDQyLjQgMTMxLjYsMTEuMSAxNDcuNSwxMS4xIA0KCTE0Ny41LDI0LjYgMTMxLjcsMjkuNSAxNjAuMiw1MC40IDE0Ni42LDMyLjYgIi8+DQo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNODMuOSw0OS42aDMxLjhWMi44SDgzLjlWNDkuNnogTTkxLjksMTEuMmgxNS45djMwTDkxLjksNDZWMTEuMnoiLz4NCjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik04My45LDQ5LjZoMzEuOFYyLjhIODMuOVY0OS42eiBNOTEuOSwxMS4yaDE1Ljl2MzBMOTEuOSw0NlYxMS4yeiIvPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxOC45LDQ5LjZoMzEuOFYyLjhoLTMxLjhWNDkuNnogTTIyNi45LDExLjJoMTUuOXYzMEwyMjYuOSw0NlYxMS4yeiIvPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxOC45LDQ5LjZoMzEuOFYyLjhoLTMxLjhWNDkuNnogTTIyNi45LDExLjJoMTUuOXYzMEwyMjYuOSw0NlYxMS4yeiIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIyODUuNCwyLjggMjg1LjQsNDEuMSAyODIuNCw0MS4xIDI3Ni4xLDIuOCAyNTguNiwyLjggMjU4LjYsNTAuNSAyNjYuNywyOS42IDI2Ni43LDExLjIgMjcwLDExLjIgDQoJMjc2LjMsNDkuNSAyOTMuMyw0OS41IDI5My4zLDIuOCAiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjg1LjQsMi44IDI4NS40LDQxLjEgMjgyLjQsNDEuMSAyNzYuMSwyLjggMjU4LjYsMi44IDI1OC42LDUwLjUgMjY2LjcsMjkuNiAyNjYuNywxMS4yIDI3MCwxMS4yIA0KCTI3Ni4zLDQ5LjUgMjkzLjMsNDkuNSAyOTMuMywyLjggIi8+DQo8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjIwMy4xLDUwLjUgMjExLDQyLjUgMjExLDEuOSAyMDMuMSwxMC40ICIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIyMDMuMSw1MC41IDIxMSw0Mi41IDIxMSwxLjkgMjAzLjEsMTAuNCAiLz4NCjwvc3ZnPg0K" style={{ width:"32.5%", maxWidth:90, display:"block", margin:"0 auto 4px" }} />
+        </div>
+        <h2 style={{ fontSize:17, fontWeight:700, color:C.text, marginBottom:4 }}>ورود / ثبت‌نام سریع</h2>
+          <p style={{ fontSize:12, color:C.textDim, lineHeight:1.7 }}>نام و شماره تماس خود را وارد کنید<br/>اگر برای اولین بار است، حساب شما ساخته می‌شود و مستقیم وارد فروشگاه می‌شوید</p>
+        </div>
+
+        {/* error */}
+        {error && (
+          <div style={{ background:"#EF444422", border:"1px solid #EF444444", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#EF4444", marginBottom:14, textAlign:"center" }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom:14 }}>
+            <div style={{ fontSize:11, fontWeight:600, color:"#6B7280", marginBottom:5 }}>نام و نام خانوادگی *</div>
+            <input
+              className="login-input"
+              value={name}
+              onChange={e => { setName(e.target.value); setError(''); }}
+              placeholder="مثال: علی محمدی"
+              style={iS}
+              autoComplete="name"
+            />
+          </div>
+          <div style={{ marginBottom:20 }}>
+            <div style={{ fontSize:11, fontWeight:600, color:"#6B7280", marginBottom:5 }}>شماره تماس *</div>
+            <input
+              className="login-input"
+              type="tel"
+              value={phone}
+              onChange={e => { setPhone(e.target.value); setError(''); }}
+              placeholder="مثال: 09123456789"
+              style={iS}
+              autoComplete="tel"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width:"100%", padding:"12px 20px", borderRadius:10, border:"none",
+              background:loading ? "#222" : C.primary,
+              color:loading ? "#6B7280" : "#111",
+              fontSize:14, fontWeight:700,
+              cursor:loading ? "not-allowed" : "pointer",
+              fontFamily:FF, opacity:loading ? 0.5 : 1,
+              boxShadow:loading ? "none" : "0 0 20px #D4880E33",
+            }}
+          >
+            {loading ? "در حال ورود..." : "ورود / ثبت‌نام"}
+          </button>
+        </form>
+
+        {/* back button */}
+        <button
+          onClick={onBack}
+          style={{
+            width:"100%", padding:"10px", borderRadius:10, border:`1px solid ${C.border}`,
+            background:"transparent", color:C.textDim, fontSize:13, fontWeight:600,
+            cursor:"pointer", fontFamily:FF, marginTop:12,
+          }}
+        >
+          بازگشت به انتخاب نوع کاربری
+        </button>
+
+        <div style={{ textAlign:"center", marginTop:20, fontSize:10, color:"#4B5563", opacity:0.5 }}>
+          نسخه ۱.۰ | کلیه حقوق محفوظ است © آذرمهرصنعت
+        </div>
+      </div>
+    </div>
+  );
+}
+function LoginScreen({ onLogin, initialMobile: im = '', onBack }) {
+  const [mode, setMode] = useState("login"); // "login" | "register"
+  const [customerType, setCustomerType] = useState("wholesale");
+  const [legalType, setLegalType] = useState("individual");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [nationalId, setNationalId] = useState("");
+  const [companyNationalId, setCompanyNationalId] = useState("");
+  const [economicCode, setEconomicCode] = useState("");
+  const [ceoName, setCeoName] = useState("");
+  const [phone, setPhone] = useState(im);
+  const [email, setEmail] = useState("");
+  const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [registeredType, setRegisteredType] = useState(null); // null | 'wholesale' | 'retail'
+  const [regCredentials, setRegCredentials] = useState(null); // { username, password } for retail
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [screen, setScreen] = useState("login"); // login | forgot | forgot_result
+  const [forgotUser, setForgotUser] = useState("");
+  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !navigator.standalone;
+
+  function handleForgot() {
+    if (!forgotUser.trim()) { setError("نام کاربری را وارد کنید"); return; }
+    setScreen("forgot_result");
+    setError("");
+  }
+
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener("beforeinstallprompt", handler);
+    if (isIOS) setShowIOSPrompt(true);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const iS = { width:"100%", padding:"9px 12px", borderRadius:8, border:`1px solid ${C.border}`, background:C.surfaceAlt, color:C.text, fontFamily:FF, fontSize:13, boxSizing:"border-box" };
+
+  const submitLogin = async (e) => {
+    e.preventDefault();
+    if (!username || !password) { setError("نام کاربری و رمز عبور را وارد کنید"); return; }
+    setLoading(true); setError("");
+    try {
+      const res = await fetch(`${API_BASE}/portal-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || "خطا در ورود");
+      localStorage.setItem("az_token", data.token);
+      onLogin(data.token, data.user);
+    } catch (e) {
+      setError(e.message || "نام کاربری یا رمز عبور اشتباه است");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitRegister = async (e) => {
+    e.preventDefault();
+    const type = legalType === "legal" ? "legal" : "individual";
+    if (type === "legal" && !companyName.trim()) { setError("نام شرکت الزامی است"); return; }
+    if (type === "individual" && !name.trim()) { setError("نام و نام خانوادگی الزامی است"); return; }
+    if (!username.trim() || username.trim().length < 3) { setError("نام کاربری پیشنهادی باید حداقل ۳ حرف باشد"); return; }
+    setLoading(true); setError("");
+    try {
+      const body = {
+        username: username.trim(),
+        customer_type: customerType,
+        legal_type: type,
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined,
+        city: city.trim() || undefined,
+        address: address.trim() || undefined,
+      };
+      if (type === "legal") {
+        body.company_name = companyName.trim();
+        body.company_national_id = companyNationalId.trim() || undefined;
+        body.economic_code = economicCode.trim() || undefined;
+        body.ceo_name = ceoName.trim() || undefined;
+      } else {
+        body.name = name.trim();
+        body.national_id = nationalId.trim() || undefined;
+      }
+      const res = await fetch(`${API_BASE}/portal-register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "خطا در ثبت درخواست");
+      // موفقیت — retail خودکار فعال می‌شود، wholesale منتظر تأیید
+      if (data.auto_approved && data.credentials) {
+        setRegCredentials(data.credentials);
+      }
+      setRegisteredType(data.auto_approved ? 'retail' : 'wholesale');
+    } catch (e) {
+      setError(e.message || "خطا در ثبت درخواست");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const Lbl = ({ children }) => <label style={{ display:"block", fontSize:11, marginBottom:5, color:C.textMuted, fontWeight:600 }}>{children}</label>;
+
+  return (
+    <div style={{ position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center", background:C.bg, padding:16 }}>
+      <div style={{ background:C.surface, borderRadius:24, padding:"19px 36px 36px", width:"100%", maxWidth:400, border:`1px solid ${C.border}`, animation:"glowPulse 3s infinite", maxHeight:"95vh", overflowY:"auto" }}>
+        {onBack && (
+          <div style={{ marginBottom:8, textAlign:"right" }}>
+            <button onClick={onBack} style={{ background:"none", border:"none", color:C.textDim, fontSize:12, cursor:"pointer", fontFamily:FF, display:"inline-flex", alignItems:"center", gap:4, padding:"4px 0" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              بازگشت
+            </button>
+          </div>
+        )}
+        <div style={{ textAlign:"center", marginBottom:16 }}>
+          <div style={{ width:128, height:128, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 4px", animation:"logoPulse 3s ease-in-out infinite" }}>
+          <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCA3NjggNzY4IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3NjggNzY4OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8Zz4NCgk8Zz4NCgkJPGc+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTU2LDQzNS40Yy0xOC45LTE2LjctNDguNS00Mi45LTY3LjQtNTkuNWMtMS43LDEzLjktMy42LDI3LjYtNS43LDQxLjRjMTYsMTQuMSw0OC43LDQzLjEsNjQuNiw1Ny4xDQoJCQkJYy0xLjIsNS41LTE5LjEsODgtMTkuMSw4OHMzNi4yLTc2LjUsNTAuMi0xMDYuOWwtMjEuNy0xOS4xTDU1Niw0MzUuNEw1NTYsNDM1LjR6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTgzLjksMTY4Ljl2OTYuNmMtNC4yLDMuNy0yNy44LDI0LjYtMzEuNCwyNy44Yy0wLjItMC4xLTU0LjMtNDgtNTQuNS00OC4ydjBjLTMuOS0xOS43LTE4LjgtOTYuMS0xOS43LTEwMQ0KCQkJCWMwLjEsMC4yLDcwLjYsMTE3LjQsNzAuNiwxMTcuNnYtODAuOWMtMC4xLTAuMi02Ny4yLTExMS44LTY3LjMtMTEyTDU4My45LDE2OC45TDU4My45LDE2OC45eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM4NiwzNzcuOWMtMjEsMTguNi01My4xLDQ3LTczLjksNjUuM2MyLjQsMTMuNCw0LjksMjYuNyw3LjYsMzkuNmMxOC40LTE2LjMsNDgtNDIuNSw2Ni4zLTU4LjYNCgkJCQljMTguMiwxNi4xLDQ3LjksNDIuNCw2Ni4zLDU4LjZjMi44LTEzLDUuMy0yNi4yLDcuNi0zOS42QzQ1MS40LDQzNS42LDM4NiwzNzcuOSwzODYsMzc3Ljl6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzg2LDU5Ni42Yy0xNC4zLTEyLjctMzQuOC0zMC44LTQ5LjEtNDMuNWMwLjUsMiw0NS43LDEyNy4xLDQ5LjEsMTM0LjNjMy41LTcuMiw0OC42LTEzMi40LDQ5LjEtMTM0LjMNCgkJCQlDNDMzLjEsNTU0LjksMzk2LjgsNTg3LjEsMzg2LDU5Ni42eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTQ2OC4yLDQ5Ni45bDE3LjIsMTUuMnY4OC4xbDAuMi0wLjJjNy4yLTMzLjMsMTcuMi03OS4yLDI0LjUtMTEyLjVsLTMzLjktMzANCgkJCQlDNDczLjcsNDcwLjksNDcxLDQ4NCw0NjguMiw0OTYuOUw0NjguMiw0OTYuOXoiLz4NCgkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01NTEsMzM4LjJjLTEzLjQtMTEuOC01NC42LTQ4LjMtNTQuNi00OC4zcy0xLjksMjguOS0zLjMsNDMuNWMxNi43LDE0LjgsNjEuNCw1NC4zLDYxLjQsNTQuM2wzNC04Mi44DQoJCQkJTDU1MSwzMzguMkw1NTEsMzM4LjJ6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMjg5LDQxNy4yYy0yLjEtMTMuNy00LTI3LjUtNS43LTQxLjRjLTI3LjYsMjQuNC04OS45LDc5LjUtODkuOSw3OS41bDUwLjIsMTA2LjljMCwwLTE4LTgyLjctMTkuMS04OA0KCQkJCUMyNDAuMyw0NjAuMywyNzMuMSw0MzEuMywyODksNDE3LjJMMjg5LDQxNy4yeiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM4Niw1NTVjMTMuMy0xMi43LDMxLTI5LjUsNDQuMy00Mi4yYy01LjYtNS4zLTM5LjYtMzcuNy00NC4zLTQyLjJjLTQuNSw0LjMtMzguOSwzNy00NC4zLDQyLjINCgkJCQlDMzQ3LjksNTE4LjcsMzg0LjcsNTUzLjcsMzg2LDU1NUwzODYsNTU1eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTI2MS45LDQ4Ny42YzcuMywzMy40LDE3LjIsNzkuMiwyNC41LDExMi41bDAuMiwwLjJ2LTg4LjFsMTcuMi0xNS4yYy0yLjktMTIuOS01LjUtMjYtOC0zOS40TDI2MS45LDQ4Ny42DQoJCQkJTDI2MS45LDQ4Ny42eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxNy40LDM4Ny44YzE2LjktMTQuOSw2MS40LTU0LjMsNjEuNC01NC4zcy0yLjQtMjkuMS0zLjMtNDMuNWMtMTMuNSwxMi01NC42LDQ4LjMtNTQuNiw0OC4zDQoJCQkJcy0yNy41LTI0LjQtMzcuNi0zMy4zQzE5Mi40LDMyNi45LDIxNy40LDM4Ny44LDIxNy40LDM4Ny44TDIxNy40LDM4Ny44eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTE4Ny44LDE2OC45djk2LjZjNC4yLDMuNywyNy44LDI0LjYsMzEuNCwyNy44YzAuMi0wLjEsNTQuMy00OCw1NC41LTQ4LjJ2MGMzLjktMTkuNywxOC44LTk2LjEsMTkuNy0xMDENCgkJCQljLTAuMSwwLjItNzAuNiwxMTcuNC03MC42LDExNy42di04MC45YzAuMS0wLjIsNjcuMi0xMTEuOCw2Ny4zLTExMkwxODcuOCwxNjguOUwxODcuOCwxNjguOXoiLz4NCgkJPC9nPg0KCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzk2LjksMTk3LjVMMzg2LDIwOC40bC0xMC45LTEwLjlsLTgxLjgsNzYuOGMyLDQyLjYsNi4xLDg2LjEsMTIuMywxMjguM2MxMi40LTExLDY2LjktNTkuMiw4MC40LTcxLjENCgkJCWMxMy44LDEyLjIsNjcuNyw1OS45LDgwLjQsNzEuMWM2LjEtNDIuMiwxMC4yLTg1LjcsMTIuMy0xMjguM0wzOTYuOSwxOTcuNUwzOTYuOSwxOTcuNXoiLz4NCgk8L2c+DQoJPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIzMjAuMSw2NjUuOCAzMDIuNSw2NzIuNSAyOTAuNiw2MTQuNiAJIi8+DQoJPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIzNjkuNCw2ODguMSAzMDYuNiw2ODcuNSAzNjIuMiw2NjguNCAJIi8+DQo8L2c+DQo8L3N2Zz4NCg==" alt="عقرب" style={{width:128,height:128,objectFit:"contain",display:"block",margin:"0 auto 12px"}} />
+          </div>
+          <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCAyOTcuMSA1Mi41IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyOTcuMSA1Mi41OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjYuOCwyNi42IDMwLjYsMzMuMyAzMC42LDQxLjIgMyw0OS42IDM4LjYsNDkuNiAzOC42LDI2LjggMTQuOCwyMC4xIDE0LjgsMTEuMiAzOC42LDExLjIgMzguNiwyLjggDQoJNi44LDIuOCAiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iNi44LDI2LjYgMzAuNiwzMy4zIDMwLjYsNDEuMiAzLDQ5LjYgMzguNiw0OS42IDM4LjYsMjYuOCAxNC44LDIwLjEgMTQuOCwxMS4yIDM4LjYsMTEuMiAzOC42LDIuOCANCgk2LjgsMi44ICIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSI1NC41LDExLjIgNjguMiwxMS4yIDc2LDEzLjUgNzYsMi44IDQ2LjUsMi44IDQ2LjUsNDkuNiA3OCw0OS42IDU0LjUsNDEuMiAiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iNTQuNSwxMS4yIDY4LjIsMTEuMiA3NiwxMy41IDc2LDIuOCA0Ni41LDIuOCA0Ni41LDQ5LjYgNzgsNDkuNiA1NC41LDQxLjIgIi8+DQo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTYzLjQsMi44TDE2My40LDIuOEwxNjMuNCwyLjh2NDcuN2w3LjktOFYzMi4zbDIzLjgsMFYyLjl2MEwxNjMuNCwyLjh6IE0xODcuMiwxMS4yVjI0bC0xNS45LDQuOFYxMS4ySDE4Ny4yeg0KCSIvPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTE2My40LDIuOEwxNjMuNCwyLjhMMTYzLjQsMi44djQ3LjdsNy45LThWMzIuM2wyMy44LDBWMi45djBMMTYzLjQsMi44eiBNMTg3LjIsMTEuMlYyNGwtMTUuOSw0LjhWMTEuMkgxODcuMnoNCgkiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTU1LjQsMjkuOCAxNTUuNCwyLjggMTU1LjQsMi43IDEyMy43LDIuNyAxMjMuNywyLjcgMTIzLjcsNTAuNCAxMzEuNiw0Mi40IDEzMS42LDExLjEgMTQ3LjUsMTEuMSANCgkxNDcuNSwyNC42IDEzMS43LDI5LjUgMTYwLjIsNTAuNCAxNDYuNiwzMi42ICIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIxNTUuNCwyOS44IDE1NS40LDIuOCAxNTUuNCwyLjcgMTIzLjcsMi43IDEyMy43LDIuNyAxMjMuNyw1MC40IDEzMS42LDQyLjQgMTMxLjYsMTEuMSAxNDcuNSwxMS4xIA0KCTE0Ny41LDI0LjYgMTMxLjcsMjkuNSAxNjAuMiw1MC40IDE0Ni42LDMyLjYgIi8+DQo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNODMuOSw0OS42aDMxLjhWMi44SDgzLjlWNDkuNnogTTkxLjksMTEuMmgxNS45djMwTDkxLjksNDZWMTEuMnoiLz4NCjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik04My45LDQ5LjZoMzEuOFYyLjhIODMuOVY0OS42eiBNOTEuOSwxMS4yaDE1Ljl2MzBMOTEuOSw0NlYxMS4yeiIvPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxOC45LDQ5LjZoMzEuOFYyLjhoLTMxLjhWNDkuNnogTTIyNi45LDExLjJoMTUuOXYzMEwyMjYuOSw0NlYxMS4yeiIvPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxOC45LDQ5LjZoMzEuOFYyLjhoLTMxLjhWNDkuNnogTTIyNi45LDExLjJoMTUuOXYzMEwyMjYuOSw0NlYxMS4yeiIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIyODUuNCwyLjggMjg1LjQsNDEuMSAyODIuNCw0MS4xIDI3Ni4xLDIuOCAyNTguNiwyLjggMjU4LjYsNTAuNSAyNjYuNywyOS42IDI2Ni43LDExLjIgMjcwLDExLjIgDQoJMjc2LjMsNDkuNSAyOTMuMyw0OS41IDI5My4zLDIuOCAiLz4NCjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjg1LjQsMi44IDI4NS40LDQxLjEgMjgyLjQsNDEuMSAyNzYuMSwyLjggMjU4LjYsMi44IDI1OC42LDUwLjUgMjY2LjcsMjkuNiAyNjYuNywxMS4yIDI3MCwxMS4yIA0KCTI3Ni4zLDQ5LjUgMjkzLjMsNDkuNSAyOTMuMywyLjggIi8+DQo8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjIwMy4xLDUwLjUgMjExLDQyLjUgMjExLDEuOSAyMDMuMSwxMC40ICIvPg0KPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIyMDMuMSw1MC41IDIxMSw0Mi41IDIxMSwxLjkgMjAzLjEsMTAuNCAiLz4NCjwvc3ZnPg0K" alt="عقرب" style={{width:120,display:"block",margin:"0 auto"}} />
+        </div>
+
+        {/* ── Login / Register toggle ─────────────────────────────── */}
+        <div style={{ display:"flex", background:C.bg, borderRadius:10, padding:3, marginBottom:16 }}>
+          {["login","register"].map(m => (
+            <div key={m} onClick={()=>{setMode(m);setError("");}} style={{ flex:1, textAlign:"center", padding:"8px 0", borderRadius:8, cursor:"pointer", fontWeight:600, fontSize:13, background:mode===m?C.primary:"transparent", color:mode===m?"#111":C.textMuted, fontFamily:FF, transition:"all 0.2s" }}>
+              {m === "login" ? "ورود" : "ثبت‌نام"}
+            </div>
+          ))}
+        </div>
+
+        {mode === "login" ? (
+          <>
+
+
+            {/* ارور */}
+            {error && (
+              <div style={{
+                background:"#EF444422", border:"1px solid #EF444444",
+                borderRadius:8, padding:"10px 14px",
+                fontSize:13, color:"#EF4444",
+                marginBottom:14, textAlign:"center"
+              }}>
+                {error}
+              </div>
+            )}
+
+            {/* فرم login */}
+            {screen === "login" && (
+              <>
+                {/* نام کاربری */}
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#6B7280",marginBottom:5}}>نام کاربری</div>
+                  <input
+                    style={{
+                      width:"100%", background:"#131313",
+                      border:"1px solid #2A2A2A", borderRadius:10,
+                      padding:"10px 14px", color:"#D1D3D4",
+                      fontSize:13, outline:"none",
+                      direction:"ltr", textAlign:"left",
+                      fontFamily:"inherit", boxSizing:"border-box"
+                    }}
+                    placeholder="username"
+                    value={username}
+                    onChange={e=>{setUsername(e.target.value);setError("");}}
+                    onKeyDown={e=>e.key==="Enter"&&submitLogin(e)}
+                    autoCapitalize="none" autoCorrect="off" autoComplete="username"
+                  />
+                </div>
+
+                {/* رمز عبور */}
+                <div style={{marginBottom:6}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#6B7280",marginBottom:5}}>رمز عبور</div>
+                  <div style={{position:"relative"}}>
+                    <input
+                      style={{
+                        width:"100%", background:"#131313",
+                        border:"1px solid #2A2A2A", borderRadius:10,
+                        padding:"10px 14px", paddingLeft:36,
+                        color:"#D1D3D4", fontSize:13, outline:"none",
+                        fontFamily:"inherit", boxSizing:"border-box"
+                      }}
+                      type={showPassword?"text":"password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={e=>{setPassword(e.target.value);setError("");}}
+                      onKeyDown={e=>e.key==="Enter"&&submitLogin(e)}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      onClick={()=>setShowPassword(p=>!p)}
+                      type="button"
+                      style={{
+                        position:"absolute", left:10, top:"50%",
+                        transform:"translateY(-50%)",
+                        background:"none", border:"none",
+                        color:"#6B7280", cursor:"pointer", padding:4,
+                        display:"flex", alignItems:"center"
+                      }}
+                    >
+                      {showPassword
+                        ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      }
+                    </button>
+                  </div>
+                </div>
+
+                {/* فراموشی رمز */}
+                <div style={{textAlign:"left", marginBottom:20}}>
+                  <button
+                    type="button"
+                    onClick={()=>{setScreen("forgot");setError("");setForgotUser("");}}
+                    style={{background:"none",border:"none",color:"#D4880E",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}
+                  >
+                    فراموشی رمز عبور؟
+                  </button>
+                </div>
+
+                {/* دکمه ورود */}
+                <button
+                  onClick={submitLogin}
+                  disabled={loading}
+                  style={{
+                    width:"100%", padding:"11px 20px",
+                    borderRadius:10, border:"none",
+                    background:loading?"#222222":"#D4880E",
+                    color:loading?"#6B7280":"#111",
+                    fontSize:13, fontWeight:700,
+                    cursor:loading?"not-allowed":"pointer",
+                    fontFamily:"inherit",
+                    opacity:loading?0.5:1,
+                    boxShadow:loading?"none":"0 0 20px #D4880E33",
+                    marginTop:8
+                  }}
+                >
+                {loading?"در حال ورود...":"ورود به فروشگاه"}
+                </button>
+
+                {/* دکمه نصب PWA — Android/Chrome */}
+                {installPrompt && (
+                  <div style={{marginTop:12,textAlign:"center"}}>
+                    <button
+                      type="button"
+                      onClick={async()=>{
+                        installPrompt.prompt();
+                        const {outcome} = await installPrompt.userChoice;
+                        if(outcome==="accepted") setInstallPrompt(null);
+                      }}
+                      style={{
+                        width:"100%", padding:"12px",
+                        borderRadius:10, border:"1px solid #D4880E44",
+                        background:"transparent", color:"#D4880E",
+                        fontSize:13, fontWeight:600, cursor:"pointer",
+                        fontFamily:"inherit", display:"flex",
+                        alignItems:"center", justifyContent:"center", gap:8
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      نصب اپلیکیشن
+                    </button>
+                    <div style={{fontSize:11,color:"#555555",marginTop:6}}>
+                      برای دسترسی سریع‌تر روی دستگاه نصب کنید
+                    </div>
+                  </div>
+                )}
+
+                {/* iOS Modal راهنمای نصب — مثل پنل مدیریت */}
+                {showIOSPrompt && (
+                  <div id="pwa-ios-guide" style={{position:"fixed",inset:0,background:"#000000CC",zIndex:10000,display:"flex",alignItems:"flex-end",justifyContent:"center",direction:"rtl"}} onClick={()=>setShowIOSPrompt(false)}>
+                    <div style={{background:"#1C1C1C",borderRadius:"20px 20px 0 0",padding:"24px 20px 40px",width:"100%",maxWidth:480,fontFamily:"IRANSans,Tahoma,sans-serif",position:"relative"}} onClick={e=>e.stopPropagation()}>
+                      <div style={{width:36,height:4,background:"#303030",borderRadius:2,margin:"0 auto 20px"}}></div>
+                      <div style={{fontSize:16,fontWeight:700,color:"#D1D3D4",marginBottom:16,textAlign:"center"}}>نصب روی iPhone/iPad</div>
+                      <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:24}}>
+                        <div style={{display:"flex",alignItems:"center",gap:12,background:"#252525",borderRadius:10,padding:12}}>
+                          <div style={{width:32,height:32,background:"#D4880E22",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>①</div>
+                          <div style={{fontSize:13,color:"#D1D3D4"}}>در Safari روی دکمه <strong style={{color:"#D4880E"}}>اشتراک‌گذاری</strong> (□↑) بزنید</div>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:12,background:"#252525",borderRadius:10,padding:12}}>
+                          <div style={{width:32,height:32,background:"#D4880E22",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>②</div>
+                          <div style={{fontSize:13,color:"#D1D3D4"}}>گزینه <strong style={{color:"#D4880E"}}>«افزودن به صفحه اصلی»</strong> را انتخاب کنید</div>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:12,background:"#252525",borderRadius:10,padding:12}}>
+                          <div style={{width:32,height:32,background:"#D4880E22",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>③</div>
+                          <div style={{fontSize:13,color:"#D1D3D4"}}>روی <strong style={{color:"#D4880E"}}>«افزودن»</strong> در گوشه بالا سمت چپ بزنید</div>
+      </div>
+
+      {/* ── Support section ──────────────────────────────────────── */}
+      <div style={{ background:C.surface, borderRadius:14, border:`1px solid ${C.border}`, padding:20, marginTop:14 }}>
+        <h3 style={{ fontSize:15, fontWeight:600, color:C.text, marginBottom:10 }}>پشتیبانی و پیگیری</h3>
+        <p style={{ fontSize:11, color:C.textDim, lineHeight:1.7, marginBottom:10 }}>
+          برای پیگیری سفارش، سوالات ثبت سفارش، گارانتی یا مرجوعی از راه‌های زیر استفاده کنید.
+        </p>
+        <p style={{ fontSize:10, color:C.warning, marginBottom:10, background:C.warningDim, borderRadius:6, padding:"5px 8px", fontWeight:600 }}>
+          استعلام قیمت فقط از طریق پورتال انجام می‌شود.
+        </p>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+          {onSupport && <button onClick={onSupport} style={{ padding:"10px", borderRadius:8, border:`1px solid ${C.border}`, background:C.surfaceAlt, cursor:"pointer", fontFamily:FF, fontSize:11, fontWeight:600, color:C.text }}>
+            <svg width="16" height="16" fill="none" stroke={C.primary} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{display:"block",margin:"0 auto 4px"}}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            ثبت درخواست پشتیبانی
+          </button>}
+          {onOrders && <button onClick={onOrders} style={{ padding:"10px", borderRadius:8, border:`1px solid ${C.border}`, background:C.surfaceAlt, cursor:"pointer", fontFamily:FF, fontSize:11, fontWeight:600, color:C.text }}>
+            <svg width="16" height="16" fill="none" stroke={C.info} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{display:"block",margin:"0 auto 4px"}}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8m8 4H8m2-8H8"/></svg>
+            پیگیری سفارش
+          </button>}
+          {onWarranty && <button onClick={onWarranty} style={{ padding:"10px", borderRadius:8, border:`1px dashed ${C.primary}55`, background:"transparent", cursor:"pointer", fontFamily:FF, fontSize:11, fontWeight:600, color:C.primary }}>
+            <svg width="16" height="16" fill="none" stroke={C.primary} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{display:"block",margin:"0 auto 4px"}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            گارانتی/مرجوعی
+          </button>}
+          {onProducts && <button onClick={onProducts} style={{ padding:"10px", borderRadius:8, border:`1px solid ${C.border}`, background:C.surfaceAlt, cursor:"pointer", fontFamily:FF, fontSize:11, fontWeight:600, color:C.text }}>
+            <svg width="16" height="16" fill="none" stroke={C.primary} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{display:"block",margin:"0 auto 4px"}}><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+            مشاهده محصولات
+          </button>}
+        </div>
+      </div>
+    </div>
+                      <button onClick={()=>setShowIOSPrompt(false)} style={{width:"100%",padding:14,borderRadius:12,background:"#D4880E",border:"none",color:"#111",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>متوجه شدم</button>
+                    </div>
+                  </div>
+                )}
+
+                
+
+                {/* فوتر */}
+                <div style={{textAlign:"center",marginTop:24,fontSize:10,color:"#4B5563",opacity:0.5}}>
+                  نسخه ۱.۰ | کلیه حقوق محفوظ است © آذرمهرصنعت
+                </div>
+              </>
+            )}
+
+            {/* صفحه فراموشی رمز */}
+            {screen === "forgot" && (
+              <>
+                <div style={{textAlign:"center",marginBottom:24}}>
+                  <div style={{fontSize:16,fontWeight:700,color:"#D1D3D4",marginBottom:8}}>فراموشی رمز عبور</div>
+                  <div style={{fontSize:13,color:"#6B7280",lineHeight:1.7}}>نام کاربری خود را وارد کنید</div>
+                </div>
+                <div style={{marginBottom:16}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#6B7280",marginBottom:5}}>نام کاربری</div>
+                  <input
+                    style={{
+                      width:"100%", background:"#131313",
+                      border:"1px solid #2A2A2A", borderRadius:10,
+                      padding:"10px 14px", color:"#D1D3D4",
+                      fontSize:13, outline:"none",
+                      direction:"ltr", textAlign:"left",
+                      fontFamily:"inherit", boxSizing:"border-box"
+                    }}
+                    placeholder="username"
+                    value={forgotUser}
+                    onChange={e=>{setForgotUser(e.target.value);setError("");}}
+                    autoCapitalize="none"
+                  />
+                </div>
+                {error && (
+                  <div style={{background:"#C94B3F22",borderRadius:8,padding:"10px 14px",fontSize:13,color:"#C94B3F",marginBottom:14,textAlign:"center"}}>{error}</div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleForgot}
+                  style={{
+                    width:"100%", padding:"11px 20px",
+                    borderRadius:10, border:"none",
+                    background:"#D4880E", color:"#111",
+                    fontSize:13, fontWeight:700, cursor:"pointer",
+                    fontFamily:"inherit", boxShadow:"0 0 20px #D4880E33",
+                    marginBottom:12
+                  }}
+                >
+                  ادامه
+                </button>
+                <button
+                  type="button"
+                  onClick={()=>{setScreen("login");setError("");}}
+                  style={{
+                    width:"100%", padding:"11px",
+                    borderRadius:10, border:"1px solid #2A2A2A",
+                    background:"transparent", color:"#6B7280",
+                    fontSize:13, cursor:"pointer", fontFamily:"inherit"
+                  }}
+                >
+                  بازگشت به ورود
+                </button>
+              </>
+            )}
+
+            {/* نتیجه فراموشی رمز */}
+            {screen === "forgot_result" && (
+              <>
+                <div style={{textAlign:"center",marginBottom:24}}>
+                  <Icon name="headset" size={36} style={{color:C.primary}} />
+                  <div style={{fontSize:16,fontWeight:700,color:"#D1D3D4",marginBottom:8}}>بازیابی رمز عبور</div>
+                  <div style={{fontSize:13,color:"#6B7280",marginBottom:16,lineHeight:1.8}}>
+                    برای بازیابی رمز عبور کاربر{" "}
+                    <span style={{color:"#D4880E",fontWeight:700}}>{forgotUser}</span>{" "}
+                    با مدیر سیستم تماس بگیرید:
+                  </div>
+                  <div style={{background:"#131313",border:"1px solid #2A2A2A",borderRadius:10,padding:14,fontSize:14,color:"#D4880E"}}>
+                    بزرگمهر یا کریم‌لو
+                  </div>
+                  <div style={{fontSize:12,color:"#4B5563",marginTop:10}}>
+                    مدیر سیستم رمز جدید را از طریق پنل مدیریت تنظیم خواهد کرد.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={()=>{setScreen("login");setError("");setForgotUser("");}}
+                  style={{
+                    width:"100%", padding:"11px 20px",
+                    borderRadius:10, border:"none",
+                    background:"#D4880E", color:"#111",
+                    fontSize:13, fontWeight:700, cursor:"pointer",
+                    fontFamily:"inherit", boxShadow:"0 0 20px #D4880E33"
+                  }}
+                >
+                  بازگشت به ورود
+                </button>
+              </>
+            )}
+          </>
+        ) : registeredType ? (
+          /* ═══════════════════════ REGISTER SUCCESS ═══════════════════ */
+          <div style={{ textAlign:"center", padding:"16px 0" }}>
+            <div style={{ width:48, height:48, borderRadius:"50%", background:C.successDim, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px" }}>
+              <Icon name="check" size={28} style={{color:C.success}} />
+            </div>
+            <p style={{ fontSize:15, fontWeight:600, color:C.text, marginBottom:8 }}>
+              {registeredType === 'retail' ? 'ثبت‌نام با موفقیت انجام شد' : 'درخواست شما ثبت شد'}
+            </p>
+            <p style={{ fontSize:13, color:C.textMuted, marginBottom:20, lineHeight:1.7 }}>
+              {registeredType === 'retail' ? (
+                <>اطلاعات شما ثبت شد. می‌توانید با اطلاعات زیر وارد پورتال شوید:</>
+              ) : (
+                <>اطلاعات شما با موفقیت دریافت شد.<br />
+                پس از تأیید مدیر، نام کاربری و رمز عبور برای شما صادر خواهد شد<br />
+                و از طریق پیامک اطلاع‌رسانی می‌گردد.</>
+              )}
+            </p>
+            {registeredType === 'retail' && regCredentials && (
+              <div style={{ background:C.surfaceAlt, borderRadius:10, padding:14, marginBottom:16, textAlign:"right" }}>
+                <div style={{ fontSize:11, color:C.textMuted, marginBottom:4 }}>نام کاربری</div>
+                <div style={{ fontSize:15, fontWeight:700, color:C.text, fontFamily:"monospace", direction:"ltr", textAlign:"left", marginBottom:12 }}>{regCredentials.username}</div>
+                <div style={{ fontSize:11, color:C.textMuted, marginBottom:4 }}>رمز عبور</div>
+                <div style={{ fontSize:15, fontWeight:700, color:C.text, fontFamily:"monospace", direction:"ltr", textAlign:"left" }}>{regCredentials.password}</div>
+              </div>
+            )}
+            <button onClick={() => { setMode("login"); setRegisteredType(null); setRegCredentials(null); setError(""); }}
+              style={{ padding:"12px 36px", borderRadius:12, border:"none", background:C.primary, color:"#111", fontWeight:700, cursor:"pointer", fontFamily:FF, fontSize:14 }}>
+              بازگشت به صفحه ورود
+            </button>
+          </div>
+        ) : (
+          /* ═══════════════════════ REGISTER FORM ═════════════════════ */
+          <form onSubmit={submitRegister}>
+            {/* Customer type selector */}
+            <div style={{ display:"flex", background:C.bg, borderRadius:8, padding:2, marginBottom:8 }}>
+              {[["wholesale","عمده‌فروش"],["retail","خرده‌فروش"]].map(([k,l]) => (
+                <div key={k} onClick={()=>{setCustomerType(k);setError("");}} style={{ flex:1, textAlign:"center", padding:"6px 0", borderRadius:6, cursor:"pointer", fontWeight:600, fontSize:12, background:customerType===k?C.primary:"transparent", color:customerType===k?"#111":C.textMuted, fontFamily:FF, transition:"all 0.2s" }}>
+                  {l}
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize:10, color:C.textDim, textAlign:"center", marginBottom:12, lineHeight:1.6 }}>
+              {customerType === "retail"
+                ? "🛍️ خرده‌فروش — پس از ثبت، بلافاصله فعال می‌شوید"
+                : "🏪 عمده‌فروش — پس از تأیید مدیر، دسترسی شما فعال می‌شود"}
+            </div>
+
+            {/* Legal type toggle */}
+            <div style={{ display:"flex", background:C.bg, borderRadius:8, padding:2, marginBottom:14 }}>
+              {[["individual","حقیقی"],["legal","حقوقی"]].map(([k,l]) => (
+                <div key={k} onClick={()=>{setLegalType(k);setError("");}} style={{ flex:1, textAlign:"center", padding:"6px 0", borderRadius:6, cursor:"pointer", fontWeight:600, fontSize:12, background:legalType===k?C.surfaceHover:"transparent", color:legalType===k?C.text:C.textMuted, fontFamily:FF, transition:"all 0.2s" }}>
+                  {l}
+                </div>
+              ))}
+            </div>
+
+            {/* Individual fields */}
+            {legalType === "individual" && (
+              <>
+                <div style={{ marginBottom:12 }}><Lbl>نام و نام خانوادگی *</Lbl><input className="login-input" value={name} onChange={e=>setName(e.target.value)} style={iS} /></div>
+                <div style={{ marginBottom:12 }}><Lbl>کد ملی</Lbl><input className="login-input" value={nationalId} onChange={e=>setNationalId(e.target.value)} style={iS} /></div>
+              </>
+            )}
+
+            {/* Legal fields */}
+            {legalType === "legal" && (
+              <>
+                <div style={{ marginBottom:12 }}><Lbl>نام شرکت *</Lbl><input className="login-input" value={companyName} onChange={e=>setCompanyName(e.target.value)} style={iS} /></div>
+                <div style={{ marginBottom:12 }}><Lbl>شناسه ملی شرکت</Lbl><input className="login-input" value={companyNationalId} onChange={e=>setCompanyNationalId(e.target.value)} style={iS} /></div>
+                <div style={{ marginBottom:12 }}><Lbl>کد اقتصادی</Lbl><input className="login-input" value={economicCode} onChange={e=>setEconomicCode(e.target.value)} style={iS} /></div>
+                <div style={{ marginBottom:12 }}><Lbl>نام مدیرعامل</Lbl><input className="login-input" value={ceoName} onChange={e=>setCeoName(e.target.value)} style={iS} /></div>
+              </>
+            )}
+
+            {/* Common fields */}
+            <div style={{ marginBottom:12 }}>
+              <Lbl>شماره تماس</Lbl>
+              <input className="login-input" value={phone} onChange={e=>setPhone(e.target.value)} style={iS} />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <Lbl>ایمیل</Lbl>
+              <input className="login-input" type="email" value={email} onChange={e=>setEmail(e.target.value)} style={iS} />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <Lbl>شهر</Lbl>
+              <input className="login-input" value={city} onChange={e=>setCity(e.target.value)} style={iS} />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <Lbl>آدرس</Lbl>
+              <input className="login-input" value={address} onChange={e=>setAddress(e.target.value)} style={iS} />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <Lbl>نام کاربری پیشنهادی *</Lbl>
+              <input className="login-input" value={username} onChange={e=>setUsername(e.target.value)} style={iS} />
+            </div>
+            <div style={{ marginBottom:8, fontSize:11, color:C.textDim, lineHeight:1.6 }}>
+              ⏳ پس از ثبت درخواست، مدیر فروش اطلاعات شما را بررسی می‌کند.<br />
+              پس از تأیید، نام کاربری و رمز عبور برای شما صادر خواهد شد.
+            </div>
+
+            <button type="submit" disabled={loading} style={{ width:"100%", padding:"14px", borderRadius:12, border:"none", background:C.primary, color:"#111", fontWeight:700, cursor:loading?"not-allowed":"pointer", fontFamily:FF, fontSize:15, opacity:loading?0.7:1 }}>
+              {loading ? "در حال ثبت..." : "ثبت درخواست"}
+            </button>
+          </form>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ ICONS ════════════════════════════════════════ */
+/* All icons are inline SVGs — no emoji, icon fonts, or external CDN dependencies.
+   Use <Icon name="..." /> for easy access, or individual Ic* components for backward compat. */
+
+// Icon: stores arrays of path 'd' values, renders with React.createElement (no JSX, no dangerouslySetInnerHTML)
+/* ═══════════════════════════════════════ ICON SYSTEM ═════════════════════════════════ */
+const ICON = {
+  home:     ["M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z","M9 22V12h6v10"],
+  box:      ["M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z","M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"],
+  file:     ["M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z","M14 2v6h6M16 13H8m8 4H8m2-8H8"],
+  orders:   ["M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2","M9 14l2 2 4-4"],
+  cart:     ["M9 21m-1 0a1 1 0 112 0 1 1 0 01-2 0","M20 21m-1 0a1 1 0 112 0 1 1 0 01-2 0","M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"],
+  plus:     ["M12 5v14M5 12h14"],
+  minus:    ["M5 12h14"],
+  delete:   ["M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"],
+  edit:     ["M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7","M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"],
+  save:     ["M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z","M17 21v-8H7v8M7 3v5h8"],
+  close:    ["M18 6L6 18M6 6l12 12"],
+  back:     ["M19 12H5M12 19l-7-7 7-7"],
+  search:   ["M11 11m-8 0a8 8 0 1116 0 8 8 0 01-16 0","M21 21l-4.35-4.35"],
+  filter:   ["M22 3H2l8 9.46V19l4 2v-8.54L22 3z"],
+  sort:     ["M11 5h10M11 9h7M11 13h4M11 17h2M5 5v14M5 19l-3-3M5 19l3-3"],
+  menu:     ["M3 12h18M3 6h18M3 18h18"],
+  user:     ["M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2","M12 7m-4 0a4 4 0 118 0 4 4 0 01-8 0"],
+  users:    ["M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2","M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75","M9 11a4 4 0 100-8 4 4 0 000 8z"],
+  logout:   ["M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"],
+  chat:     ["M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"],
+  send:     ["M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"],
+  support:  ["M21 15a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h1a2 2 0 012 2zM7 12a2 2 0 012 2v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3a2 2 0 012-2z","M21 15v2a5 5 0 01-5 5M3 15v2a5 5 0 005 5"],
+  phone:    ["M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"],
+  warranty: ["M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z","M9 12l2 2 4-4"],
+  return:   ["M4 7V4h16v4M9 20h6M12 4v16","M4 11l3-3-3-3"],
+  payment:  ["M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"],
+  upload:   ["M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"],
+  download: ["M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"],
+  image:    ["M3 3h18v18H3z","M8.5 8.5m-1.5 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0","M21 15l-5-5L5 21"],
+  check:    ["M20 6L9 17l-5-5"],
+  alert:    ["M12 9v4M12 17h.01","M10.29 3.86l-8.3 14.4A2 2 0 003.7 21h16.6a2 2 0 001.7-2.74l-8.3-14.4a2 2 0 00-3.4 0z"],
+  info:     ["M12 12m-10 0a10 10 0 1120 0 10 10 0 01-20 0","M12 16v-4M12 8h.01"],
+  loading:  ["M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"],
+  star:     ["M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"],
+  calendar: ["M3 4h18v4H3zM7 2v4M17 2v4","M3 10h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2V10z"],
+  minusCircle:["M12 12m-10 0a10 10 0 1120 0 10 10 0 01-20 0","M8 12h8"],
+  plusCircle: ["M12 12m-10 0a10 10 0 1120 0 10 10 0 01-20 0","M12 8v8M8 12h8"],
+  chevronDown:["M6 9l6 6 6-6"],
+  chevronUp:  ["M18 15l-6-6-6 6"],
+  whatsapp: ["M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"],
+};
+
+function Icon(props) {
+  var name = props.name, size = props.size || IZ.lg, style = props.style;
+  var ds = ICON[name];
+  if (!ds) return null;
+  var ch = [];
+  for (var i = 0; i < ds.length; i++) {
+    ch.push(React.createElement('path', { key:i, d:ds[i], fill:'none', stroke:'currentColor', strokeWidth:2, strokeLinecap:'round', strokeLinejoin:'round' }));
+  }
+  var svgProps = { width:size, height:size, viewBox:'0 0 24 24', style:style };
+  for (var k in props) { if (k !== 'name' && k !== 'size' && k !== 'style') svgProps[k] = props[k]; }
+  return React.createElement('svg', svgProps, ch);
+}
+
+// Legacy individual icon wrappers (used in TABS nav, header etc.)
+const IcHome = (p) => React.createElement(Icon, Object.assign({name:'home',size:IZ.xl}, p));
+const IcBox = (p) => React.createElement(Icon, Object.assign({name:'box',size:IZ.xl}, p));
+const IcFile = (p) => React.createElement(Icon, Object.assign({name:'file',size:IZ.xl}, p));
+const IcUser = (p) => React.createElement(Icon, Object.assign({name:'user',size:IZ.xl}, p));
+const IcChat = (p) => React.createElement(Icon, Object.assign({name:'chat',size:IZ.xl}, p));
+const IcLogout = (p) => React.createElement(Icon, Object.assign({name:'logout',size:IZ.lg}, p));
+
+/* ═══════════════════════════════════════ CANONICAL UI COMPONENTS ══════════════════════ */
+/* ─── Button ─── */
+function Btn({ children, variant, size, icon, disabled, loading, onClick, style, fullWidth, type }) {
+  var v = variant || 'primary';
+  var s = size || 'md';
+  var h = BH[s] || BH.md;
+  var bgMap = { primary:C.primary, secondary:'transparent', ghost:'transparent', danger:C.danger };
+  var bdMap = { primary:'none', secondary:'1px solid '+C.border, ghost:'none', danger:'none' };
+  var clMap = { primary:'#111', secondary:C.text, ghost:C.text, danger:'#fff' };
+  var bg = loading ? C.surfaceAlt : bgMap[v] || C.primary;
+  return React.createElement('button', {
+    onClick: disabled || loading ? undefined : onClick,
+    disabled: disabled || loading,
+    type: type || 'button',
+    style: Object.assign({
+      display:'inline-flex', alignItems:'center', justifyContent:'center', gap:SP.sm,
+      height:h, padding:'0 '+(s==='sm'?SP.md:SP.lg)+'px',
+      borderRadius:RD.sm, border:bdMap[v], background:bg, color:disabled?C.textDim:clMap[v],
+      fontWeight:600, cursor:disabled?'not-allowed':loading?'wait':'pointer',
+      fontFamily:FF, fontSize: s==='sm' ? FZ.xs : FZ.base,
+      transition:'all 0.15s ease', whiteSpace:'nowrap',
+      width: fullWidth ? '100%' : undefined,
+      opacity: disabled ? 0.5 : 1,
+    }, style || {}),
+  }, loading
+    ? [React.createElement(Icon, {name:'loading', size:IZ.sm, style:{animation:'spin 1s linear infinite', marginLeft:SP.xs}}), children]
+    : icon
+      ? [React.createElement(Icon, {name:icon, size:s==='sm'?IZ.xs:IZ.sm}), children]
+      : children);
+}
+
+/* ─── Input ─── */
+function Inp({ label, value, onChange, placeholder, icon, type, multiline, error, style }) {
+  var inputStyle = {
+    width:'100%', padding:SP.md+'px '+SP.md+'px',
+    background:C.bg, border:'1px solid '+(error?C.danger:C.border),
+    borderRadius:RD.sm, color:C.text, fontSize:FZ.base, fontFamily:FF,
+    boxSizing:'border-box', height: multiline ? undefined : BH.md,
+    transition:'border-color 0.15s ease',
+  };
+  var el = multiline
+    ? React.createElement('textarea', { value:value, onChange:onChange, placeholder:placeholder, style:Object.assign({}, inputStyle, {resize:'vertical', minHeight:80, padding:SP.md+'px '+SP.md+'px', lineHeight:1.7}) })
+    : React.createElement('input', { type:type||'text', value:value, onChange:onChange, placeholder:placeholder, style:Object.assign({}, inputStyle, icon ? {paddingRight:36} : {}, style||{}) });
+  var containerStyle = { marginBottom:SP.md };
+  return React.createElement('div', {style:Object.assign({}, containerStyle, style||{})},
+    label ? React.createElement('label', {style:{display:'block', fontSize:FZ.sm, color:C.textMuted, marginBottom:3, fontWeight:600}}, label) : null,
+    icon ? React.createElement('div', {style:{position:'relative'}},
+      React.createElement('div', {style:{position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', color:C.textDim, pointerEvents:'none'}}, React.createElement(Icon, {name:icon, size:IZ.sm})),
+      el
+    ) : el,
+    error ? React.createElement('p', {style:{fontSize:FZ.xs, color:C.danger, marginTop:4}}, error) : null
+  );
+}
+
+/* ─── Card ─── */
+function Card({ children, style, onClick, padding }) {
+  return React.createElement('div', {
+    onClick: onClick,
+    style: Object.assign({
+      background:C.surface, borderRadius:RD.md, border:'1px solid '+C.border,
+      padding: padding !== undefined ? padding : SP.lg,
+    }, style || {}),
+  }, children);
+}
+
+/* ─── Modal / Bottom Sheet ─── */
+function Modal({ open, onClose, title, children, style }) {
+  if (!open) return null;
+  return React.createElement('div', {
+    style:{ position:'fixed', inset:0, background:'#000a', zIndex:ZI.overlay, display:'flex', alignItems:'center', justifyContent:'center', padding:SP.lg, animation:'fadeUp 0.2s ease' },
+    onClick: onClose,
+  },
+    React.createElement('div', {
+      onClick: function(e) { e.stopPropagation(); },
+      style: Object.assign({
+        background:C.surface, borderRadius:RD.lg, padding:'20px 20px 24px',
+        width:'100%', maxWidth:480, border:'1px solid '+C.border,
+        maxHeight:'90vh', overflowY:'auto', animation:'fadeUp 0.2s ease',
+      }, style||{}),
+    },
+      title ? React.createElement('div', {style:{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:SP.lg}},
+        React.createElement('h3', {style:{fontSize:FZ.lg, fontWeight:700, color:C.text}}, title),
+        React.createElement('button', {onClick:onClose, style:{background:'none', border:'none', color:C.textDim, cursor:'pointer', padding:'4px 8px'}},
+          React.createElement(Icon, {name:'close', size:IZ.md})
+        )
+      ) : null,
+      children
+    )
+  );
+}
+
+/* ─── Empty State ─── */
+function EmptyState({ icon, title, subtitle }) {
+  return React.createElement('div', {style:{textAlign:'center', padding:SP.xxxl+'px '+SP.lg+'px'}},
+    icon ? React.createElement('div', {style:{marginBottom:SP.md}}, React.createElement(Icon, {name:icon, size:40, style:{color:C.textDim}})) : null,
+    title ? React.createElement('p', {style:{fontSize:FZ.base, color:C.textMuted, marginBottom:4}}, title) : null,
+    subtitle ? React.createElement('p', {style:{fontSize:FZ.xs, color:C.textDim}}, subtitle) : null,
+  );
+}
+
+/* ─── Badge ─── */
+function Badge({ label, variant }) {
+  var mp = { success:C.success, warning:C.warning, danger:C.danger, info:C.info, primary:C.primary, default:C.textMuted };
+  var c = mp[variant] || mp.default;
+  return React.createElement('span', {style:{fontSize:FZ.xs, padding:'2px 7px', borderRadius:4, background:c+'22', color:c, whiteSpace:'nowrap', fontWeight:500}}, label);
+}
+
+/* ─── Loading Spinner ─── */
+function Spinner({ size, style }) {
+  return React.createElement(Icon, {name:'loading', size:size||24, style:Object.assign({animation:'spin 1s linear infinite', color:C.primary}, style||{})});
+}
+
+const STATUS_LABELS = {
+  'registered': 'ثبت شده',
+  'stock_check': 'بررسی موجودی',
+  'confirmed': 'تایید شده',
+  'proforma_issued': 'پیش‌فاکتور صادر',
+  'production': 'در حال تولید',
+  'ready_for_delivery': 'آماده تحویل',
+  'delivered': 'تحویل شده',
+  'cancelled': 'لغو شده'
+};
+
+/* ═══════════════════════════════════════ HOME TAB (Storefront) ═══════════════════════ */
+function HomeTab({ customer, products, cartItems, onAddToCart, onNavigateProducts, onNavigateOrders }) {
+  var grade = customer?.grade || 'standard';
+  var priceField = GRADE_PRICE_MAP[grade] || 'price_standard';
+  var inCartMap = {};
+  (cartItems || []).forEach(function(i) { if (i) inCartMap[Number(i.product_id)] = (i.quantity || 0); });
+
+  // Featured: products with valid price for this grade, max 4
+  var priced = (products||[]).filter(function(p) { return p && p.active !== false && Number(p[priceField] || 0) > 0; });
+  var featured = priced.length >= 1 ? priced.slice(0, 2) : (products||[]).filter(function(p){ return p; }).slice(0, 2);
+
+  // Categories definition (safe data, no API dependency)
+  var CATEGORIES = [
+    { id:'all', label:'همه محصولات', icon:'box' },
+    { id:'10kg', label:'۱۰ کیلویی', icon:'filter' },
+    { id:'bestseller', label:'پرفروش‌ها', icon:'star' },
+    { id:'newest', label:'جدیدترین‌ها', icon:'calendar' },
+  ];
+
+  return (
+    <div style={{ padding:"10px 10px 76px", maxWidth:800, margin:"0 auto" }}>
+
+
+      {/* ═══ 2. Hero banner ═══ */}
+      <div style={{ background:"linear-gradient(135deg, "+C.primaryDim+" 0%, "+C.surfaceAlt+" 100%)", borderRadius:12, padding:"16px 14px 14px", marginBottom:12, border:"1px solid "+C.borderLight }}>
+        <h2 style={{ fontSize:FZ.lg, fontWeight:700, color:C.text, marginBottom:4, lineHeight:1.4 }}>خرید محصولات غذایی عقرب</h2>
+        <p style={{ fontSize:FZ.sm, color:C.textDim, marginBottom:10, lineHeight:1.7 }}>سفارش سریع، پیگیری آسان — محصولات ویژه عمده‌فروشی</p>
+        <button onClick={function(){ if (onNavigateProducts) onNavigateProducts(); }} style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"8px 18px", borderRadius:8, border:"none", background:C.primary, color:"#111", fontWeight:700, cursor:"pointer", fontFamily:FF, fontSize:13 }}>
+          مشاهده محصولات
+        </button>
+      </div>
+
+      {/* ═══ 3. Category shortcuts ═══ */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:14 }}>
+        {CATEGORIES.map(function(cat){
+          return (
+            <button key={cat.id} onClick={function(){ if (onNavigateProducts) onNavigateProducts(); }}
+              style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, padding:"10px 4px", borderRadius:10, background:C.surface, border:"1px solid "+C.border, cursor:"pointer", fontFamily:FF, transition:"all 0.15s" }}>
+              <Icon name={cat.icon} size={18} style={{ color:C.primary }} />
+              <span style={{ fontSize:11, color:C.textDim, fontWeight:400, whiteSpace:"nowrap" }}>{cat.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ═══ 4. Featured products ═══ */}
+      {featured.length > 0 && (
+        <div style={{ marginBottom:14 }}>
+          <h3 style={{ fontSize:13, fontWeight:400, color:C.text, marginBottom:8 }}>محصولات پیشنهادی</h3>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2,minmax(0,1fr))", gap:8 }}>
+            {featured.map(function(p){
+              if (!p || !p.id) return null;
+              var price = safeNum(p[priceField] || p.base_price);
+              var inCart = inCartMap[p.id] || 0;
+              var pName = safeText(p.name, 'محصول');
+              var pPack = safeText(p.packaging);
+              var pSize = safeText(p.package_size);
+              var code = safeText(p.code);
+              var hasImg = p.image_url ? true : false;
+              return (
+                <div key={p.id} style={{ display:"flex", flexDirection:"column", borderRadius:8, overflow:"hidden", background:C.surface, border:"1px solid "+C.border }}>
+                  {/* Product image */}
+                   <div style={{ height:220, background:"linear-gradient(135deg, "+C.surfaceAlt+" 0%, #1A1A1A 100%)", display:"flex", alignItems:"center", justifyContent:"center", borderBottom:"1px solid "+C.border, position:"relative", overflow:"hidden", flexShrink:0 }}>
+                    {hasImg
+                      ? <img src={p.image_url} alt={pName} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
+                      : <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2, opacity:0.4 }}>
+                          <Icon name="image" size={22} />
+                          {pPack && <span style={{ fontSize:7, color:C.textMuted, textAlign:"center", padding:"0 4px" }}>{pPack}</span>}
+                        </div>
+                    }
+                    {inCart > 0 && (
+                      <span style={{ position:"absolute", top:3, left:3, background:C.primary, color:"#111", fontSize:8, fontWeight:700, borderRadius:6, minWidth:16, height:16, display:"flex", alignItems:"center", justifyContent:"center", padding:"0 3px", lineHeight:1 }}>
+                        {fa(inCart)}
+                      </span>
+                    )}
+                    {code && (
+                      <span style={{ position:"absolute", bottom:3, right:3, background:"#000000aa", color:C.primary, fontSize:FZ.base, fontWeight:700, borderRadius:4, padding:"2px 8px", lineHeight:"20px" }}>
+                        {code}
+                      </span>
+                    )}
+                  </div>
+                  {/* Product info */}
+                  <div style={{ padding:"6px", flex:1, display:"flex", flexDirection:"column", gap:2 }}>
+                    <p style={{ fontSize:FZ.base, fontWeight:600, color:C.text, lineHeight:1.3, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden", minHeight:34 }}>
+                      {pName}
+                    </p>
+                    {(pPack || pSize) && (
+                      <p style={{ fontSize:FZ.xs, color:C.textDim, overflow:"hidden", whiteSpace:"nowrap", textOverflow:"ellipsis" }}>
+                        {pPack}{pPack && pSize ? ' — ' : ''}{pSize}
+                      </p>
+                    )}
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:"auto", flexShrink:0, paddingTop:2 }}>
+                      <span style={{ fontSize:FZ.lg, fontWeight:700, color: price > 0 ? C.primary : C.textDim, direction:"ltr", textAlign:"left" }}>
+                        {price > 0 ? fa(Number(price).toLocaleString()) : 'استعلام قیمت'}
+                      </span>
+                      <button onClick={function(){ if (onAddToCart) onAddToCart(p); }}
+                        style={{ border:"none", borderRadius:5, padding:"4px 6px", fontSize:9, fontWeight:600, cursor:"pointer", fontFamily:FF, transition:"all 0.15s", display:"flex", alignItems:"center", gap:2, background: inCart > 0 ? C.success : C.primary, color: inCart > 0 ? "#fff" : "#111", height:26, minWidth:26, justifyContent:"center", lineHeight:1 }}>
+                        <Icon name={inCart > 0 ? "check" : "plus"} size={10} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ 5. Benefits strip ═══ */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, marginBottom:12 }}>
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3, padding:"10px 4px", borderRadius:8, background:C.surface, border:"1px solid "+C.border }}>
+          <Icon name="warranty" size={16} style={{ color:C.primary }} />
+          <span style={{ fontSize:FZ.xs, color:C.text, fontWeight:500 }}>ضمانت اصالت</span>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3, padding:"10px 4px", borderRadius:8, background:C.surface, border:"1px solid "+C.border }}>
+          <Icon name="orders" size={16} style={{ color:C.primary }} />
+          <span style={{ fontSize:FZ.xs, color:C.text, fontWeight:500 }}>پیگیری سفارش</span>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3, padding:"10px 4px", borderRadius:8, background:C.surface, border:"1px solid "+C.border }}>
+          <Icon name="box" size={16} style={{ color:C.primary }} />
+          <span style={{ fontSize:FZ.xs, color:C.text, fontWeight:500 }}>ارسال سریع</span>
+        </div>
+      </div>
+
+      {/* ═══ 6. My Orders CTA ═══ */}
+      <button onClick={function(){ if (onNavigateOrders) onNavigateOrders(); }}
+        style={{ width:"100%", padding:"11px", borderRadius:10, border:"1px solid "+C.border, background:C.surfaceAlt, color:C.text, fontWeight:600, cursor:"pointer", fontFamily:FF, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+        مشاهده سفارش‌های من
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ ORDERS TAB ═══════════════════════════════════ */
+function OrdersTab({ orders, onApprove, customer, products, onOrderCreated, deepLinkData, clearDeepLink, onSelectOrder }) {
+  const [filter, setFilter] = useState('all');
+  const [showForm, setShowForm] = useState(false);
+
+  // Deep-link: باز کردن خودکار فرم در صورت وجود درخواست
+  useEffect(() => {
+    if (deepLinkData) {
+      setShowForm(true);
+    }
+  }, [deepLinkData]);
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    if (clearDeepLink) clearDeepLink();
+  };
+
+  const filtered = filter === 'all' ? orders : orders.filter(o => o.order_status === filter);
+
+  return (
+    <div style={{ padding:"20px 16px 100px", maxWidth:800, margin:"0 auto" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+        <h3 style={{ fontSize:16, fontWeight:700, color:C.text }}>سفارشات من</h3>
+        <button onClick={() => setShowForm(true)} style={{ display:"flex", alignItems:"center", gap:6, padding:"10px 16px", borderRadius:10, border:"none", background:C.primary, color:"#111", fontWeight:600, cursor:"pointer", fontFamily:FF, fontSize:13 }}>
+          <Icon name="plus" size={IZ.lg} /> ثبت سفارش جدید
+        </button>
+      </div>
+
+      <div style={{ display:"flex", gap:6, marginBottom:16, flexWrap:"wrap" }}>
+        {[['all','همه'],['registered','ثبت شده'],['proforma_issued','پیش‌فاکتور'],['delivered','تحویل شده'],['cancelled','لغو شده']].map(([k,l]) => (
+          <button key={k} onClick={() => setFilter(k)} style={{ padding:"6px 14px", borderRadius:20, border:"none", fontSize:12, cursor:"pointer", fontFamily:FF, fontWeight:600, background:filter===k?C.primary:C.surfaceAlt, color:filter===k?"#111":C.textMuted }}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0
+        ? <p style={{ fontSize:13, color:C.textDim, textAlign:"center", padding:30 }}>هیچ سفارشی یافت نشد</p>
+        : filtered.map(order => (
+            <div key={order.id} onClick={() => onSelectOrder && onSelectOrder(order)} style={{ background:C.surface, borderRadius:12, border:`1px solid ${C.border}`, padding:16, marginBottom:10, cursor:"pointer", transition:"all 0.15s" }}
+              onMouseEnter={e => { if (window.innerWidth > 768) e.currentTarget.style.borderColor = C.primary }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                <span style={{ fontSize:15, fontWeight:600, color:C.text }}>#{fa(order.id)}</span>
+                <span style={{ fontSize:11, padding:"3px 9px", borderRadius:5, background:C.surfaceAlt, color:C.textMuted }}>{STATUS_LABELS[order.order_status] || order.order_status}</span>
+              </div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:order.note?6:0 }}>
+                <span style={{ fontSize:12, color:C.textDim }}>{formatDate(order.created_at)}</span>
+                <span style={{ fontSize:14, fontWeight:600, color:C.primary }}>{shortCur(order.total_amount)}</span>
+              </div>
+              {order.note && <p style={{ fontSize:12, color:C.textDim, fontStyle:"italic", marginTop:6, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:"100%" }}>{order.note}</p>}
+              {order.proforma_status === 'issued' && (
+                <div style={{ marginTop:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <span style={{ fontSize:11, padding:"3px 9px", borderRadius:5, background:C.purpleDim, color:C.purple, fontWeight:600 }}>پیش‌فاکتور صادر شده</span>
+                  <button onClick={e => { e.stopPropagation(); onApprove && onApprove(order.id); }} style={{ padding:"7px 16px", borderRadius:8, border:"none", background:C.purple, color:"#fff", fontWeight:600, cursor:"pointer", fontFamily:FF, fontSize:12 }}>
+                    تایید پیش‌فاکتور
+                  </button>
+                </div>
+              )}
+              {order.proforma_status === 'approved' && (
+                <div style={{ marginTop:10 }}>
+                  <span style={{ fontSize:11, padding:"3px 9px", borderRadius:5, background:C.successDim, color:C.success, fontWeight:600 }}>✓ پیش‌فاکتور تایید شده</span>
+                </div>
+              )}
+            </div>
+          ))
+      }
+
+      {showForm && (
+        <div style={{ position:"fixed", inset:0, background:"#000a", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }} onClick={handleCloseForm}>
+          <div style={{ background:C.surface, borderRadius:12, padding:16, width:"100%", maxWidth:500, border:`1px solid ${C.border}` }} onClick={e => e.stopPropagation()}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+              <h3 style={{ fontSize:15, fontWeight:700, color:C.text }}>ثبت سفارش جدید</h3>
+              <button onClick={handleCloseForm} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", padding:"4px 8px", borderRadius:"50%", display:"flex", alignItems:"center" }}><Icon name="close" size={14} /></button>
+            </div>
+            <OrderForm customer={customer} products={products} onClose={handleCloseForm} onCreated={onOrderCreated} initialProductId={deepLinkData?.productId} initialQty={deepLinkData?.qty} initialMobile={deepLinkData?.mobile} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrderForm({ customer, products, onClose, onCreated, initialProductId, initialQty, initialMobile }) {
+  const [rows, setRows] = useState([{ product_id:'', product_name:'', qty:1, unit_price:0, total:0 }]);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Deep-link: prefill ردیف اول با محصول و تعداد درخواستی
+  useEffect(() => {
+    if (initialProductId && products && products.length > 0) {
+      const grade = customer?.grade || 'standard';
+      const priceField = GRADE_PRICE_MAP[grade] || 'price_standard';
+      const prod = products.find(p => p.id === Number(initialProductId));
+
+      if (prod && prod.active && Number(prod[priceField] || 0) > 0) {
+        const price = Number(prod[priceField]);
+        const targetQty = initialQty && !isNaN(initialQty) ? Math.max(1, initialQty) : 1;
+        setRows([{
+          product_id: prod.id.toString(),
+          product_name: prod.name,
+          qty: targetQty,
+          unit_price: price,
+          total: price * targetQty,
+        }]);
+      } else {
+        alert('محصول درخواستی یافت نشد یا در دسترس نیست.');
+      }
+    }
+  }, [initialProductId, initialQty, products, customer]);
+
+  const grade = customer?.grade || 'standard';
+  const priceField = GRADE_PRICE_MAP[grade] || 'price_standard';
+
+  // محصولات فعال + دارای قیمت برای این سطح
+  const availProducts = (products||[]).filter(p => p.active === true && Number(p[priceField]||0) > 0);
+
+  const grandTotal = rows.reduce((s, r) => s + r.total, 0);
+  const isValid = rows.some(r => r.product_id && Number(r.qty) > 0);
+
+  const addRow = () => {
+    setRows(prev => [...prev, { product_id:'', product_name:'', qty:1, unit_price:0, total:0 }]);
+  };
+
+  const removeRow = (idx) => {
+    if (rows.length <= 1) return;
+    setRows(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateRow = (idx, field, value) => {
+    setRows(prev => {
+      const newRows = prev.map(r => ({ ...r }));
+      if (field === 'product_id') {
+        const prod = products.find(p => p.id === Number(value));
+        if (prod) {
+          const price = Number(prod[priceField]) || 0;
+          newRows[idx].product_id = prod.id;
+          newRows[idx].product_name = prod.name;
+          newRows[idx].unit_price = price;
+          newRows[idx].qty = 1;
+          newRows[idx].total = price;
+        } else {
+          newRows[idx] = { product_id:'', product_name:'', qty:1, unit_price:0, total:0 };
+        }
+      } else if (field === 'qty') {
+        const q = Math.max(1, Number(value) || 1);
+        newRows[idx].qty = q;
+        newRows[idx].total = newRows[idx].unit_price * q;
+      }
+      return newRows;
+    });
+  };
+
+  const sendOrderNotification = async (orderData, customerName) => {
+    const SUPABASE_URL = "https://apscmdspkitpwzhizgkq.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwc2NtZHNwa2l0cHd6aGl6Z2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MDc3NDgsImV4cCI6MjA5Njk4Mzc0OH0.LC_e1vafGe2KtTrWsb0mjIVIrQoqyvA46THD83HkhMo";
+
+    const recipients = [
+      "b72f54f0-3364-41e1-b587-c6423455d70b",
+      "dfc283d7-c461-4b01-a91a-5ee4374b271e",
+      "dfdcf3a2-9640-4871-93f1-f148835b068e",
+    ];
+
+    const message = `🛒 سفارش جدید از پرتال عمده
+━━━━━━━━━━━━━━━
+👤 مشتری: ${customerName}
+💰 مبلغ کل: ${Number(orderData.total_amount).toLocaleString('fa-IR')} ریال
+📦 محصولات: ${orderData.note ? orderData.note.replace('سفارش: ', '') : '—'}
+📅 تاریخ: ${new Date().toLocaleDateString('fa-IR')}
+━━━━━━━━━━━━━━━
+برای مشاهده جزئیات وارد پنل مدیریت شوید.`;
+
+    const notifications = recipients.map(user_id => ({
+      user_id,
+      message,
+      read: false,
+    }));
+
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify(notifications)
+      });
+    } catch (err) {
+      console.error("خطا در ارسال notification:", err);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isValid) { alert('حداقل یک محصول با تعداد معتبر انتخاب کنید'); return; }
+    setSubmitting(true);
+    try {
+      const validRows = rows.filter(r => r.product_id);
+      const summary = validRows.map(r => `${r.product_name} x${r.qty}`).join('، ');
+      const body = {
+        customer_id: customer.id,
+        source_app: 'wholesale-portal',
+        sales_channel: 'wholesale',
+        order_type: 'stock',
+        note: 'سفارش: ' + summary,
+        total_amount: grandTotal,
+        // items blocked by backend BLOCKED_POST — stored in note above
+      };
+      await apiCall('/crm-orders', { method: 'POST', body: JSON.stringify(body) });
+      await sendOrderNotification(body, customer?.name || customer?.company_name || 'مشتری');
+      alert('سفارش با موفقیت ثبت شد');
+      if (onCreated) onCreated();
+    } catch (err) {
+      alert('خطا در ثبت سفارش: ' + (err.message || ''));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const iS = { width:"100%", padding:"11px 14px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:10, color:C.text, fontSize:14, fontFamily:FF, boxSizing:"border-box" };
+  const selS = { ...iS, cursor:"pointer" };
+  const smallS = { ...iS, width:"100%", fontSize:13, textAlign:"center" };
+  const priceLabel = { standard:'استاندارد', silver:'نقره‌ای', gold:'طلایی', vip:'ویژه' }[grade] || 'استاندارد';
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div style={{ fontSize:11, color:C.textDim, marginBottom:12, padding:"8px 12px", background:C.surfaceAlt, borderRadius:8, border:`1px solid ${C.border}` }}>
+        سطح قیمت شما: <strong style={{ color:C.primary }}>{priceLabel}</strong>
+        {initialMobile && <span style={{ display:"block", marginTop:4, color:C.primary }}>شماره موبایل: {initialMobile}</span>}
+        {availProducts.length === 0 && <span style={{ display:"block", marginTop:4, color:C.danger }}>هیچ محصولی با قیمت در دسترس نیست</span>}
+      </div>
+
+      {rows.map((row, idx) => (
+        <div key={idx} style={{ padding:"10px 0", borderBottom: idx < rows.length-1 ? `1px solid ${C.border}` : 'none' }}>
+          <div style={{ display:"flex", gap:8, alignItems:"flex-start", flexWrap:"wrap" }}>
+            {/* Product dropdown — grows on desktop, full width on mobile */}
+            <div style={{ flex:"2 1 180px", minWidth:0 }}>
+              <label style={{ display:"block", fontSize:10, color:C.textDim, marginBottom:3, fontWeight:600 }}>محصول</label>
+              <select value={row.product_id} onChange={e => updateRow(idx, 'product_id', e.target.value)} style={selS}>
+                <option value="">انتخاب محصول...</option>
+                    {availProducts.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {safeText(p.name)} — {safeText(p.packaging) || safeText(p.package_size) || ''}
+                      </option>
+                    ))}
+              </select>
+            </div>
+            {/* Quantity */}
+            <div style={{ flex:"0 1 80px" }}>
+              <label style={{ display:"block", fontSize:10, color:C.textDim, marginBottom:3, fontWeight:600 }}>تعداد</label>
+              <input type="number" min="1" value={row.qty} onChange={e => updateRow(idx, 'qty', e.target.value)} style={smallS} disabled={!row.product_id} />
+            </div>
+            {/* Unit price (readonly) */}
+            <div style={{ flex:"1 1 110px" }}>
+              <label style={{ display:"block", fontSize:10, color:C.textDim, marginBottom:3, fontWeight:600 }}>قیمت واحد</label>
+              <div style={{ ...smallS, background:C.bg, opacity:0.8, cursor:"default", display:"flex", alignItems:"center", justifyContent:"center", minHeight:42 }}>
+                {row.unit_price > 0 ? cur(row.unit_price) : <span style={{ color:C.danger, fontSize:10 }}>—</span>}
+              </div>
+            </div>
+            {/* Row total */}
+            <div style={{ flex:"0 1 90px" }}>
+              <label style={{ display:"block", fontSize:10, color:C.textDim, marginBottom:3, fontWeight:600 }}>جمع</label>
+              <div style={{ ...smallS, background:C.bg, opacity:0.8, cursor:"default", display:"flex", alignItems:"center", justifyContent:"center", minHeight:42, fontWeight:700, color:C.primary }}>
+                {row.total > 0 ? shortCur(row.total) : '—'}
+              </div>
+            </div>
+            {/* Remove button */}
+            {rows.length > 1 && (
+              <div style={{ flex:"0 0 36px", paddingTop:22 }}>
+                <button type="button" onClick={() => removeRow(idx)} style={{ width:36, height:36, borderRadius:"50%", border:`1px solid ${C.danger}55`, background:"transparent", color:C.danger, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }} title="حذف ردیف">
+                  <Icon name="close" size={12} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/* Add row button */}
+      <button type="button" onClick={addRow} style={{ width:"100%", padding:"10px", borderRadius:10, border:`1px solid ${C.border}`, background:C.surfaceAlt, color:C.textMuted, cursor:"pointer", fontFamily:FF, fontSize:13, marginBottom:14 }}>
+        + افزودن محصول
+      </button>
+
+      {/* Grand total */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 14px", background:C.surfaceAlt, borderRadius:10, border:`1px solid ${C.border}`, marginBottom:20 }}>
+        <span style={{ fontSize:13, color:C.textDim, fontWeight:600 }}>جمع کل</span>
+        <span style={{ fontSize:17, fontWeight:700, color:C.primary }}>{grandTotal > 0 ? shortCur(grandTotal) : '۰ ریال'}</span>
+      </div>
+
+      {/* Submit / Cancel */}
+      <div style={{ display:"flex", gap:10 }}>
+        <button type="submit" disabled={submitting || !isValid} style={{ flex:1, padding:"12px", borderRadius:10, border:"none", background:isValid?C.primary:C.surfaceAlt, color:isValid?"#111":C.textDim, fontWeight:700, cursor:isValid&&!submitting?"pointer":"not-allowed", fontFamily:FF, fontSize:14, opacity:submitting?0.7:1 }}>
+          {submitting ? "در حال ثبت..." : "ثبت سفارش"}
+        </button>
+        <button type="button" onClick={onClose} style={{ padding:"12px 20px", borderRadius:10, border:`1px solid ${C.border}`, background:"transparent", color:C.textDim, fontWeight:600, cursor:"pointer", fontFamily:FF, fontSize:14 }}>
+          انصراف
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/* ═══════════════════════════════════════ INVOICES TAB ═════════════════════════════════ */
+function InvoicesTab({ customer }) {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [amount, setAmount] = useState('');
+  const [method, setMethod] = useState('کارت به کارت');
+  const [orderId, setOrderId] = useState('');
+  const [paymentNote, setPaymentNote] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchPayments = async () => {
+    try {
+      const data = await apiCall(`/crm-payments`);
+      setPayments(data||[]);
+    } catch (e) { console.error(e); }
+  };
+
+  useEffect(() => { (async () => { await fetchPayments(); setLoading(false); })(); }, [customer.id]);
+
+  const handleSubmitPayment = async (e) => {
+    e.preventDefault();
+    const parsed = Number(amount);
+    if (!amount || !Number.isFinite(parsed) || parsed <= 0) { alert('مبلغ معتبر وارد کنید'); return; }
+    setSubmitting(true);
+    try {
+      const body = { amount: parsed, payment_method: method, note: paymentNote || undefined };
+      if (orderId && Number(orderId) > 0) body.order_id = Number(orderId);
+      await apiCall('/crm-payment-submit', { method: 'POST', body: JSON.stringify(body) });
+      alert('پرداخت ثبت شد و در انتظار تایید است');
+      setAmount(''); setMethod('کارت به کارت'); setOrderId(''); setPaymentNote('');
+      await fetchPayments();
+    } catch (err) {
+      alert('خطا: ' + (err.message || ''));
+    } finally { setSubmitting(false); }
+  };
+
+  const iS = { width:"100%", padding:"11px 14px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:10, color:C.text, fontSize:14, fontFamily:FF, boxSizing:"border-box" };
+
+  if (loading) return <div style={{ padding:20, textAlign:"center", color:C.textDim }}>در حال بارگذاری...</div>;
+
+  return (
+    <div style={{ padding:"20px 16px 100px", maxWidth:800, margin:"0 auto" }}>
+      <div style={{ background:C.surface, borderRadius:14, border:`1px solid ${C.border}`, padding:20, marginBottom:18 }}>
+        <h3 style={{ fontSize:15, fontWeight:600, color:C.text, marginBottom:16 }}>ثبت پرداخت جدید</h3>
+        <form onSubmit={handleSubmitPayment}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+            <div>
+              <label style={{ display:"block", fontSize:12, color:C.textMuted, marginBottom:4, fontWeight:600 }}>مبلغ (ریال) *</label>
+              <input type="number" min="1" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="مثال: ۵۰۰۰۰۰۰" style={iS} />
+            </div>
+            <div>
+              <label style={{ display:"block", fontSize:12, color:C.textMuted, marginBottom:4, fontWeight:600 }}>روش پرداخت</label>
+              <select value={method} onChange={e => setMethod(e.target.value)} style={{ ...iS, cursor:"pointer" }}>
+                <option value="کارت به کارت">کارت به کارت</option>
+                <option value="واریز به حساب">واریز به حساب</option>
+                <option value="چک">چک</option>
+                <option value="نقدی">نقدی</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <label style={{ display:"block", fontSize:12, color:C.textMuted, marginBottom:4, fontWeight:600 }}>شماره سفارش (اختیاری)</label>
+            <input type="number" min="1" value={orderId} onChange={e => setOrderId(e.target.value)} placeholder="شماره سفارش مرتبط" style={iS} />
+          </div>
+          <div style={{ marginBottom:16 }}>
+            <label style={{ display:"block", fontSize:12, color:C.textMuted, marginBottom:4, fontWeight:600 }}>یادداشت (اختیاری)</label>
+            <textarea rows={2} value={paymentNote} onChange={e => setPaymentNote(e.target.value)} placeholder="..." style={{ ...iS, resize:"vertical" }} />
+          </div>
+          <button type="submit" disabled={submitting} style={{ width:"100%", padding:"12px", borderRadius:10, border:"none", background:C.primary, color:"#111", fontWeight:700, cursor:submitting?"not-allowed":"pointer", fontFamily:FF, fontSize:14, opacity:submitting?0.7:1 }}>
+            {submitting ? "در حال ثبت..." : "ثبت پرداخت"}
+          </button>
+        </form>
+      </div>
+
+      <h3 style={{ fontSize:15, fontWeight:600, color:C.text, marginBottom:12 }}>سابقه پرداخت‌ها</h3>
+      {payments.length === 0
+        ? <p style={{ fontSize:13, color:C.textDim, textAlign:"center", padding:20 }}>پرداختی ثبت نشده</p>
+        : payments.map(p => (
+            <div key={p.id} style={{ background:C.surface, borderRadius:12, border:`1px solid ${C.border}`, padding:14, marginBottom:8, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <p style={{ fontSize:13, fontWeight:600, color:C.text }}>#{fa(p.id)}</p>
+                <p style={{ fontSize:11, color:C.textDim }}>{formatDate(p.created_at)}</p>
+              </div>
+              <div style={{ textAlign:"left" }}>
+                <p style={{ fontSize:14, fontWeight:700, color:C.primary }}>{shortCur(p.amount)}</p>
+                <span style={{ fontSize:10, padding:"2px 7px", borderRadius:4, background: p.status==='approved'?C.successDim : p.status==='rejected'?C.dangerDim : C.warningDim, color: p.status==='approved'?C.success : p.status==='rejected'?C.danger : C.warning, fontWeight:600 }}>
+                  {p.status === 'approved' ? 'تایید شده' : p.status === 'rejected' ? 'رد شده' : 'در انتظار تایید'}
+                </span>
+              </div>
+            </div>
+          ))
+      }
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ PROFILE TAB ══════════════════════════════════ */
+function ProfileTab({ customer, onWarranty, onSupport, onToast }) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({});
+  const [errMsg, setErrMsg] = useState('');
+
+  useEffect(() => {
+    if (customer) {
+      setForm({
+        name: customer.name || customer.store_name || customer.company_name || customer.username || '',
+        phone: customer.phone || '',
+        city: customer.city || '',
+        address: customer.address || '',
+        postal_code: customer.postal_code || '',
+        store_name: customer.store_name || customer.company_name || '',
+        email: customer.email || '',
+      });
+    }
+  }, [customer]);
+
+  const handleSave = async () => {
+    setErrMsg('');
+    if (!form.name.trim()) { setErrMsg('نام نمی‌تواند خالی باشد'); return; }
+    if (form.phone) {
+      const digits = form.phone.replace(/\D/g, '');
+      if (digits.length < 10 || digits.length > 13) { setErrMsg('شماره تماس معتبر نیست'); return; }
+    }
+    if (form.postal_code) {
+      const pc = form.postal_code.replace(/\D/g, '');
+      if (pc.length !== 10) { setErrMsg('کد پستی باید ۱۰ رقم باشد'); return; }
+    }
+    setSaving(true);
+    try {
+      await apiCall('/portal-profile', {
+        method: 'PUT',
+        body: JSON.stringify(form),
+      });
+      setEditing(false);
+      // Update local customer state by re-fetching profile
+      try {
+        const full = await apiCall(`/crm-customers?id=${customer.id}`);
+        if (full && full.length > 0) {
+          Object.assign(customer, full[0]);
+        }
+      } catch (_) {}
+      if (onToast) onToast('پروفایل با موفقیت به‌روز شد', 'success');
+    } catch (e) {
+      setErrMsg(e.message || 'خطا در ذخیره');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditing(false);
+    setErrMsg('');
+    // Reset form
+    if (customer) {
+      setForm({
+        name: customer.name || customer.store_name || customer.company_name || customer.username || '',
+        phone: customer.phone || '',
+        city: customer.city || '',
+        address: customer.address || '',
+        postal_code: customer.postal_code || '',
+        store_name: customer.store_name || customer.company_name || '',
+        email: customer.email || '',
+      });
+    }
+  };
+
+  const fields = [
+    { key:'name', label:'نام و نام خانوادگی / نام فروشگاه', type:'text' },
+    { key:'phone', label:'شماره تماس', type:'tel' },
+    { key:'city', label:'شهر', type:'text' },
+    { key:'address', label:'آدرس', type:'text' },
+    { key:'postal_code', label:'کد پستی', type:'text' },
+    { key:'email', label:'ایمیل', type:'email' },
+  ];
+
+  const iS = { width:"100%", padding:"10px 12px", background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:8, color:C.text, fontSize:13, fontFamily:FF, boxSizing:"border-box" };
+
+  return (
+    <div style={{ padding:"20px 16px 100px", maxWidth:800, margin:"0 auto" }}>
+      {/* Profile card */}
+      <div style={{ background:C.surface, borderRadius:14, border:`1px solid ${C.border}`, padding:20, marginBottom:14 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+          <h3 style={{ fontSize:16, fontWeight:700, color:C.text }}>پروفایل من</h3>
+          {!editing && (
+            <button onClick={() => setEditing(true)} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 14px", borderRadius:8, border:`1px solid ${C.border}`, background:"transparent", color:C.primary, cursor:"pointer", fontFamily:FF, fontSize:12, fontWeight:600 }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4l-6 6-1 3 3-1 6-6a2 2 0 00-2-2z"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>
+              ویرایش
+            </button>
+          )}
+        </div>
+
+        {errMsg && (
+          <div style={{ background:C.dangerDim, border:`1px solid ${C.danger}44`, borderRadius:8, padding:"8px 12px", fontSize:12, color:C.danger, marginBottom:12, textAlign:"center" }}>{errMsg}</div>
+        )}
+
+        {fields.map(f => (
+          <div key={f.key} style={{ marginBottom:10 }}>
+            <label style={{ display:"block", fontSize:11, color:C.textMuted, marginBottom:3, fontWeight:600 }}>{f.label}</label>
+            {editing ? (
+              <input type={f.type} value={form[f.key] || ''} onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))} style={iS} autoComplete={f.key === 'email' ? 'email' : f.key === 'phone' ? 'tel' : f.key === 'address' ? 'street-address' : f.key === 'postal_code' ? 'postal-code' : 'off'} />
+            ) : (
+              <div style={{ padding:"10px 12px", background:C.surfaceAlt, border:`1px solid transparent`, borderRadius:8, color:C.text, fontSize:13, minHeight:38, opacity:0.85 }}>
+                {form[f.key] || <span style={{ color:C.textDim, fontSize:11 }}>وارد نشده</span>}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {editing && (
+          <div style={{ display:"flex", gap:10, marginTop:16 }}>
+            <button onClick={handleSave} disabled={saving} style={{ flex:1, padding:"11px", borderRadius:8, border:"none", background:C.primary, color:"#111", fontWeight:700, cursor:saving?"not-allowed":"pointer", fontFamily:FF, fontSize:13, opacity:saving?0.6:1 }}>
+              {saving ? "در حال ذخیره..." : "ذخیره تغییرات"}
+            </button>
+            <button onClick={handleCancel} disabled={saving} style={{ padding:"11px 20px", borderRadius:8, border:`1px solid ${C.border}`, background:"transparent", color:C.textDim, fontWeight:600, cursor:"pointer", fontFamily:FF, fontSize:13 }}>
+              انصراف
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Support section ──────────────────────────────────────────────── */}
+      <div style={{ background:C.surface, borderRadius:14, border:`1px solid ${C.border}`, padding:20, marginBottom:14 }}>
+        <h3 style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:12 }}>پشتیبانی و پیگیری</h3>
+        <p style={{ fontSize:12, color:C.textDim, lineHeight:1.7, marginBottom:14 }}>
+          برای پیگیری سفارش، سوالات ثبت سفارش، گارانتی یا مرجوعی از راه‌های زیر استفاده کنید.
+        </p>
+        <p style={{ fontSize:11, color:C.warning, marginBottom:14, background:C.warningDim, borderRadius:6, padding:"6px 10px", fontWeight:600 }}>
+          استعلام قیمت فقط از طریق پورتال انجام می‌شود.
+        </p>
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          <button onClick={onSupport} style={{ padding:"12px", borderRadius:10, border:`1px solid ${C.border}`, background:C.surfaceAlt, display:"flex", alignItems:"center", gap:10, cursor:"pointer", fontFamily:FF }}>
+            <svg width="18" height="18" fill="none" stroke={C.primary} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <span style={{ flex:1, fontSize:13, fontWeight:600, color:C.text, textAlign:"right" }}>ثبت درخواست پشتیبانی</span>
+            <svg width="14" height="14" fill="none" stroke={C.textDim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 4 15 10 9 16"/></svg>
+          </button>
+          <button onClick={() => { const t = window.TABS_REF?.setTab; if (t) t('orders'); else window.location.hash = '#/orders'; }} style={{ padding:"12px", borderRadius:10, border:`1px solid ${C.border}`, background:C.surfaceAlt, display:"flex", alignItems:"center", gap:10, cursor:"pointer", fontFamily:FF }}>
+            <svg width="18" height="18" fill="none" stroke={C.info} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8m8 4H8m2-8H8"/></svg>
+            <span style={{ flex:1, fontSize:13, fontWeight:600, color:C.text, textAlign:"right" }}>پیگیری سفارش</span>
+            <svg width="14" height="14" fill="none" stroke={C.textDim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 4 15 10 9 16"/></svg>
+          </button>
+          <button onClick={onWarranty} style={{ padding:"12px", borderRadius:10, border:`1px dashed ${C.primary}55`, background:"transparent", display:"flex", alignItems:"center", gap:10, cursor:"pointer", fontFamily:FF }}>
+            <svg width="18" height="18" fill="none" stroke={C.primary} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            <span style={{ flex:1, fontSize:13, fontWeight:600, color:C.primary, textAlign:"right" }}>ثبت درخواست گارانتی/مرجوعی</span>
+            <svg width="14" height="14" fill="none" stroke={C.textDim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 4 15 10 9 16"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ PRODUCTS TAB ═════════════════════════════════ */
+/* ═══════════════════════════════════════ HELPERS: SAFE TEXT ═════════════════════════ */
+/* Guard against undefined, null, NaN, or "????" in UI output */
+function safeText(val, fallback = '') {
+  if (val === null || val === undefined) return fallback;
+  const s = String(val).trim();
+  if (!s || s === 'null' || s === 'undefined' || s === 'NaN' || s === '????') return fallback;
+  return s;
+}
+function safeNum(val) {
+  const n = Number(val);
+  return isNaN(n) ? 0 : n;
+}
+
+function ProductsTab({ products, customer, cartItems, onAddToCart, onShowCart }) {
+  const [search, setSearch] = useState('');
+  const grade = customer?.grade || 'standard';
+  const priceField = GRADE_PRICE_MAP[grade] || 'price_standard';
+
+  const is10kg = (p) => {
+    const normalize = (s) => (s||'').replace(/[\s\-]/g, '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+    const sz = normalize(p?.package_size);
+    const pk = normalize(p?.packaging);
+    const wv = Number(p?.weight_value) || 0;
+    const wu = (p?.weight_unit || '').toLowerCase();
+    return sz.includes('10کیلو') || sz.includes('10kg')
+        || pk.includes('10کیلو') || pk.includes('10kg')
+        || (wv >= 10 && wu === 'kg');
+  };
+
+  const filtered = products.filter(p => {
+    if (!p) return false;
+    if (!search) return true;
+    const q = search.trim().toLowerCase();
+    return safeText(p.name, '').toLowerCase().includes(q)
+        || safeText(p.keywords, '').toLowerCase().includes(q)
+        || safeText(p.category, '').toLowerCase().includes(q)
+        || safeText(p.code, '').toLowerCase().includes(q)
+        || safeText(p.sku, '').toLowerCase().includes(q)
+        || safeText(p.packaging, '').toLowerCase().includes(q)
+        || safeText(p.package_size, '').toLowerCase().includes(q);
+  });
+
+  const inCartMap = {};
+  (cartItems || []).forEach(i => { if (i) inCartMap[Number(i.product_id)] = (i.quantity || 0); });
+
+  // ----- Product Image component -----
+  function ProductImage({ p }) {
+    const [imgErr, setImgErr] = useState(false);
+    const hasImg = p?.image_url && !imgErr;
+    const imgHeight = 220;
+    return (
+      <div style={{ height:imgHeight, background:`linear-gradient(135deg, ${C.surfaceAlt} 0%, #1A1A1A 100%)`, display:"flex", alignItems:"center", justifyContent:"center", borderBottom:`1px solid ${C.border}`, position:"relative", overflow:"hidden", flexShrink:0 }}>
+        {hasImg
+          ? <img src={p.image_url} alt={safeText(p.name)} onError={() => setImgErr(true)}
+                 style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
+          : <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2, opacity:0.4 }}>
+              <Icon name="image" size={22} />
+              {safeText(p?.packaging) && <span style={{ fontSize:8, color:C.textMuted, textAlign:"center", padding:"0 4px" }}>{p.packaging}</span>}
+            </div>
+        }
+        {inCartMap[p?.id] > 0 && (
+          <span style={{ position:"absolute", top:3, left:3, background:C.primary, color:"#111", fontSize:8, fontWeight:700, borderRadius:6, minWidth:16, height:16, display:"flex", alignItems:"center", justifyContent:"center", padding:"0 3px", lineHeight:1 }}>
+            {fa(inCartMap[p.id])}
+          </span>
+        )}
+        {is10kg(p) && p?.code && (
+          <span style={{ position:"absolute", bottom:4, right:4, background:"#000000aa", color:C.primary, fontSize:FZ.base, fontWeight:700, borderRadius:4, padding:"2px 8px", lineHeight:"20px" }}>
+            کد {p.code}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  const isMobile = window.innerWidth < 640;
+
+  return (
+    <div style={{ padding: isMobile ? "8px 6px 72px" : "16px 16px 80px", maxWidth:1100, margin:"0 auto" }}>
+      {/* Search bar */}
+      <div style={{ position:"relative", marginBottom:isMobile ? 8 : 14 }}>
+        <input
+          value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="جستجوی محصول..."
+          style={{ width:"100%", padding: isMobile ? "8px 30px 8px 8px" : "10px 36px 10px 12px", background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:8, color:C.text, fontSize: isMobile ? 12 : 13, fontFamily:FF, boxSizing:"border-box" }}
+        />
+        <Icon name="search" size={isMobile ? 13 : 15} style={{ position:"absolute", right: isMobile ? 7 : 10, top:"50%", transform:"translateY(-50%)", color:C.textDim, pointerEvents:"none" }} />
+      </div>
+
+      {/* Product grid */}
+      {filtered.length === 0
+        ? <p style={{ textAlign:"center", color:C.textDim, padding:40, fontSize:13 }}>{search ? 'محصولی یافت نشد' : 'محصولی موجود نیست'}</p>
+        : <div style={{ display: isMobile ? "grid" : "grid", gridTemplateColumns: isMobile ? "repeat(2,minmax(0,1fr))" : "repeat(auto-fill,minmax(220px,1fr))", gap: isMobile ? 8 : 14 }}>
+            {filtered.map(p => {
+              if (!p || !p.id) return null;
+              const price = safeNum(p[priceField] || p.base_price);
+              const inCart = inCartMap[p.id] || 0;
+              const productName = safeText(p.name, 'نام محصول نامشخص');
+              const packagingText = safeText(p.packaging);
+              const pkgSizeText = safeText(p.package_size);
+              return (
+                <div key={p.id} style={{ display:"flex", flexDirection:"column", borderRadius:8, overflow:"hidden", background:C.surface, border:`1px solid ${C.border}` }}>
+                  <ProductImage p={p} />
+                  <div style={{ padding:"6px", flex:1, display:"flex", flexDirection:"column", gap:"2px" }}>
+                    {/* Name */}
+                    <p style={{ fontSize: isMobile ? FZ.base : FZ.md, fontWeight:600, color:C.text, lineHeight:1.3, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden", minHeight: isMobile ? '34px' : '42px' }}>
+                      {productName}
+                    </p>
+                    {/* Packaging / size */}
+                    {(packagingText || pkgSizeText) && (
+                      <p style={{ fontSize: isMobile ? FZ.xs : FZ.sm, color:C.textDim, overflow:"hidden", whiteSpace:"nowrap", textOverflow:"ellipsis" }}>
+                        {packagingText}{packagingText && pkgSizeText ? ' - ' : ''}{pkgSizeText}
+                      </p>
+                    )}
+                    {/* Price + Add button */}
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:"auto", flexShrink:0, paddingTop:"2px" }}>
+                      <span style={{ fontSize: isMobile ? FZ.lg : FZ.xl, fontWeight:700, color: price > 0 ? C.primary : C.textDim, direction:"ltr", textAlign:"left" }}>
+                        {price > 0 ? fa(Number(price).toLocaleString()) : 'استعلام از پورتال'}
+                      </span>
+                      <button
+                        onClick={() => onAddToCart(p)}
+                        style={{ border:"none", borderRadius:5, padding: isMobile ? "4px 6px" : "6px 10px", fontSize: isMobile ? 9 : 11, fontWeight:600, cursor:"pointer", fontFamily:FF, transition:"all 0.15s", display:"flex", alignItems:"center", gap:2, background: inCart > 0 ? C.success : C.primary, color: inCart > 0 ? "#fff" : "#111", height: isMobile ? 26 : 32, minWidth: isMobile ? 26 : 32, justifyContent:"center", lineHeight:1 }}
+                      >
+                        <Icon name={inCart > 0 ? "check" : "plus"} size={isMobile ? 10 : 12} />
+                        {!isMobile && (inCart > 0 ? ' در سبد' : ' افزودن')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+      }
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ CART PANEL ════════════════════════════════════ */
+function CartPanel({ items, onClose, onUpdateQty, onRemove, onSubmit, submitting }) {
+  const total = (items||[]).reduce((s, i) => s + (Number(i.quantity)||0) * (Number(i.unit_price)||0), 0);
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"#000000aa", zIndex:2000, display:"flex", alignItems:"flex-end" }} onClick={onClose}>
+      <div style={{ background:C.surface, borderRadius:"16px 16px 0 0", width:"100%", maxHeight:"80vh", display:"flex", flexDirection:"column", padding:"16px 16px 24px" }} onClick={e => e.stopPropagation()}>
+        {/* Handle */}
+        <div style={{ width:40, height:4, background:C.borderLight, borderRadius:2, margin:"0 auto 12px" }} />
+
+        {/* Header */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+          <h3 style={{ fontSize:16, fontWeight:700, color:C.text }}>سبد خرید ({fa(items?.length||0)})</h3>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", padding:4, display:"flex", alignItems:"center" }}><Icon name="close" size={14} /></button>
+        </div>
+
+        {/* Items list */}
+        <div style={{ flex:1, overflowY:"auto", maxHeight:"55vh" }}>
+          {(!items || items.length === 0)
+            ? <p style={{ textAlign:"center", color:C.textDim, padding:30, fontSize:13 }}>سبد خرید خالی است</p>
+            : items.map((item, idx) => (
+                <div key={item.product_id || idx} style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+                  <div style={{ flex:1 }}>
+                    <p style={{ fontWeight:600, color:C.text, marginBottom:2, fontSize:12 }}>{safeText(item.item_name) || `محصول #${item.product_id}`}</p>
+                    <p style={{ fontSize:10, color:C.textDim }}>{cur(safeNum(item.unit_price))}</p>
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                    <button onClick={() => onUpdateQty(item.product_id, (item.quantity||0) - 1)} style={{ width:26, height:26, borderRadius:"50%", border:`1px solid ${C.border}`, background:"transparent", color:C.text, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><Icon name="minus" size={12} /></button>
+                    <span style={{ minWidth:22, textAlign:"center", fontWeight:700, color:C.text, fontSize:13 }}>{fa(item.quantity||0)}</span>
+                    <button onClick={() => onUpdateQty(item.product_id, (item.quantity||0) + 1)} style={{ width:26, height:26, borderRadius:"50%", border:`1px solid ${C.border}`, background:"transparent", color:C.text, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><Icon name="plus" size={12} /></button>
+                  </div>
+                  <span style={{ fontWeight:700, color:C.primary, minWidth:55, textAlign:"left", fontSize:11, direction:"ltr" }}>{shortCur((item.quantity||0) * (item.unit_price||0))}</span>
+                  <button onClick={() => onRemove(item.product_id)} style={{ background:"none", border:"none", color:C.danger, cursor:"pointer", padding:4, display:"flex", alignItems:"center" }} title="حذف"><Icon name="delete" size={14} /></button>
+                </div>
+              ))
+          }
+        </div>
+
+        {/* Total + Submit */}
+        {items && items.length > 0 && (
+          <>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 0", borderTop:`1px solid ${C.border}`, marginTop:8 }}>
+              <span style={{ fontSize:14, fontWeight:600, color:C.text }}>جمع کل</span>
+              <span style={{ fontSize:18, fontWeight:700, color:C.primary }}>{shortCur(total)}</span>
+            </div>
+            <button
+              onClick={onSubmit}
+              disabled={submitting}
+              style={{ width:"100%", padding:"14px", borderRadius:10, border:"none", background:C.primary, color:"#111", fontWeight:700, fontFamily:FF, fontSize:15, cursor:submitting?"not-allowed":"pointer", opacity:submitting?0.6:1, marginTop:4 }}
+            >
+              {submitting ? "در حال ثبت..." : "ثبت سفارش نهایی"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ WARRANTY FORM ═══════════════════════════════ */
+function WarrantyForm({ onBack }) {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [productDesc, setProductDesc] = useState('');
+  const [reason, setReason] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const faDigits = (n) => String(n).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+
+  const iS = { width:"100%", padding:"11px 14px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:10, color:C.text, fontSize:14, fontFamily:FF, boxSizing:"border-box" };
+  const lblS = { fontSize:11, fontWeight:600, color:"#6B7280", marginBottom:5 };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) { setError('نام و نام خانوادگی را وارد کنید'); return; }
+    if (!phone.trim()) { setError('شماره تماس را وارد کنید'); return; }
+    if (!reason.trim()) { setError('لطفاً علت درخواست را توضیح دهید'); return; }
+    setLoading(true); setError('');
+
+    try {
+      const res = await fetch(`${API_BASE}/public-warranty-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_name: name.trim(),
+          customer_phone: phone.trim(),
+          customer_address: address.trim(),
+          postal_code: postalCode.trim(),
+          product_code: productDesc.trim(),
+          reason: reason.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطا در ثبت درخواست');
+      setSuccess(true);
+    } catch (e) {
+      setError(e.message || 'خطا در ارتباط با سرور');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Success state
+  if (success) {
+    return (
+      <div style={{ position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center", background:C.bg, padding:16 }}>
+        <div style={{ background:C.surface, borderRadius:24, padding:"36px 36px 40px", width:"100%", maxWidth:400, border:`1px solid ${C.border}`, textAlign:"center", animation:"glowPulse 3s infinite" }}>
+          <div style={{ width:72, height:72, borderRadius:"50%", background:C.successDim, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
+            <svg width="36" height="36" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h2 style={{ fontSize:18, fontWeight:700, color:C.text, marginBottom:8 }}>درخواست شما ثبت شد</h2>
+          <p style={{ fontSize:13, color:C.textDim, lineHeight:2, marginBottom:20 }}>
+            درخواست گارانتی شما با موفقیت ثبت شد.<br/>
+            کارشناسان ما به زودی با شما تماس می‌گیرند.<br/>
+            همه خریداران ۷ گرم چای مهمان عقرب هستند
+          </p>
+          <button
+            onClick={onBack}
+            style={{ width:"100%", padding:"12px 20px", borderRadius:10, border:"none", background:C.primary, color:"#111", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:FF }}
+          >
+            بازگشت به صفحه اصلی
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center", background:C.bg, padding:16, overflowY:"auto" }}>
+      <div style={{ background:C.surface, borderRadius:24, padding:"24px 36px 36px", width:"100%", maxWidth:420, border:`1px solid ${C.border}`, animation:"glowPulse 3s infinite", margin:"auto" }}>
+        {/* Header */}
+        <div style={{ textAlign:"center", marginBottom:20 }}>
+          <div style={{ textAlign:"center", marginBottom:16 }}>
+            <div style={{ width:88, height:88, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 4px", animation:"logoPulse 3s ease-in-out infinite" }}>
+              <svg width="88" height="88" fill="none" stroke="#D4880E" strokeWidth="1.2" viewBox="0 0 88 88">
+                <rect x="4" y="16" width="80" height="56" rx="6" stroke="currentColor" fill="none"/>
+                <path d="M28 38h32M28 50h20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M44 10l-8 6h16l-8-6z" stroke="currentColor" strokeWidth="1.2"/>
+                <circle cx="62" cy="58" r="10" stroke="currentColor" fill="none"/>
+                <path d="M62 54v4l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <h2 style={{ fontSize:17, fontWeight:700, color:C.text, marginBottom:4 }}>درخواست گارانتی</h2>
+            <p style={{ fontSize:12, color:C.textDim, lineHeight:1.9 }}>
+              فقط دو محصول مشمول گارانتی بازگشت وجه هستند:<br/>
+              <strong>چای شکسته زرین ۵۰۰ گرمی</strong> و <strong>چای باروتی زرین ۵۰۰ گرمی</strong>
+            </p>
+          </div>
+        </div>
+
+        {/* Warranty info card */}
+        <div style={{ background:C.primaryDim, border:`1px solid ${C.primary}33`, borderRadius:10, padding:"12px 14px", marginBottom:16, fontSize:12, color:C.textDim, lineHeight:2 }}>
+          <div style={{ fontWeight:700, color:C.primary, marginBottom:2, fontSize:12 }}>شرایط گارانتی:</div>
+          - داخل جعبه ساشه نمونه ۷ گرمی رایگان وجود دارد<br/>
+          - ابتدا فقط نمونه را مصرف کنید<br/>
+          - شرط: پاکت اصلی باز نشده باشد<br/>
+          - اگر پاکت باز شده باشد، مشمول گارانتی نیست<br/>
+          <div style={{ color:C.primary, fontWeight:600, marginTop:4, textAlign:"center" }}>
+            همه خریداران ۷ گرم چای مهمان عقرب هستند
+          </div>
+        </div>
+
+        {/* error */}
+        {error && (
+          <div style={{ background:"#EF444422", border:"1px solid #EF444444", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#EF4444", marginBottom:14, textAlign:"center" }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom:12 }}>
+            <div style={lblS}>نام و نام خانوادگی *</div>
+            <input className="login-input" value={name} onChange={e => { setName(e.target.value); setError(''); }} placeholder="مثال: علی محمدی" style={iS} autoComplete="name" />
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <div style={lblS}>شماره تماس *</div>
+            <input className="login-input" type="tel" value={phone} onChange={e => { setPhone(e.target.value); setError(''); }} placeholder="مثال: 09123456789" style={iS} autoComplete="tel" />
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <div style={lblS}>آدرس</div>
+            <input className="login-input" value={address} onChange={e => { setAddress(e.target.value); setError(''); }} placeholder="استان — شهر — خیابان" style={iS} autoComplete="street-address" />
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <div style={lblS}>کد پستی</div>
+            <input className="login-input" value={postalCode} onChange={e => { setPostalCode(e.target.value); setError(''); }} placeholder="کد پستی ۱۰ رقمی" style={iS} autoComplete="postal-code" />
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <div style={lblS}>نام محصول (در صورت تمایل)</div>
+            <input className="login-input" value={productDesc} onChange={e => { setProductDesc(e.target.value); setError(''); }} placeholder="مثال: چای شکسته زرین ۵۰۰ گرمی" style={iS} />
+          </div>
+          <div style={{ marginBottom:20 }}>
+            <div style={lblS}>علت درخواست *</div>
+            <textarea
+              className="login-input"
+              value={reason}
+              onChange={e => { setReason(e.target.value); setError(''); }}
+              placeholder="لطفاً توضیح دهید什么问题 پیش آمده..."
+              style={{ ...iS, resize:"vertical", minHeight:72, lineHeight:1.7 }}
+              rows={3}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width:"100%", padding:"12px 20px", borderRadius:10, border:"none",
+              background:loading ? "#222" : C.primary,
+              color:loading ? "#6B7280" : "#111",
+              fontSize:14, fontWeight:700,
+              cursor:loading ? "not-allowed" : "pointer",
+              fontFamily:FF, opacity:loading ? 0.5 : 1,
+              boxShadow:loading ? "none" : "0 0 20px #D4880E33",
+            }}
+          >
+            {loading ? "در حال ثبت..." : "ثبت درخواست گارانتی"}
+          </button>
+        </form>
+
+        {/* back button */}
+        <button
+          onClick={onBack}
+          style={{
+            width:"100%", padding:"10px", borderRadius:10, border:`1px solid ${C.border}`,
+            background:"transparent", color:C.textDim, fontSize:13, fontWeight:600,
+            cursor:"pointer", fontFamily:FF, marginTop:12,
+          }}
+        >
+          بازگشت
+        </button>
+
+        <div style={{ textAlign:"center", marginTop:20, fontSize:10, color:"#4B5563", opacity:0.5 }}>
+          گروه محصولات غذایی عقرب — آذرمهر صنعت
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ TOAST ════════════════════════════════════════ */
+function Toast({ toast, onDone }) {
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => onDone(), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
+  if (!toast) return null;
+  const bg = toast.type === 'success' ? C.success : C.danger;
+  return (
+    <div style={{ position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", background:bg, color:"#fff", padding:"10px 20px", borderRadius:10, zIndex:9999, fontSize:13, fontWeight:600, fontFamily:FF, boxShadow:"0 4px 16px #00000066", animation:"toastIn 0.3s ease" }}>
+      {toast.msg}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ ORDER DETAIL BOTTOM SHEET ════════════════════ */
+function OrderDetailSheet({ order, onClose, onSupport }) {
+  const [items, setItems] = useState([]);
+  const [statusLog, setStatusLog] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!order) return;
+    setLoading(true);
+
+    // Fetch items + status log in parallel
+    const fetchAll = async () => {
+      try {
+        const [itemsData, logData] = await Promise.all([
+          apiCall(`/crm-order-items?order_id=eq.${order.id}`).catch(() => []),
+          apiCall(`/crm-order-status-log?order_id=${order.id}`).catch(() => []),
+        ]);
+        setItems(itemsData||[]);
+        setStatusLog(logData||[]);
+      } catch (_) {}
+      setLoading(false);
+    };
+    fetchAll();
+  }, [order]);
+
+  const statusLabel = STATUS_LABELS[order.order_status] || order.order_status || '—';
+  const itemTotal = items.reduce((s, i) => s + (Number(i.total || i.unit_price * i.quantity) || 0), 0);
+  const totalAmount = Number(order.total_amount) || itemTotal || 0;
+
+  if (!order) return null;
+
+  const sheetS = { width:"100%", background:C.surface, borderRadius:"16px 16px 0 0", maxHeight:"85vh", display:"flex", flexDirection:"column", overflow:"hidden" };
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"#000000aa", zIndex:2000, display:"flex", alignItems:"flex-end" }} onClick={onClose}>
+      <div style={sheetS} onClick={e => e.stopPropagation()}>
+        {/* Handle */}
+        <div style={{ width:40, height:4, background:C.borderLight, borderRadius:2, margin:"10px auto 4px" }} />
+
+        <div style={{ padding:"8px 20px 20px", overflowY:"auto", flex:1 }}>
+          {/* Header */}
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+            <h3 style={{ fontSize:16, fontWeight:700, color:C.text }}>جزئیات سفارش #{fa(order.id)}</h3>
+            <button onClick={onClose} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", padding:"4px 8px", display:"flex", alignItems:"center" }}><Icon name="close" size={16} /></button>
+          </div>
+
+          {/* Status badge */}
+          <div style={{ marginBottom:14 }}>
+            <span style={{ fontSize:12, padding:"4px 10px", borderRadius:6, background:C.surfaceAlt, color:C.textMuted, fontWeight:600 }}>{statusLabel}</span>
+            {order.proforma_status === 'issued' && <span style={{ fontSize:11, padding:"4px 8px", borderRadius:5, background:C.purpleDim, color:C.purple, fontWeight:600, marginRight:6 }}>پیش‌فاکتور صادر شده</span>}
+            {order.proforma_status === 'approved' && <span style={{ fontSize:11, padding:"4px 8px", borderRadius:5, background:C.successDim, color:C.success, fontWeight:600, marginRight:6 }}>✓ پیش‌فاکتور تایید شده</span>}
+          </div>
+
+          {/* Info fields */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+            <div style={{ background:C.surfaceAlt, borderRadius:8, padding:"10px 12px" }}>
+              <p style={{ fontSize:10, color:C.textDim, marginBottom:2, fontWeight:600 }}>شماره سفارش</p>
+              <p style={{ fontSize:14, fontWeight:700, color:C.text, direction:"ltr", textAlign:"left" }}>#{fa(order.id)}</p>
+            </div>
+            <div style={{ background:C.surfaceAlt, borderRadius:8, padding:"10px 12px" }}>
+              <p style={{ fontSize:10, color:C.textDim, marginBottom:2, fontWeight:600 }}>تاریخ ثبت</p>
+              <p style={{ fontSize:13, fontWeight:600, color:C.text }}>{formatDate(order.created_at)}</p>
+            </div>
+            {order.payment_status && (
+              <div style={{ background:C.surfaceAlt, borderRadius:8, padding:"10px 12px" }}>
+                <p style={{ fontSize:10, color:C.textDim, marginBottom:2, fontWeight:600 }}>وضعیت پرداخت</p>
+                <p style={{ fontSize:13, fontWeight:600, color:C.text }}>{order.payment_status === 'paid' ? 'پرداخت شده' : order.payment_status === 'pending' ? 'در انتظار پرداخت' : order.payment_status}</p>
+              </div>
+            )}
+            <div style={{ background:C.surfaceAlt, borderRadius:8, padding:"10px 12px" }}>
+              <p style={{ fontSize:10, color:C.textDim, marginBottom:2, fontWeight:600 }}>مبلغ کل</p>
+              <p style={{ fontSize:14, fontWeight:700, color:C.primary, direction:"ltr", textAlign:"left" }}>{shortCur(totalAmount)}</p>
+            </div>
+          </div>
+
+          {/* Items */}
+          <div style={{ marginBottom:16 }}>
+            <h4 style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:8 }}>اقلام سفارش</h4>
+            {loading ? (
+              <p style={{ fontSize:12, color:C.textDim, textAlign:"center", padding:12 }}>در حال بارگذاری...</p>
+            ) : items.length === 0 ? (
+              order.note ? <p style={{ fontSize:12, color:C.textDim, padding:8, background:C.surfaceAlt, borderRadius:8, lineHeight:1.7 }}>{order.note}</p>
+                        : <p style={{ fontSize:12, color:C.textDim, padding:8, textAlign:"center" }}>اطلاعات اقلام موجود نیست</p>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                {items.map((item, idx) => {
+                  const qty = Number(item.quantity) || 0;
+                  const unitPrice = Number(item.unit_price) || 0;
+                  const lineTotal = Number(item.total || (qty * unitPrice)) || 0;
+                  const productName = item.products ? (item.products.name || item.item_name) : (item.item_name || `محصول #${item.product_id}`);
+                  return (
+                    <div key={item.id || idx} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 10px", background:C.surfaceAlt, borderRadius:8 }}>
+                      <div style={{ flex:1, marginLeft:8 }}>
+                        <p style={{ fontSize:12, fontWeight:600, color:C.text }}>{productName}</p>
+                        <p style={{ fontSize:10, color:C.textDim }}>{fa(qty)} × {shortCur(unitPrice)}</p>
+                      </div>
+                      <span style={{ fontSize:12, fontWeight:700, color:C.primary, whiteSpace:"nowrap" }}>{shortCur(lineTotal)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Status history */}
+          {statusLog.length > 0 && (
+            <div style={{ marginBottom:"70px" }}>
+              <h4 style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:8 }}>تاریخچه وضعیت</h4>
+              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                {statusLog.map((log, idx) => (
+                  <div key={log.id || idx} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 8px", background:C.surfaceAlt, borderRadius:6 }}>
+                    <div>
+                      <p style={{ fontSize:11, fontWeight:600, color:C.text }}>{STATUS_LABELS[log.to_status] || log.to_status}</p>
+                      {log.from_status && <p style={{ fontSize:10, color:C.textDim }}>از: {STATUS_LABELS[log.from_status] || log.from_status}</p>}
+                    </div>
+                    <span style={{ fontSize:10, color:C.textDim }}>{formatDate(log.created_at)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div style={{ position:"sticky", bottom:0, background:C.surface, padding:"12px 0 8px", display:"flex", gap:8 }}>
+            <button onClick={() => { if (onSupport) { onSupport(order.id); onClose(); } }} style={{ flex:1, padding:"11px", borderRadius:8, border:"none", background:C.info, color:"#fff", fontWeight:600, cursor:"pointer", fontFamily:FF, fontSize:12 }}>
+              پیگیری این سفارش
+            </button>
+            <button onClick={onClose} style={{ padding:"11px 16px", borderRadius:8, border:`1px solid ${C.border}`, background:"transparent", color:C.textDim, fontWeight:600, cursor:"pointer", fontFamily:FF, fontSize:12 }}>
+              بستن
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ SUPPORT TICKET FORM ═══════════════════════════ */
+const ORDER_CATEGORIES = [
+  { id:'order_tracking',  label:'پیگیری سفارش' },
+  { id:'order_question', label:'سوال ثبت سفارش' },
+  { id:'warranty',       label:'گارانتی/مرجوعی' },
+  { id:'payment',        label:'مشکل پرداخت' },
+  { id:'other',          label:'سایر' },
+];
+
+function SupportTicketForm({ onClose, prefillOrderId }) {
+  const [subject, setSubject] = useState('');
+  const [category, setCategory] = useState('order_tracking');
+  const [orderId, setOrderId] = useState(prefillOrderId || '');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!subject.trim()) { setError('موضوع را وارد کنید'); return; }
+    if (!message.trim()) { setError('متن پیام را وارد کنید'); return; }
+    setLoading(true);
+    try {
+      const res = await apiCall('/support-tickets', {
+        method: 'POST',
+        body: JSON.stringify({
+          subject: subject.trim(),
+          category,
+          order_id: orderId ? Number(orderId) : undefined,
+          message: message.trim(),
+        }),
+      });
+      if (res && res.ok) {
+        setSuccess(true);
+      } else {
+        throw new Error(res?.error || 'خطا');
+      }
+    } catch (e) {
+      const msg = e.message || '';
+      if (msg.includes('راه‌اندازی') || msg.includes('fallback')) {
+        setError('سامانه پشتیبانی در حال راه‌اندازی است. لطفاً بعداً تلاش کنید یا با پشتیبانی تماس بگیرید.');
+      } else {
+        setError(msg || 'خطا در ثبت درخواست');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const iS = { width:"100%", padding:"10px 12px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:8, color:C.text, fontSize:13, fontFamily:FF, boxSizing:"border-box" };
+  const lblS = { display:"block", fontSize:11, color:C.textMuted, marginBottom:3, fontWeight:600 };
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"#000a", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }} onClick={onClose}>
+      <div style={{ background:C.surface, borderRadius:16, padding:"20px 20px 24px", width:"100%", maxWidth:480, border:`1px solid ${C.border}`, maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+          <h3 style={{ fontSize:16, fontWeight:700, color:C.text }}>ثبت درخواست پشتیبانی</h3>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", padding:"4px 8px", display:"flex", alignItems:"center" }}><Icon name="close" size={16} /></button>
+          </div>
+
+        {success ? (
+          <div style={{ textAlign:"center", padding:"30px 0" }}>
+            <svg width="48" height="48" fill="none" stroke={C.success} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom:12 }}>
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <p style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:6 }}>درخواست شما ثبت شد</p>
+            <p style={{ fontSize:12, color:C.textDim, lineHeight:1.7, marginBottom:16 }}>کارشناسان ما به زودی درخواست شما را بررسی و پیگیری می‌کنند.</p>
+            <button onClick={onClose} style={{ padding:"10px 24px", borderRadius:8, border:"none", background:C.primary, color:"#111", fontWeight:700, cursor:"pointer", fontFamily:FF, fontSize:13 }}>باشه</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <div style={{ background:C.dangerDim, border:`1px solid ${C.danger}44`, borderRadius:8, padding:"8px 12px", fontSize:12, color:C.danger, marginBottom:12, textAlign:"center" }}>{error}</div>
+            )}
+
+            <div style={{ marginBottom:12 }}>
+              <label style={lblS}>موضوع *</label>
+              <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="مثال: پیگیری وضعیت سفارش" style={iS} />
+            </div>
+
+            <div style={{ marginBottom:12 }}>
+              <label style={lblS}>دسته‌بندی</label>
+              <select value={category} onChange={e => setCategory(e.target.value)} style={{ ...iS, cursor:"pointer" }}>
+                {ORDER_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+
+            <div style={{ marginBottom:12 }}>
+              <label style={lblS}>شماره سفارش (اختیاری)</label>
+              <input type="number" min="1" value={orderId} onChange={e => setOrderId(e.target.value)} placeholder="در صورت وجود شماره سفارش مرتبط" style={iS} />
+            </div>
+
+            <div style={{ marginBottom:18 }}>
+              <label style={lblS}>متن پیام *</label>
+              <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} placeholder="توضیحات خود را وارد کنید..." style={{ ...iS, resize:"vertical", lineHeight:1.7, minHeight:80 }} />
+            </div>
+
+            <button type="submit" disabled={loading} style={{ width:"100%", padding:"11px", borderRadius:8, border:"none", background:loading ? C.surfaceAlt : C.primary, color:loading ? C.textDim : "#111", fontWeight:700, cursor:loading?"not-allowed":"pointer", fontFamily:FF, fontSize:13, opacity:loading?0.6:1 }}>
+              {loading ? "در حال ثبت..." : "ثبت درخواست"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+const TABS = [
+  { id:'home',     label:'خانه', icon:IcHome },
+  { id:'products', label:'محصولات', icon:IcBox },
+  { id:'orders',   label:'سفارشات', icon:IcFile },
+  { id:'profile',  label:'پروفایل', icon:IcUser },
+];
+
+function App() {
+  const [tab, setTab] = useState('home');
+  const [customer, setCustomer] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [cart, setCart] = useState(null);          // draft object from API
+  const [cartItems, setCartItems] = useState([]);   // draft.items
+  const [showCart, setShowCart] = useState(false);  // cart panel visibility
+  const [showWarrantyForm, setShowWarrantyForm] = useState(false); // warranty form overlay
+  const [showSupportForm, setShowSupportForm] = useState(false);   // support ticket form
+  const [supportPrefillOrder, setSupportPrefillOrder] = useState(null); // order id to prefill
+  const [selectedOrder, setSelectedOrder] = useState(null); // for order detail sheet
+  const [submittingCart, setSubmittingCart] = useState(false);
+  const [toast, setToast] = useState(null); // { msg, type:'success'|'error' }
+  const [deepLinkData, setDeepLinkData] = useState(null);
+  const deepLinkProcessed = useRef(false);
+  const [authScreen, setAuthScreen] = useState(() => {
+    const h = window.location.hash.toLowerCase().replace(/^#\/?/, '');
+    if (h === 'warranty' || h === 'warranty-request') return 'warranty';
+    return 'select';
+  }); // 'select' | 'retail' | 'wholesale' | 'warranty'
+  const [initialMobile, setInitialMobile] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get('mobile') || '';
+  });
+
+  // Expose setTab for programmatic navigation (e.g. from ProfileTab)
+  useEffect(() => {
+    window.TABS_REF = { setTab };
+    return () => { delete window.TABS_REF; };
+  }, []);
+
+  const loadData = async (token, initialUser, showWelcome) => {
+    setLoading(true);
+    let welcomeName = '';
+    try {
+      if (!token) { setError('نشست منقضی شده'); setLoading(false); return; }
+      const payload = decodeJwt(token);
+      if (!payload || !payload.id) { localStorage.removeItem('az_token'); setError('نشست نامعتبر'); setLoading(false); return; }
+
+      // Set basic profile from login response (has name) or JWT
+      const profile = initialUser || {
+        id: payload.id,
+        username: payload.username,
+        name: payload.name || payload.username,
+        customer_type: payload.customer_type || 'wholesale',
+      };
+      welcomeName = profile.name || '';
+      setCustomer(profile);
+
+      // Fetch full customer profile for phone, city, email, address, grade
+      try {
+        const full = await apiCall(`/crm-customers?id=${profile.id}`);
+        if (full && full.length > 0) {
+          setCustomer(prev => ({ ...prev, ...full[0] }));
+
+          // ── Customer & Lead Sync: customers table + lead conversion ──
+          const customerPhone = full[0].phone;
+          if (customerPhone) {
+            // ── Stage 1: Normalize mobile ──
+            const digitsOnly = String(customerPhone).replace(/\D/g, '');
+            const mobileClean = digitsOnly.startsWith('98') ? '0' + digitsOnly.slice(2) : digitsOnly;
+
+            const SB = 'https://apscmdspkitpwzhizgkq.supabase.co/rest/v1';
+            const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwc2NtZHNwa2l0cHd6aGl6Z2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MDc3NDgsImV4cCI6MjA5Njk4Mzc0OH0.LC_e1vafGe2KtTrWsb0mjIVIrQoqyvA46THD83HkhMo';
+            const hdr = { 'Content-Type': 'application/json', 'apikey': SB_KEY };
+            let customerId = null;
+
+            // ── Stage 2: Check customer → create if not exists ──
+            try {
+              const getResp = await fetch(`${SB}/customers?mobile=eq.${encodeURIComponent(mobileClean)}&select=id`, { headers: hdr });
+              const existing = await getResp.json();
+              if (existing && existing.length > 0) {
+                customerId = existing[0].id;
+              } else {
+                const postResp = await fetch(`${SB}/customers`, {
+                  method: 'POST',
+                  headers: { ...hdr, 'Prefer': 'return=representation' },
+                  body: JSON.stringify({
+                    mobile: mobileClean,
+                    name: full[0].name || null,
+                    source: 'portal',
+                  }),
+                });
+                const created = await postResp.json();
+                if (created && created.length > 0) {
+                  customerId = created[0].id;
+                }
+              }
+            } catch (e) {
+              console.error('[Customer Sync] Failed:', e);
+            }
+
+            // ── Stage 3 & 4: Check lead → update status + link customer.lead_id ──
+            try {
+              const leadResp = await fetch(`${SB}/leads?mobile=eq.${encodeURIComponent(mobileClean)}&select=id`, { headers: hdr });
+              const leads = await leadResp.json();
+              if (leads && leads.length > 0) {
+                const lead = leads[0];
+
+                // Try PATCH with converted_at (column may not exist yet)
+                let patchResp = await fetch(`${SB}/leads?id=eq.${lead.id}`, {
+                  method: 'PATCH',
+                  headers: hdr,
+                  body: JSON.stringify({
+                    status: 'converted',
+                    converted_at: new Date().toISOString(),
+                  }),
+                });
+                // Fallback: if column doesn't exist, retry with just status
+                if (!patchResp.ok) {
+                  await fetch(`${SB}/leads?id=eq.${lead.id}`, {
+                    method: 'PATCH',
+                    headers: hdr,
+                    body: JSON.stringify({ status: 'converted' }),
+                  });
+                }
+
+                // Link customer → lead
+                if (customerId) {
+                  await fetch(`${SB}/customers?id=eq.${customerId}`, {
+                    method: 'PATCH',
+                    headers: hdr,
+                    body: JSON.stringify({ lead_id: lead.id }),
+                  });
+                }
+              }
+            } catch (e) {
+              console.error('[Lead Conversion] Failed:', e);
+            }
+          }
+        }
+      } catch (_) { /* use basic profile */ }
+
+      // Fetch active products for order form
+      try {
+        const all = await apiCall('/products');
+        setProducts((all||[]).filter(p => p.active === true));
+      } catch (_) { /* products unavailable */ }
+
+      // ── Load active draft ──────────────────────────────────────────
+      try {
+      const draftData = await apiCall('/crm-draft-orders/me');
+        if (draftData && draftData.draft) {
+          setCart(draftData.draft);
+          setCartItems(draftData.draft.items || []);
+        } else {
+          setCart(null);
+          setCartItems([]);
+        }
+      } catch (_) { /* no draft */ }
+
+      const orderData = await apiCall(`/crm-orders?customer_id=${profile.id}`);
+      setOrders((orderData||[]).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+    } catch (err) {
+      console.error(err);
+      setError('خطا در بارگذاری اطلاعات');
+      if (err.message?.includes('401') || err.message?.includes('توکن')) {
+        localStorage.removeItem('az_token');
+      }
+    } finally {
+      if (showWelcome && welcomeName) {
+        setToast({ msg: `خوش آمدید، ${welcomeName} 🙌`, type: 'success' });
+      }
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('az_token');
+    if (token) loadData(token); else setLoading(false);
+  }, []);
+
+  // Deep-link: پردازش پارامترهای URL بعد از لود دیتا
+  useEffect(() => {
+    if (!customer || !products || products.length === 0) return;
+    if (deepLinkProcessed.current) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+
+    if (action === 'new-order') {
+      const productId = params.get('product_id');
+      const qtyStr = params.get('qty');
+      const mobileFromUrl = params.get('mobile') || '';
+
+      setDeepLinkData({
+        productId: productId ? Number(productId) : null,
+        qty: qtyStr ? Math.max(1, Number(qtyStr) || 1) : 1,
+        mobile: mobileFromUrl,
+      });
+      setTab('orders');
+      deepLinkProcessed.current = true;
+
+      // پاک کردن پارامترها از URL برای جلوگیری از پردازش مجدد در رفرش
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [customer, products]);
+
+  const handleLogin = (token, userData) => {
+    setError('');
+    loadData(token, userData, true);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('az_token');
+    setCustomer(null);
+    setOrders([]);
+    setTab('products');
+    setAuthScreen('select');
+  };
+
+  const approveProforma = async (orderId) => {
+    try {
+      const res = await apiCall('/crm-proforma-approve', { method: 'POST', body: JSON.stringify({ order_id: orderId }) });
+      if (res && res.ok) {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, proforma_status: 'approved' } : o));
+        alert('پیش‌فاکتور با موفقیت تایید شد');
+      }
+    } catch (e) {
+      alert('خطا در تایید: ' + (e.message || ''));
+    }
+  };
+
+  /* ── Cart Operations ──────────────────────────────────────────────── */
+  const loadCart = async () => {
+    try {
+      const d = await apiCall('/crm-draft-orders/me');
+      if (d && d.draft) { setCart(d.draft); setCartItems(d.draft.items || []); }
+      else { setCart(null); setCartItems([]); }
+    } catch { setCart(null); setCartItems([]); }
+  };
+
+  const addToCart = async (product, qty = 1) => {
+    const grade = customer?.grade || 'standard';
+    const priceField = GRADE_PRICE_MAP[grade] || 'price_standard';
+    const price = Number(product[priceField] || product.base_price || 0);
+    if (price <= 0) { setToast({ msg:'این محصول قیمت‌گذاری نشده', type:'error' }); return; }
+
+    // Merge with existing items: if same product_id exists, increase qty
+    const existing = cartItems.find(i => Number(i.product_id) === Number(product.id));
+    let newItems;
+    if (existing) {
+      newItems = cartItems.map(i =>
+        Number(i.product_id) === Number(product.id)
+          ? { ...i, quantity: (i.quantity || 0) + qty }
+          : i
+      );
+    } else {
+      newItems = [...cartItems, {
+        product_id: product.id,
+        item_name: product.name,
+        quantity: qty,
+        unit_price: price,
+        unit: product.unit || product.packaging || '',
+      }];
+    }
+
+    try {
+      const body = JSON.stringify({ items: newItems });
+      const result = await apiCall('/crm-draft-orders/me', { method: 'POST', body });
+      if (result && result.draft) {
+        setCart(result.draft);
+        setCartItems(result.draft.items || []);
+      }
+    } catch (err) {
+      setToast({ msg:'خطا: ' + (err.message || ''), type:'error' });
+    }
+  };
+
+  const updateCartQty = async (productId, newQty) => {
+    if (newQty <= 0) { removeFromCart(productId); return; }
+    const newItems = cartItems.map(i =>
+      Number(i.product_id) === Number(productId) ? { ...i, quantity: newQty } : i
+    );
+    try {
+      const result = await apiCall('/crm-draft-orders/me', { method: 'POST', body: JSON.stringify({ items: newItems }) });
+      if (result && result.draft) { setCart(result.draft); setCartItems(result.draft.items || []); }
+    } catch (err) { setToast({ msg:'خطا: ' + (err.message || ''), type:'error' }); }
+  };
+
+  const removeFromCart = async (productId) => {
+    const newItems = cartItems.filter(i => Number(i.product_id) !== Number(productId));
+    try {
+      if (newItems.length === 0) {
+        await apiCall('/crm-draft-orders/me', { method: 'DELETE' });
+        setCart(null); setCartItems([]);
+      } else {
+        const result = await apiCall('/crm-draft-orders/me', { method: 'POST', body: JSON.stringify({ items: newItems }) });
+        if (result && result.draft) { setCart(result.draft); setCartItems(result.draft.items || []); }
+      }
+    } catch (err) { setToast({ msg:'خطا: ' + (err.message || ''), type:'error' }); }
+  };
+
+  const submitCart = async () => {
+    if (!cartItems || cartItems.length === 0) { setToast({ msg:'سبد خرید خالی است', type:'error' }); return; }
+    setSubmittingCart(true);
+    try {
+      const result = await apiCall('/crm-draft-orders/me/submit', { method: 'POST' });
+      if (result && result.ok) {
+        setToast({ msg:`سفارش #${result.order_id} با موفقیت ثبت شد`, type:'success' });
+        setCart(null); setCartItems([]);
+        setShowCart(false);
+        refreshOrders();
+      }
+    } catch (err) {
+      const msg = err.message || '';
+      if (msg.includes('وجود ندارد')) setToast({ msg:'سبد خریدی برای ثبت وجود ندارد', type:'error' });
+      else setToast({ msg:'خطا در ثبت سفارش: ' + msg, type:'error' });
+    } finally {
+      setSubmittingCart(false);
+    }
+  };
+
+  const refreshOrders = async () => {
+    if (!customer) return;
+    try {
+      const data = await apiCall(`/crm-orders?customer_id=${customer.id}`);
+      setOrders(data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+    } catch (err) { console.error(err); }
+  };
+
+  // ── Hash-based routing: #/warranty or #/warranty-request ──────────
+  useEffect(() => {
+    const onHash = () => {
+      const h = window.location.hash.toLowerCase().replace(/^#\/?/, '');
+      if (h === 'warranty' || h === 'warranty-request') {
+        if (customer) {
+          setShowWarrantyForm(true);
+        } else {
+          setAuthScreen('warranty');
+        }
+      }
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, [customer]);
+
+  // Not logged in → show auth screen based on selection
+  if (!customer && !loading) {
+    if (authScreen === 'retail') return <RetailLoginScreen onLogin={handleLogin} onBack={() => setAuthScreen('select')} />;
+    if (authScreen === 'wholesale') return <LoginScreen onLogin={handleLogin} initialMobile={initialMobile} onBack={() => setAuthScreen('select')} />;
+    if (authScreen === 'warranty') return <WarrantyForm onBack={() => setAuthScreen('select')} />;
+    return <UserTypeSelection onSelect={(type) => setAuthScreen(type)} />;
+  }
+  if (loading) return <div style={{ position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center", background:"#0A0A0A", color:C.textDim, fontSize:14, flexDirection:"column", gap:12 }}><img src="/splash-logo.png" alt="عقرب" style={{width:"100vw",height:"100vh",objectFit:"cover",objectPosition:"center",position:"fixed",top:0,left:0,zIndex:0}} />در حال بارگذاری...</div>;
+  if (error && !customer) return <div style={{ position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center", background:C.bg, color:C.danger, fontSize:14, flexDirection:"column", gap:16 }}><p>{error}</p><button onClick={() => {localStorage.removeItem('az_token');window.location.reload();}} style={{ padding:"10px 20px", borderRadius:8, border:"none", background:C.primary, color:"#111", fontWeight:600, cursor:"pointer", fontFamily:FF }}>تلاش مجدد</button></div>;
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.bg, fontFamily:FF, direction:"rtl" }}>
+      {/* Header */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"4px 16px", background:C.surface, borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+          <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCA3NjggNzY4IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3NjggNzY4OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8Zz4NCgk8Zz4NCgkJPGc+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTU2LDQzNS40Yy0xOC45LTE2LjctNDguNS00Mi45LTY3LjQtNTkuNWMtMS43LDEzLjktMy42LDI3LjYtNS43LDQxLjRjMTYsMTQuMSw0OC43LDQzLjEsNjQuNiw1Ny4xDQoJCQkJYy0xLjIsNS41LTE5LjEsODgtMTkuMSw4OHMzNi4yLTc2LjUsNTAuMi0xMDYuOWwtMjEuNy0xOS4xTDU1Niw0MzUuNEw1NTYsNDM1LjR6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTgzLjksMTY4Ljl2OTYuNmMtNC4yLDMuNy0yNy44LDI0LjYtMzEuNCwyNy44Yy0wLjItMC4xLTU0LjMtNDgtNTQuNS00OC4ydjBjLTMuOS0xOS43LTE4LjgtOTYuMS0xOS43LTEwMQ0KCQkJCWMwLjEsMC4yLDcwLjYsMTE3LjQsNzAuNiwxMTcuNnYtODAuOWMtMC4xLTAuMi02Ny4yLTExMS44LTY3LjMtMTEyTDU4My45LDE2OC45TDU4My45LDE2OC45eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM4NiwzNzcuOWMtMjEsMTguNi01My4xLDQ3LTczLjksNjUuM2MyLjQsMTMuNCw0LjksMjYuNyw3LjYsMzkuNmMxOC40LTE2LjMsNDgtNDIuNSw2Ni4zLTU4LjYNCgkJCQljMTguMiwxNi4xLDQ3LjksNDIuNCw2Ni4zLDU4LjZjMi44LTEzLDUuMy0yNi4yLDcuNi0zOS42QzQ1MS40LDQzNS42LDM4NiwzNzcuOSwzODYsMzc3Ljl6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzg2LDU5Ni42Yy0xNC4zLTEyLjctMzQuOC0zMC44LTQ5LjEtNDMuNWMwLjUsMiw0NS43LDEyNy4xLDQ5LjEsMTM0LjNjMy41LTcuMiw0OC42LTEzMi40LDQ5LjEtMTM0LjMNCgkJCQlDNDMzLjEsNTU0LjksMzk2LjgsNTg3LjEsMzg2LDU5Ni42eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTQ2OC4yLDQ5Ni45bDE3LjIsMTUuMnY4OC4xbDAuMi0wLjJjNy4yLTMzLjMsMTcuMi03OS4yLDI0LjUtMTEyLjVsLTMzLjktMzANCgkJCQlDNDczLjcsNDcwLjksNDcxLDQ4NCw0NjguMiw0OTYuOUw0NjguMiw0OTYuOXoiLz4NCgkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01NTEsMzM4LjJjLTEzLjQtMTEuOC01NC42LTQ4LjMtNTQuNi00OC4zcy0xLjksMjguOS0zLjMsNDMuNWMxNi43LDE0LjgsNjEuNCw1NC4zLDYxLjQsNTQuM2wzNC04Mi44DQoJCQkJTDU1MSwzMzguMkw1NTEsMzM4LjJ6Ii8+DQoJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMjg5LDQxNy4yYy0yLjEtMTMuNy00LTI3LjUtNS43LTQxLjRjLTI3LjYsMjQuNC04OS45LDc5LjUtODkuOSw3OS41bDUwLjIsMTA2LjljMCwwLTE4LTgyLjctMTkuMS04OA0KCQkJCUMyNDAuMyw0NjAuMywyNzMuMSw0MzEuMywyODksNDE3LjJMMjg5LDQxNy4yeiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM4Niw1NTVjMTMuMy0xMi43LDMxLTI5LjUsNDQuMy00Mi4yYy01LjYtNS4zLTM5LjYtMzcuNy00NC4zLTQyLjJjLTQuNSw0LjMtMzguOSwzNy00NC4zLDQyLjINCgkJCQlDMzQ3LjksNTE4LjcsMzg0LjcsNTUzLjcsMzg2LDU1NUwzODYsNTU1eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTI2MS45LDQ4Ny42YzcuMywzMy40LDE3LjIsNzkuMiwyNC41LDExMi41bDAuMiwwLjJ2LTg4LjFsMTcuMi0xNS4yYy0yLjktMTIuOS01LjUtMjYtOC0zOS40TDI2MS45LDQ4Ny42DQoJCQkJTDI2MS45LDQ4Ny42eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTIxNy40LDM4Ny44YzE2LjktMTQuOSw2MS40LTU0LjMsNjEuNC01NC4zcy0yLjQtMjkuMS0zLjMtNDMuNWMtMTMuNSwxMi01NC42LDQ4LjMtNTQuNiw0OC4zDQoJCQkJcy0yNy41LTI0LjQtMzcuNi0zMy4zQzE5Mi40LDMyNi45LDIxNy40LDM4Ny44LDIxNy40LDM4Ny44TDIxNy40LDM4Ny44eiIvPg0KCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTE4Ny44LDE2OC45djk2LjZjNC4yLDMuNywyNy44LDI0LjYsMzEuNCwyNy44YzAuMi0wLjEsNTQuMy00OCw1NC41LTQ4LjJ2MGMzLjktMTkuNywxOC44LTk2LjEsMTkuNy0xMDENCgkJCQljLTAuMSwwLjItNzAuNiwxMTcuNC03MC42LDExNy42di04MC45YzAuMS0wLjIsNjcuMi0xMTEuOCw2Ny4zLTExMkwxODcuOCwxNjguOUwxODcuOCwxNjguOXoiLz4NCgkJPC9nPg0KCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzk2LjksMTk3LjVMMzg2LDIwOC40bC0xMC45LTEwLjlsLTgxLjgsNzYuOGMyLDQyLjYsNi4xLDg2LjEsMTIuMywxMjguM2MxMi40LTExLDY2LjktNTkuMiw4MC40LTcxLjENCgkJCWMxMy44LDEyLjIsNjcuNyw1OS45LDgwLjQsNzEuMWM2LjEtNDIuMiwxMC4yLTg1LjcsMTIuMy0xMjguM0wzOTYuOSwxOTcuNUwzOTYuOSwxOTcuNXoiLz4NCgk8L2c+DQoJPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIzMjAuMSw2NjUuOCAzMDIuNSw2NzIuNSAyOTAuNiw2MTQuNiAJIi8+DQoJPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIzNjkuNCw2ODguMSAzMDYuNiw2ODcuNSAzNjIuMiw2NjguNCAJIi8+DQo8L2c+DQo8L3N2Zz4NCg==" alt="عقرب" style={{width:52,height:52,display:"block"}} />
+          <span style={{ fontSize:13, fontWeight:500, color:C.textDim }}>محصولات غذایی عقرب</span>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+          <button onClick={() => setShowWarrantyForm(true)} style={{ display:"flex", alignItems:"center", gap:4, background:"transparent", border:"none", color:C.primary, cursor:"pointer", fontFamily:FF, fontSize:11, fontWeight:600, padding:"6px 8px", borderRadius:8 }}>
+            <Icon name="warranty" size={15} />
+            گارانتی
+          </button>
+          <button onClick={logout} style={{ display:"flex", alignItems:"center", gap:6, background:"transparent", border:"none", color:C.textDim, cursor:"pointer", fontFamily:FF, fontSize:12, padding:"6px 10px", borderRadius:8 }}>
+            <IcLogout /> خروج
+          </button>
+        </div>
+      </div>
+
+      {/* Tab content */}
+      {tab === 'home' && <HomeTab customer={customer} products={products} cartItems={cartItems} onAddToCart={addToCart} onNavigateProducts={() => setTab('products')} onNavigateOrders={() => setTab('orders')} />}
+      {tab === 'products' && <ProductsTab products={products} customer={customer} cartItems={cartItems} onAddToCart={addToCart} onShowCart={() => setShowCart(true)} />}
+      {tab === 'orders' && <OrdersTab orders={orders} onApprove={approveProforma} customer={customer} products={products} onOrderCreated={refreshOrders} deepLinkData={deepLinkData} clearDeepLink={() => setDeepLinkData(null)} onSelectOrder={(o) => setSelectedOrder(o)} />}
+      {tab === 'profile' && <ProfileTab customer={customer} onWarranty={() => setShowWarrantyForm(true)} onSupport={() => setShowSupportForm(true)} onToast={(msg, type) => setToast({ msg, type })} />}
+
+      {/* Cart panel overlay */}
+      {showCart && (
+        <CartPanel
+          items={cartItems}
+          onClose={() => setShowCart(false)}
+          onUpdateQty={updateCartQty}
+          onRemove={removeFromCart}
+          onSubmit={submitCart}
+          submitting={submittingCart}
+        />
+      )}
+      <Toast toast={toast} onDone={() => setToast(null)} />
+
+      {/* Warranty form overlay (logged-in users) */}
+      {showWarrantyForm && <WarrantyForm onBack={() => setShowWarrantyForm(false)} />}
+
+      {/* Support ticket form overlay */}
+      {showSupportForm && <SupportTicketForm onClose={() => { setShowSupportForm(false); setSupportPrefillOrder(null); }} prefillOrderId={supportPrefillOrder} />}
+
+      {/* Order detail bottom sheet */}
+      {selectedOrder && <OrderDetailSheet order={selectedOrder} onClose={() => setSelectedOrder(null)} onSupport={(orderId) => { setSupportPrefillOrder(orderId); setShowSupportForm(true); }} />}
+
+      {/* Bottom nav */}
+      <nav style={{ position:"fixed", bottom:0, left:0, right:0, height:64, background:C.surface, borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"space-around", alignItems:"center", zIndex:1000 }}>
+        {TABS.map(t => (
+          <div key={t.id} onClick={() => setTab(t.id)} style={{ position:"relative", display:"flex", flexDirection:"column", alignItems:"center", gap:3, cursor:"pointer", flex:1, color: tab===t.id ? C.primary : C.textDim, transition:"color 0.2s" }}>
+            <t.icon />
+            <span style={{ fontSize:10, fontWeight: tab===t.id ? 700 : 400 }}>{t.label}</span>
+          </div>
+        ))}
+        {/* Cart button with badge */}
+        <div onClick={() => setShowCart(true)} style={{ position:"relative", display:"flex", flexDirection:"column", alignItems:"center", gap:3, cursor:"pointer", flex:1, color:C.textDim, transition:"color 0.2s" }}>
+          <Icon name="cart" size={IZ.xl} />
+          <span style={{ fontSize:10, fontWeight:400 }}>سبد خرید</span>
+          {(cartItems?.length||0) > 0 && (
+            <span style={{ position:"absolute", top:-4, right:"50%", marginRight:-14, background:C.danger, color:"#fff", fontSize:9, fontWeight:700, borderRadius:10, minWidth:18, height:18, display:"flex", alignItems:"center", justifyContent:"center", padding:"0 4px", border:`2px solid ${C.bg}` }}>
+              {fa(cartItems.reduce((s,i) => s + (i.quantity||0), 0))}
+            </span>
+          )}
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+try {
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+} catch(e) {
+  document.getElementById('root').textContent = 'RENDER ERROR: ' + (e.message || e) + '\\n' + (e.stack || '');
+}
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
+</script>
+</body>
+</html>
+
+

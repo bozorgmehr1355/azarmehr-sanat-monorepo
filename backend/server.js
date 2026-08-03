@@ -41,6 +41,18 @@ app.use((req, res, next) => {
 });
 
 // ───────────────────────────────────────────
+// Request logging (temporary — to trace 'public.customers' error source)
+app.use((req, res, next) => {
+  const start = Date.now();
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[REQ] ${req.method} ${req.originalUrl} → ${res.statusCode} (${duration}ms) [${ip}]`);
+  });
+  next();
+});
+
+// ───────────────────────────────────────────
 // Route helpers
 // ───────────────────────────────────────────
 
@@ -122,6 +134,7 @@ const handlers = {
   growthDecide:             require('./handlers/growth-decide'),
   growthDrafts:             require('./handlers/growth-drafts'),
   messageOrchestrator:      require('./handlers/message-orchestrator').handler,
+  unifiedMessages:          require('./handlers/unified-messages'),
   baleWebhook:              require('../bale-adapter/bale-webhook-handler').handler,
 };
 
@@ -185,6 +198,7 @@ mount('/api/lead-to-proforma',           handlers.leadToProforma);
 mount('/api/growth/decide',              handlers.growthDecide);
 mount('/api/growth/drafts',              handlers.growthDrafts);
 mount('/api/message-orchestrator',       handlers.messageOrchestrator);
+mount('/api/unified-messages',          handlers.unifiedMessages);
 
 // Bale Webhook — /api/bale/webhook (with secret validation)
 const BALE_WEBHOOK_SECRET = process.env.BALE_WEBHOOK_SECRET;

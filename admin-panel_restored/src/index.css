@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@import './styles/tokens.css';
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-main, #0d1117);
+  color: #c9d1d9;
+  font-family: IRANSansX, Roboto, system-ui, -apple-system, sans-serif;
+  direction: rtl;
+}

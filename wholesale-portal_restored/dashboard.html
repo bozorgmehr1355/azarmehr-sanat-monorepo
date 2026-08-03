@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#D4880E" />
+  <title>پورتال عمده‌فروشی — آذرمهر صنعت</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body, #root { height:100%; width:100%; }
+    body { background:#f5f7fa; direction:rtl; font-family:'Vazirmatn',Tahoma,sans-serif; }
+    ::-webkit-scrollbar { width:4px; height:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#ccc; border-radius:2px; }
+    input, textarea, select, button { outline:none; font-family:inherit; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+/* ═══════════════════════════════════════ CONFIG ══════════════════════════════════════ */
+const API_BASE = "https://azarmehr-backend.vercel.app/api";
+
+/* ══════════════════════════════════════ DESIGN SYSTEM ══════════════════════════════════════ */
+const D = {
+  // Colors - unified with index.html (dark/gold theme)
+  bg: '#f5f7fa',
+  surface: '#ffffff',
+  surfaceAlt: '#f5f7fa',
+  surfaceHover: '#eef1f5',
+  border: '#e0e0e0',
+  borderLight: '#eaeaea',
+  primary: '#D4880E',
+  primaryDim: '#D4880E18',
+  primaryHover: '#E8960F',
+  text: '#1a1a1a',
+  textMuted: '#666',
+  textDim: '#999',
+  success: '#10B981',
+  successDim: '#10B98118',
+  successBg: '#d1fae5',
+  warning: '#F59E0B',
+  warningDim: '#F59E0B18',
+  warningBg: '#fef3c7',
+  danger: '#EF4444',
+  dangerDim: '#EF444418',
+  dangerBg: '#fee2e2',
+  info: '#3B82F6',
+  infoDim: '#3B82F618',
+  infoBg: '#dbeafe',
+  // Spacing
+  space: { xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '32px' },
+  radius: { sm: '8px', md: '12px', lg: '16px', xl: '24px', pill: '999px' },
+  shadow: { sm: '0 1px 2px rgba(0,0,0,0.05)', md: '0 4px 6px rgba(0,0,0,0.07)', lg: '0 10px 15px rgba(0,0,0,0.1)', xl: '0 20px 25px rgba(0,0,0,0.1)' },
+  fontSize: { xs: '11px', sm: '12px', base: '14px', lg: '16px', xl: '18px', '2xl': '20px', '3xl': '24px', '4xl': '32px' },
+  fontWeight: { normal: 400, medium: 500, semibold: 600, bold: 700 },
+};
+
+const FONT = "'Vazirmatn', Tahoma, sans-serif";
+
+/* ══════════════════════════════════════ HELPERS ══════════════════════════════════════ */
+const fa  = (n) => String(n).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+const cur = (n) => fa(Number(n||0).toLocaleString()) + " ریال";
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleDateString("fa-IR");
+}
+
+function formatPrice(num) {
+  if (!num) return '—';
+  return fa(Number(num).toLocaleString()) + ' ریال';
+}
+
+function decodeJwt(token) {
+  try { return JSON.parse(atob(token.split('.')[1])); } catch { return null; }
+}
+
+async function apiCall(endpoint, options = {}) {
+  const token = localStorage.getItem('az_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  };
+  const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'خطا در ارتباط با سرور' }));
+    throw new Error(err.error || 'خطا');
+  }
+  return res.json();
+}
+
+/* ══════════════════════════════════════ ICONS ════════════════════════════════════════ */
+const IcHome = () => (
+  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/>
+  </svg>
+);
+const IcBox = () => (
+  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+    <path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/>
+  </svg>
+);
+const IcFile = () => (
+  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8m8 4H8m2-8H8"/>
+  </svg>
+);
+const IcUser = () => (
+  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+const IcChat = () => (
+  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+  </svg>
+);
+const IcPlus = () => (
+  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+const IcEye = () => (
+  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+const IcEdit = () => (
+  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+);
+
+/* ═══════════════════════════════════════ STYLES ══════════════════════════════════════ */
+const styles = {
+  // Layout
+  app: { fontFamily: FONT, direction: 'rtl', minHeight: '100vh', background: D.bg },
+  tabContent: { padding: D.space.md, paddingBottom: '100px', maxWidth: '800px', margin: '0 auto' },
+
+  // Cards & Surfaces
+  card: { background: D.surface, borderRadius: D.radius.md, boxShadow: D.shadow.md },
+  cardPadding: { padding: D.space.md },
+  welcomeCard: { background: D.surface, padding: D.space.lg, borderRadius: D.radius.lg, marginBottom: D.space.lg, boxShadow: D.shadow.md },
+  welcomeTitle: { fontSize: D.fontSize['2xl'], fontWeight: D.fontWeight.bold, marginBottom: D.space.xs, color: D.text },
+  welcomeText: { fontSize: D.fontSize.base, color: D.textMuted },
+
+  // Stats Grid
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: D.space.md, marginBottom: D.space.lg },
+  statCard: { background: D.surface, padding: D.space.md, borderRadius: D.radius.md, textAlign: 'center', boxShadow: D.shadow.sm, border: `1px solid ${D.border}` },
+  statValue: { fontSize: D.fontSize['4xl'], fontWeight: D.fontWeight.bold, color: D.primary, marginBottom: D.space.xs },
+  statLabel: { fontSize: D.fontSize.sm, color: D.textMuted },
+
+  // Sections
+  sectionTitle: { fontSize: D.fontSize.xl, fontWeight: D.fontWeight.bold, marginBottom: D.space.md, color: D.text },
+  sectionCard: { background: D.surface, padding: D.space.md, borderRadius: D.radius.md, boxShadow: D.shadow.sm, border: `1px solid ${D.border}` },
+
+  // Order Cards
+  orderCard: { background: D.surface, padding: D.space.md, borderRadius: D.radius.md, marginBottom: D.space.md, cursor: 'pointer', boxShadow: D.shadow.sm, border: `1px solid ${D.border}`, transition: 'box-shadow 0.2s, transform 0.2s' },
+  orderCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: D.space.sm },
+  orderCardId: { fontSize: D.fontSize.lg, fontWeight: D.fontWeight.bold, color: D.text },
+  orderCardMid: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  orderCardNotes: { marginTop: D.space.sm, fontSize: D.fontSize.sm, color: D.textMuted, fontStyle: 'italic' },
+
+  // Mini Order (Dashboard)
+  miniOrderCard: { padding: D.space.md, borderBottom: `1px solid ${D.border}`, cursor: 'pointer', transition: 'background 0.2s' },
+  miniOrderTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: D.space.xs },
+  miniOrderId: { fontSize: D.fontSize.lg, fontWeight: D.fontWeight.bold, color: D.text },
+  miniOrderBot: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+
+  // Filter Bar
+  filterBar: { display: 'flex', gap: D.space.sm, marginBottom: D.space.md, overflowX: 'auto', paddingBottom: D.space.xs },
+  filterBtn: { padding: `${D.space.xs} ${D.space.md}`, border: `1px solid ${D.border}`, borderRadius: D.radius.pill, background: D.surface, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: D.fontSize.sm, fontWeight: 500, color: D.text, transition: 'all 0.2s' },
+  filterBtnActive: { background: D.primary, color: '#fff', borderColor: D.primary },
+
+  // Order Groups
+  orderGroup: { marginBottom: D.space.lg },
+  groupTitle: { fontSize: D.fontSize.lg, fontWeight: D.fontWeight.bold, marginBottom: D.space.md, color: D.textMuted },
+
+  // Invoices
+  invoiceCard: { background: D.surface, padding: D.space.md, borderRadius: D.radius.md, marginBottom: D.space.md, boxShadow: D.shadow.sm, border: `1px solid ${D.border}` },
+  invoiceRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: D.space.sm },
+  invoiceId: { fontSize: D.fontSize.lg, fontWeight: D.fontWeight.bold, color: D.text },
+
+  // Profile
+  profileCard: { background: D.surface, padding: D.space.lg, borderRadius: D.radius.lg, boxShadow: D.shadow.md, border: `1px solid ${D.border}` },
+  profileRow: { display: 'flex', justifyContent: 'space-between', padding: `${D.space.md} 0`, borderBottom: `1px solid ${D.border}` },
+  profileLabel: { fontSize: D.fontSize.base, color: D.textMuted, fontWeight: D.fontWeight.semibold },
+  profileValue: { fontSize: D.fontSize.base, color: D.text, textAlign: 'left' },
+
+  // Header Row
+  headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: D.space.lg },
+
+  // Buttons
+  btnPrimary: { background: D.primary, color: '#fff', border: 'none', borderRadius: D.radius.md, padding: `${D.space.sm} ${D.space.md}`, cursor: 'pointer', fontWeight: D.fontWeight.bold, fontFamily: FONT, fontSize: D.fontSize.base, display: 'flex', alignItems: 'center', gap: D.space.xs, transition: 'background 0.2s, opacity 0.2s' },
+  btnSecondary: { background: D.surface, color: D.text, border: `1px solid ${D.border}`, borderRadius: D.radius.md, padding: `${D.space.sm} ${D.space.md}`, cursor: 'pointer', fontWeight: 500, fontFamily: FONT, fontSize: D.fontSize.base, display: 'flex', alignItems: 'center', gap: D.space.xs, transition: 'background 0.2s' },
+
+  // Badges
+  badge: { padding: `${D.space.xs} ${D.space.sm}`, borderRadius: D.radius.pill, fontSize: D.fontSize.xs, fontWeight: D.fontWeight.bold },
+  badge_registered: { background: D.warningBg, color: '#856404' },
+  badge_pending_review: { background: D.infoBg, color: '#1e40af' },
+  badge_delivered: { background: D.successBg, color: '#065f46' },
+  badge_cancelled: { background: D.dangerBg, color: '#991b1b' },
+  badge_paid: { background: D.successBg, color: '#065f46' },
+  badge_pending: { background: D.warningBg, color: '#856404' },
+  badge_rejected: { background: D.dangerBg, color: '#991b1b' },
+
+  // Tab Bar
+  tabBar: { position: 'fixed', bottom: 0, left: 0, right: 0, height: '72px', background: D.surface, display: 'flex', justifyContent: 'space-around', alignItems: 'center', boxShadow: D.shadow.xl, borderTop: `1px solid ${D.border}`, zIndex: 1000 },
+  tabItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', cursor: 'pointer', flex: 1, padding: D.space.xs, borderRadius: D.radius.sm, transition: 'background 0.2s' },
+  tabItemActive: { color: D.primary },
+  tabLabel: { fontSize: D.fontSize.xs, fontWeight: 500 },
+
+  // Typography
+  smallText: { fontSize: D.fontSize.xs, color: D.textDim },
+  priceText: { fontSize: D.fontSize.lg, fontWeight: D.fontWeight.bold, color: D.success },
+
+  // States
+  loadingText: { textAlign: 'center', marginTop: D.space.xl, color: D.textMuted },
+  emptyText: { textAlign: 'center', marginTop: D.space.xl, color: D.textDim },
+
+  // Modals
+  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 },
+  modalContent: { background: D.surface, borderRadius: D.radius.xl, padding: D.space.lg, width: '90%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', boxShadow: D.shadow.xl },
+  modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: D.space.md },
+  modalCloseBtn: { background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: D.textDim, padding: '4px 8px', borderRadius: '50%' },
+
+  // Inputs
+  input: { width: '100%', padding: `${D.space.sm} ${D.space.md}`, borderRadius: D.radius.md, border: `1px solid ${D.border}`, background: D.surfaceAlt, color: D.text, fontSize: D.fontSize.base, fontFamily: FONT, boxSizing: 'border-box', transition: 'border 0.2s, box-shadow 0.2s' },
+  inputFocus: { borderColor: D.primary, boxShadow: `0 0 0 3px ${D.primaryDim}` },
+
+  // Empty State
+  emptyState: { textAlign: 'center', padding: D.space.xl, color: D.textDim },
+  emptyIcon: { fontSize: '48px', marginBottom: D.space.md, opacity: 0.5 },
+  emptyTitle: { fontSize: D.fontSize.xl, fontWeight: D.fontWeight.bold, color: D.textMuted, marginBottom: D.space.xs },
+  emptyDesc: { fontSize: D.fontSize.base, color: D.textDim, marginBottom: D.space.lg, lineHeight: 1.6 },
+};
+
+/* ════════════════════════════════════════ TABS ════════════════════════════════════════ */
+
+// Helper Components
+const Badge = ({ children, variant = 'registered' }) => (
+  <span style={{...styles.badge, ...styles[`badge_${variant}`]}}>{children}</span>
+);
+
+const EmptyState = ({ icon, title, description, action }) => (
+  <div style={styles.emptyState}>
+    <div style={styles.emptyIcon}>{icon}</div>
+    <h3 style={styles.emptyTitle}>{title}</h3>
+    <p style={styles.emptyDesc}>{description}</p>
+    {action}
+  </div>
+);
+
+const Modal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+  return (
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+        <div style={styles.modalHeader}>
+          <h3 style={{...styles.sectionTitle, marginBottom: 0}}>{title}</h3>
+          <button onClick={onClose} style={styles.modalCloseBtn}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const InputField = ({ label, required, type = 'text', value, onChange, placeholder, ...props }) => (
+  <div style={{ marginBottom: D.space.md }}>
+    <label style={{ display: 'block', fontSize: D.fontSize.sm, color: D.textMuted, marginBottom: D.space.xs, fontWeight: 600 }}>
+      {label} {required && <span style={{ color: D.danger }}>*</span>}
+    </label>
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      style={{
+        ...styles.input,
+        ...(type === 'number' && { appearance: 'textfield' }),
+      }}
+      {...props}
+    />
+  </div>
+);
+
+const SelectField = ({ label, required, value, onChange, options, placeholder, ...props }) => (
+  <div style={{ marginBottom: D.space.md }}>
+    <label style={{ display: 'block', fontSize: D.fontSize.sm, color: D.textMuted, marginBottom: D.space.xs, fontWeight: 600 }}>
+      {label} {required && <span style={{ color: D.danger }}>*</span>}
+    </label>
+    <select value={value} onChange={onChange} style={{ ...styles.input, cursor: 'pointer' }} {...props}>
+      {placeholder && <option value="" disabled>{placeholder}</option>}
+      {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+    </select>
+  </div>
+);
+
+const TextareaField = ({ label, required, value, onChange, placeholder, rows = 4, ...props }) => (
+  <div style={{ marginBottom: D.space.md }}>
+    <label style={{ display: 'block', fontSize: D.fontSize.sm, color: D.textMuted, marginBottom: D.space.xs, fontWeight: 600 }}>
+      {label} {required && <span style={{ color: D.danger }}>*</span>}
+    </label>
+    <textarea
+      rows={rows}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      style={{ ...styles.input, resize: 'vertical' }}
+      {...props}
+    />
+  </div>
+);
+
+/* ── Dashboard ── */
+function DashboardTab({ customer, orders }) {
+  const pending = orders.filter(o => o.order_status === 'registered').length;
+  const processing = orders.filter(o => o.order_status === 'pending_review').length;
+  const completed = orders.filter(o => o.order_status === 'delivered').length;
+  const totalOrders = orders.length;
+  const totalSpent = orders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+  const recentOrders = orders.slice(0, 3);
+
+  return (
+    <div style={styles.tabContent}>
+      {/* Welcome Card */}
+      <div style={styles.welcomeCard}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: D.space.md }}>
+          <div>
+            <h2 style={styles.welcomeTitle}>
+              سلام، {customer.company_name || customer.name || customer.username || 'کاربر'} 👋
+            </h2>
+            <p style={styles.welcomeText}>به پورتال عمده‌فروشی آذرمهر صنعت خوش آمدید</p>
+          </div>
+          <div style={{ display: 'flex', gap: D.space.sm, flexWrap: 'wrap' }}>
+            <button onClick={() => setTab('orders')} style={{...styles.btnPrimary, ...{ display: 'flex', alignItems: 'center', gap: D.space.xs }}>
+              <IcPlus /> ثبت سفارش جدید
+            </button>
+            <button onClick={() => setTab('orders')} style={styles.btnSecondary}>
+              مشاهده سفارشات
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div style={styles.statsGrid}>
+        <div style={styles.statCard}>
+          <div style={styles.statValue}>{totalOrders}</div>
+          <div style={styles.statLabel}>کل سفارش‌ها</div>
+        </div>
+        <div style={styles.statCard}>
+          <div style={styles.statValue}>{pending + processing}</div>
+          <div style={styles.statLabel}>سفارش‌های فعال</div>
+        </div>
+        <div style={styles.statCard}>
+          <div style={styles.statValue}>{completed}</div>
+          <div style={styles.statLabel}>تکمیل شده</div>
+        </div>
+        <div style={styles.statCard}>
+          <div style={styles.statValue}>{formatPrice(totalSpent)}</div>
+          <div style={styles.statLabel}>مجموع خریدها</div>
+        </div>
+      </div>
+
+      {/* Recent Orders */}
+      <div style={styles.sectionCard}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: D.space.md }}>
+          <h3 style={styles.sectionTitle}>آخرین سفارش‌ها</h3>
+          <button onClick={() => setTab('orders')} style={{ fontSize: D.fontSize.sm, color: D.primary, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+            مشاهده همه ←
+          </button>
+        </div>
+        {orders.length === 0 ? (
+          <EmptyState
+            icon={<IcBox style={{ width: 48, height: 48, color: D.textDim }} />}
+            title="هنوز سفارشی ثبت نکرده‌اید"
+            description="اولین سفارش خود را ثبت کنید و خرید را آغاز کنید."
+            action={<button onClick={() => setTab('orders')} style={styles.btnPrimary}><IcPlus /> ثبت اولین سفارش</button>}
+          />
+        ) : (
+          <>
+            {recentOrders.map(order => (
+              <div key={order.id} style={styles.miniOrderCard} onClick={() => setTab('orders')}>
+                <div style={styles.miniOrderTop}>
+                  <span style={styles.miniOrderId}>#{order.tracking_code || order.id}</span>
+                  <Badge variant={order.order_status}>{order.order_status}</Badge>
+                </div>
+                <div style={styles.miniOrderBot}>
+                  <span style={styles.smallText}>{formatDate(order.created_at)}</span>
+                  <span style={styles.priceText}>{formatPrice(order.total_amount)}</span>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
+      {/* Quick Actions */}
+      <div style={{ marginTop: D.space.lg }}>
+        <h3 style={styles.sectionTitle}>دسترسی سریع</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: D.space.md }}>
+          <button onClick={() => setTab('orders')} style={{ ...styles.card, ...styles.cardPadding, textAlign: 'center', cursor: 'pointer', border: `1px solid ${D.border}`, transition: 'all 0.2s' }}>
+            <IcBox style={{ width: 32, height: 32, color: D.primary, margin: '0 auto 8px' }} />
+            <div style={{ fontWeight: 600, color: D.text }}>سفارشات</div>
+            <div style={{ fontSize: D.fontSize.xs, color: D.textDim }}>مشاهده و ثبت سفارش</div>
+          </button>
+          <button onClick={() => setTab('invoices')} style={{ ...styles.card, ...styles.cardPadding, textAlign: 'center', cursor: 'pointer', border: `1px solid ${D.border}`, transition: 'all 0.2s' }}>
+            <IcFile style={{ width: 32, height: 32, color: D.primary, margin: '0 auto 8px' }} />
+            <div style={{ fontWeight: 600, color: D.text }}>پرداخت‌ها</div>
+            <div style={{ fontSize: D.fontSize.xs, color: D.textDim }}>ثبت و پیگیری فیش</div>
+          </button>
+          <button onClick={() => setTab('profile')} style={{ ...styles.card, ...styles.cardPadding, textAlign: 'center', cursor: 'pointer', border: `1px solid ${D.border}`, transition: 'all 0.2s' }}>
+            <IcUser style={{ width: 32, height: 32, color: D.primary, margin: '0 auto 8px' }} />
+            <div style={{ fontWeight: 600, color: D.text }}>پروفایل</div>
+            <div style={{ fontSize: D.fontSize.xs, color: D.textDim }}>اطلاعات حساب</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Orders ── */
+function OrdersTab({ orders, onApprove, customer, onOrderCreated }) {
+  const [filter, setFilter] = useState('all');
+  const [showForm, setShowForm] = useState(false);
+  const [orderDetail, setOrderDetail] = useState(null);
+
+  const filtered = filter === 'all' ? orders : orders.filter(o => o.order_status === filter);
+  const groups = {
+    pending: filtered.filter(o => o.order_status === 'registered'),
+    processing: filtered.filter(o => o.order_status === 'pending_review'),
+    completed: filtered.filter(o => o.order_status === 'delivered'),
+    cancelled: filtered.filter(o => o.order_status === 'cancelled'),
+  };
+
+  const openDetail = (order) => setOrderDetail(order);
+  const closeDetail = () => setOrderDetail(null);
+
+  return (
+    <div style={styles.tabContent}>
+      {/* Header with CTA */}
+      <div style={styles.headerRow}>
+        <h3 style={styles.sectionTitle}>سفارشات</h3>
+        <button onClick={() => setShowForm(true)} style={{...styles.btnPrimary, display: 'flex', alignItems: 'center', gap: D.space.xs }}>
+          <IcPlus /> ثبت سفارش جدید
+        </button>
+      </div>
+
+      {/* Filter Bar */}
+      <div style={styles.filterBar}>
+        {['all', 'registered', 'pending_review', 'delivered', 'cancelled'].map(f => (
+          <button key={f} onClick={() => setFilter(f)}
+            style={{...styles.filterBtn, ...(filter === f && styles.filterBtnActive)}}>
+            {f === 'all' ? 'همه' : f === 'registered' ? 'ثبت شده' : f === 'pending_review' ? 'در بررسی' : f === 'delivered' ? 'تحویل شده' : 'لغو شده'}
+          </button>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {filtered.length === 0 && (
+        <EmptyState
+          icon={<IcBox style={{ width: 48, height: 48, color: D.textDim }} />}
+          title={filter === 'all' ? 'هیچ سفارشی یافت نشد' : `سفارشی در وضعیت «${filter}» وجود ندارد`}
+          description="برای ثبت سفارش جدید، دکمه زیر را بزنید."
+          action={<button onClick={() => setShowForm(true)} style={styles.btnPrimary}><IcPlus /> ثبت سفارش جدید</button>}
+        />
+      )}
+
+      {/* Orders List */}
+      {filter === 'all' ? (
+        Object.entries(groups).map(([status, items]) =>
+          items.length > 0 && (
+            <div key={status} style={styles.orderGroup}>
+              <h3 style={styles.groupTitle}>
+                {status === 'pending' ? 'در انتظار تایید' :
+                 status === 'processing' ? 'در حال پردازش' :
+                 status === 'completed' ? 'تکمیل شده' : 'لغو شده'}
+                <span style={{ fontWeight: 400, fontSize: D.fontSize.sm, color: D.textDim, marginRight: D.space.sm }}>
+                  ({items.length})
+                </span>
+              </h3>
+              {items.map(order => (
+                <OrderCard key={order.id} order={order} onClick={() => openDetail(order)} onApprove={onApprove} />
+              ))}
+            </div>
+          )
+        )
+      ) : (
+        <div style={styles.orderGroup}>
+          {filtered.map(order => (
+            <OrderCard key={order.id} order={order} onClick={() => openDetail(order)} onApprove={onApprove} />
+          ))}
+        </div>
+      )}
+
+      {/* Order Detail Modal */}
+      <Modal isOpen={!!orderDetail} onClose={closeDetail} title="جزئیات سفارش">
+        {orderDetail && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: D.space.md, paddingBottom: D.space.md, borderBottom: `1px solid ${D.border}` }}>
+              <span style={{ fontSize: D.fontSize.lg, fontWeight: 700, color: D.text }}>#{orderDetail.tracking_code || orderDetail.id}</span>
+              <Badge variant={orderDetail.order_status}>{orderDetail.order_status}</Badge>
+            </div>
+
+            <div style={{ marginBottom: D.space.md }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: D.space.sm }}>
+                <span style={styles.smallText}>تاریخ ثبت</span>
+                <span style={{ fontWeight: 500, color: D.text }}>{formatDate(orderDetail.created_at)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: D.space.sm }}>
+                <span style={styles.smallText}>مبلغ کل</span>
+                <span style={{ fontSize: D.fontSize.lg, fontWeight: 700, color: D.primary }}>{formatPrice(orderDetail.total_amount)}</span>
+              </div>
+              {orderDetail.proforma_status && orderDetail.proforma_status !== 'draft' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: D.space.sm }}>
+                  <span style={styles.smallText}>وضعیت پیش‌فاکتور</span>
+                  <Badge variant={orderDetail.proforma_status === 'approved' ? 'paid' : 'pending_review'}>
+                    {orderDetail.proforma_status === 'approved' ? '✓ تایید شده' : 'صادر شده'}
+                  </Badge>
+                </div>
+              )}
+            </div>
+
+            {orderDetail.note && (
+              <div style={{ marginBottom: D.space.md, padding: D.space.md, background: D.surfaceAlt, borderRadius: D.radius.md }}>
+                <div style={{ fontWeight: 600, color: D.textMuted, marginBottom: D.space.xs }}>یادداشت سفارش</div>
+                <p style={{ color: D.text, whiteSpace: 'pre-wrap' }}>{orderDetail.note}</p>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: D.space.sm, justifyContent: 'flex-end', marginTop: D.space.md }}>
+              <button onClick={closeDetail} style={styles.btnSecondary}>بستن</button>
+              {orderDetail.proforma_status === 'issued' && (
+                <button
+                  onClick={() => { onApprove(orderDetail.id); closeDetail(); }}
+                  style={{ ...styles.btnPrimary, background: '#6f42c1' }}
+                >
+                  تایید پیش‌فاکتور
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Order List */}
+      {filter === 'all' ? (
+        Object.entries(groups).map(([status, items]) =>
+          items.length > 0 && (
+            <div key={status} style={styles.orderGroup}>
+              <h3 style={styles.groupTitle}>
+                {status === 'pending' ? 'در انتظار تایید' :
+                 status === 'processing' ? 'در حال پردازش' :
+                 status === 'completed' ? 'تکمیل شده' : 'لغو شده'}
+                <span style={{ fontWeight: 400, fontSize: D.fontSize.sm, color: D.textDim, marginRight: D.space.sm }}>
+                  ({items.length})
+                </span>
+              </h3>
+              {items.map(order => (
+                <OrderCard key={order.id} order={order} onClick={() => openDetail(order)} onApprove={onApprove} />
+              ))}
+            </div>
+          )
+        )
+      ) : (
+        <div style={styles.orderGroup}>
+          {filtered.map(order => (
+            <OrderCard key={order.id} order={order} onClick={() => openDetail(order)} onApprove={onApprove} />
+          ))}
+        </div>
+      )}
+
+      {/* Create Order Modal */}
+      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="ثبت سفارش جدید">
+        <OrderFormModal customer={customer} onClose={() => setShowForm(false)} onCreated={onOrderCreated} />
+      </Modal>
+    </div>
+  );
+}
+
+function OrderCard({ order, onClick, onApprove }) {
+  const ps = order.proforma_status;
+  return (
+    <div style={styles.orderCard} onClick={onClick}>
+      <div style={styles.orderCardTop}>
+        <span style={styles.orderCardId}>#{order.tracking_code || order.id}</span>
+        <Badge variant={order.order_status}>{order.order_status}</Badge>
+      </div>
+      <div style={styles.orderCardMid}>
+        <span style={styles.smallText}>{formatDate(order.created_at)}</span>
+        <span style={styles.priceText}>{formatPrice(order.total_amount)}</span>
+      </div>
+      {order.note && <div style={styles.orderCardNotes}>{order.note}</div>}
+      {ps && ps !== 'draft' && (
+        <div style={{ marginTop: D.space.sm, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: D.space.sm }}>
+          <Badge variant={ps === 'approved' ? 'paid' : 'pending_review'}>
+            {ps === 'approved' ? '✓ پیش‌فاکتور تایید شده' : 'پیش‌فاکتور صادر شده'}
+          </Badge>
+          {ps === 'issued' && (
+            <button onClick={e => { e.stopPropagation(); onApprove && onApprove(order.id); }}
+              style={{ ...styles.btnPrimary, padding: `${D.space.xs} ${D.space.sm}`, fontSize: D.fontSize.sm, background: '#6f42c1' }}>
+            تایید پیش‌فاکتور
+          </button>
+        )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Order Form Modal ── */
+function OrderFormModal({ customer, onClose, onCreated }) {
+  const [notes, setNotes] = useState('');
+  const [totalAmount, setTotalAmount] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!notes.trim()) { alert('لطفاً توضیحات سفارش را وارد کنید'); return; }
+    setSubmitting(true);
+    try {
+      const body = {
+        customer_id: customer.id,
+        source_app: 'wholesale-portal',
+        sales_channel: 'wholesale',
+        order_type: 'stock',
+        note: notes.trim(),
+      };
+      if (totalAmount && Number(totalAmount) > 0) body.total_amount = Number(totalAmount);
+      await apiCall('/crm-orders', { method: 'POST', body: JSON.stringify(body) });
+      alert('سفارش با موفقیت ثبت شد');
+      onClose();
+      if (onCreated) onCreated();
+    } catch (err) {
+      alert('خطا در ثبت سفارش: ' + (err.message || ''));
+    } finally { setSubmitting(false); }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <TextareaField
+        label="توضیحات سفارش"
+        required
+        value={notes}
+        onChange={e => setNotes(e.target.value)}
+        placeholder="محصولات، تعداد، جزئیات و هرگونه توضیح لازم..."
+        rows={5}
+      />
+      <InputField
+        label="مبلغ تخمینی (ریال)"
+        required={false}
+        type="number"
+        min="1"
+        value={totalAmount}
+        onChange={e => setTotalAmount(e.target.value)}
+        placeholder="مثال: ۵۰۰۰۰۰۰"
+      />
+      <button
+        type="submit"
+        disabled={submitting}
+        style={{ ...styles.btnPrimary, width: '100%', marginTop: D.space.md, opacity: submitting ? 0.7 : 1 }}
+      >
+        {submitting ? "در حال ثبت..." : "ثبت سفارش"}
+      </button>
+    </form>
+  );
+}
+
+/* ── Payments / Invoices ── */
+function InvoicesTab({ customer }) {
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('کارت به کارت');
+  const [paymentOrder, setPaymentOrder] = useState('');
+  const [paymentNote, setPaymentNote] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchData = async () => {
+    try {
+      const data = await apiCall(`/crm-payments`);
+      setInvoices(data || []);
+    } catch (e) { console.error(e); }
+  };
+
+  useEffect(() => { (async () => { await fetchData(); setLoading(false); })(); }, [customer.id]);
+
+  const handleSubmitPayment = async (e) => {
+    e.preventDefault();
+    const parsed = Number(paymentAmount);
+    if (!paymentAmount || !Number.isFinite(parsed) || parsed <= 0) { alert('مبلغ معتبر وارد کنید'); return; }
+    setSubmitting(true);
+    try {
+      const body = { amount: parsed, payment_method: paymentMethod, note: paymentNote || undefined };
+      if (paymentOrder && Number(paymentOrder) > 0) body.order_id = Number(paymentOrder);
+      await apiCall('/crm-payment-submit', { method: 'POST', body: JSON.stringify(body) });
+      alert('پرداخت با موفقیت ثبت شد');
+      setPaymentAmount(''); setPaymentMethod('کارت به کارت'); setPaymentOrder(''); setPaymentNote('');
+      await fetchData();
+    } catch (err) { alert('خطا: ' + (err.message || '')); } finally { setSubmitting(false); }
+  };
+
+  const statusLabel = (s) => { if (s === 'paid' || s === 'approved') return 'پرداخت شده'; if (s === 'pending') return 'در انتظار تایید'; if (s === 'rejected') return 'رد شده'; return s || '—'; };
+  const statusStyle = (s) => ({ ...styles.badge, background: s === 'paid' || s === 'approved' ? D.successBg : s === 'rejected' ? D.dangerBg : D.warningBg, color: s === 'paid' || s === 'approved' ? '#065f46' : s === 'rejected' ? '#991b1b' : '#856404' });
+
+  if (loading) return <div style={styles.tabContent}><p style={styles.loadingText}>در حال بارگذاری...</p></div>;
+
+  return (
+    <div style={styles.tabContent}>
+      {/* Section Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: D.space.md }}>
+        <h3 style={styles.sectionTitle}>پرداخت‌ها و فاکتورها</h3>
+        <button onClick={() => setShowPaymentForm(true)} style={{...styles.btnPrimary, display: 'flex', alignItems: 'center', gap: D.space.xs }}>
+          <IcPlus /> ثبت پرداخت جدید
+        </button>
+      </div>
+
+      {/* Payment Form Card */}
+      <div style={styles.sectionCard}>
+        <h4 style={{ ...styles.sectionTitle, marginBottom: D.space.md }}>ثبت پرداخت جدید</h4>
+        <form onSubmit={handleSubmitPayment}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: D.space.md, marginBottom: D.space.md }}>
+            <InputField label="مبلغ (ریال)" required type="number" min="1" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} placeholder="مثال: ۵۰۰۰۰۰۰" />
+            <SelectField label="روش پرداخت" required value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} options={['کارت به کارت', 'واریز به حساب', 'چک', 'نقدی']} />
+          </div>
+          <InputField label="شماره سفارش (اختیاری)" required={false} type="number" min="1" value={paymentOrder} onChange={e => setPaymentOrder(e.target.value)} placeholder="شماره سفارش مرتبط" />
+          <TextareaField label="یادداشت (اختیاری)" required={false} value={paymentNote} onChange={e => setPaymentNote(e.target.value)} placeholder="..." rows={2} />
+          <button type="submit" disabled={submitting}
+            style={{ ...styles.btnPrimary, width: '100%', marginTop: D.space.md, opacity: submitting ? 0.7 : 1 }}>
+            {submitting ? "در حال ثبت..." : "ثبت پرداخت"}
+          </button>
+        </form>
+      </div>
+
+      {/* Payments List */}
+      <h3 style={{...styles.sectionTitle, marginBottom: D.space.md, marginTop: D.space.xl }}>سابقه پرداخت‌ها</h3>
+      {invoices.length === 0 ? (
+        <EmptyState
+          icon={<IcFile style={{ width: 48, height: 48, color: D.textDim }} />}
+          title="هنوز پرداختی ثبت نشده"
+          description="اولین پرداخت خود را از قسمت بالا ثبت کنید."
+        />
+      ) : (
+        invoices.map(inv => (
+          <div key={inv.id} style={styles.invoiceCard}>
+            <div style={styles.invoiceRow}>
+              <span style={styles.invoiceId}>پرداخت #{inv.id}</span>
+              <span style={styles.priceText}>{formatPrice(inv.amount)}</span>
+            </div>
+            <div style={styles.invoiceRow}>
+              <span style={styles.smallText}>{formatDate(inv.created_at)}</span>
+              <Badge variant={inv.status === 'paid' || inv.status === 'approved' ? 'paid' : inv.status === 'rejected' ? 'cancelled' : 'pending'}>
+                {statusLabel(inv.status)}
+              </Badge>
+            </div>
+            {inv.note && <div style={{ fontSize: D.fontSize.sm, color: D.textDim, marginTop: D.space.xs, fontStyle: 'italic' }}>{inv.note}</div>}
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+/* ── Documents (Coming Soon) ── */
+function DocumentsTab() {
+  return (
+    <div style={{ ...styles.tabContent, textAlign: 'center' }}>
+      <EmptyState
+        icon={<IcFile style={{ width: 64, height: 64, color: D.textDim }} />}
+        title="مدیریت اسناد"
+        description="این بخش به زودی فعال خواهد شد. شما می‌توانید اسناد مرتبط با سفارشات خود را آپلود و مدیریت کنید."
+      />
+    </div>
+  );
+}
+
+/* ── Chat (Coming Soon) ── */
+function ChatTab() {
+  return (
+    <div style={{ ...styles.tabContent, textAlign: 'center' }}>
+      <EmptyState
+        icon={<IcChat style={{ width: 64, height: 64, color: D.textDim }} />}
+        title="پیام‌ها"
+        description="بخش گفتگو با پشتیبانی به زودی فعال خواهد شد. شما می‌توانید از طریق این بخش با تیم فروش و پشتیبانی ارتباط برقرار کنید."
+      />
+    </div>
+  );
+}
+
+/* ── Profile ── */
+function ProfileTab({ customer }) {
+  const infoItems = [
+    ["نام", customer.company_name || customer.name || customer.username || '—'],
+    ["شماره تماس", customer.phone || '—'],
+    ["ایمیل", customer.email || '—'],
+    ["شهر", customer.city || '—'],
+    ["آدرس", customer.address || '—'],
+    ["نوع مشتری", customer.customer_type || customer.customer_kind || '—'],
+    ["گرید", customer.grade || customer.loyalty_tier || 'standard'],
+  ];
+
+  return (
+    <div style={styles.tabContent}>
+      <h3 style={styles.sectionTitle}>اطلاعات پروفایل</h3>
+      <div style={styles.profileCard}>
+        {infoItems.map(([label, value]) => (
+          <div key={label} style={styles.profileRow}>
+            <span style={styles.profileLabel}>{label}</span>
+            <span style={styles.profileValue}>{value}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: D.space.lg, padding: D.space.md, background: D.infoBg, borderRadius: D.radius.md, border: `1px solid ${D.info}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: D.space.sm, color: D.info, marginBottom: D.space.xs }}>
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <strong>ویرایش اطلاعات</strong>
+        </div>
+        <p style={{ color: D.info, fontSize: D.fontSize.sm, lineHeight: 1.6 }}>
+          برای ویرایش اطلاعات پروفایل (نام، تلفن، آدرس، شهر) لطفاً با تیم پشتیبانی واتساپ تماس بگیرید.
+          تغییرات پس از تایید کارشناسان اعمال خواهد شد.
+        </p>
+        <a href="https://wa.me/989128898756" target="_blank" rel="noopener noreferrer"
+           style={{ display: 'inline-flex', alignItems: 'center', gap: D.space.xs, marginTop: D.space.md, padding: `${D.space.sm} ${D.space.md}`, background: '#25D366', color: '#fff', borderRadius: D.radius.md, textDecoration: 'none', fontWeight: 600, fontSize: D.fontSize.sm }}>
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.864-2.03-.967-.273-.109-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.255-1.91-1.654-.433-.397-.777-.569-.962-.712-.186-.143-.374-.168-.57.048-.198.216-.419.391-.638.569-.208.177-.48.295-.634.372-.173.088-.386.124-.646.077-.26-.048-.618-.298-.918-.642-.33-.38-.53-.802-.53-1.343 0-.36.066-.602.149-.78.088-.178.207-.477.317-.788.11-.311.152-.603.188-.878.035-.275.01-.46-.08-.67-.088-.178-.2-.358-.35-.54-.15-.18-.32-.348-.52-.507-.2-.16-.4-.26-.61-.33-.2-.06-.43-.09-.65-.09-.23 0-.48.03-.72.11-.24.08-.54.2-.78.37-.24.17-.47.38-.68.61-.22.23-.44.5-.67.85-.23.35-.37.73-.44 1.14-.07.41-.12.83-.14 1.25-.01.42.01.82-.01 1.23 0 .42.01.83.01 1.24 0 .41.02.8.02 1.18 0 .38-.01.75-.04 1.12-.03.38-.1.74-.23 1.08-.13.35-.27.67-.44.96-.17.3-.38.58-.57.85-.19.27-.4.5-.64.72-.24.22-.52.41-.83.56-.3.15-.63.26-.98.31-.35.04-.7.06-1.04.05-.34 0-.68-.01-1.02-.05-.34-.04-.66-.1-.97-.22-.31-.12-.6-.25-.88-.38-.28-.13-.53-.27-.77-.4-.24-.13-.46-.27-.67-.42-.21-.15-.4-.29-.58-.43-.18-.14-.34-.28-.49-.42-.15-.14-.28-.28-.4-.43-.12Z"/></svg>
+          <span>مراسله با پشتیبانی واتساپ</span>
+        </a>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════ MAIN APP ═════════════════════════════════════ */
+const TABS = [
+  { id:'dashboard', label:'داشبورد', icon:IcHome },
+  { id:'orders',    label:'سفارشات', icon:IcBox },
+  { id:'invoices',  label:'پرداخت‌ها', icon:IcFile },
+  { id:'documents', label:'اسناد',   icon:IcFile },
+  { id:'chat',      label:'پیام‌ها',  icon:IcChat },
+  { id:'profile',   label:'پروفایل',  icon:IcUser },
+];
+
+function App() {
+  const [tab, setTab] = useState('dashboard');
+  const [customer, setCustomer] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem('az_token');
+        if (!token) { setLoading(false); return; }
+
+        const payload = decodeJwt(token);
+        if (!payload || !payload.id) { localStorage.removeItem('az_token'); setLoading(false); return; }
+
+        const profile = { id: payload.id, username: payload.username, name: payload.name || payload.username };
+        setCustomer(profile);
+
+        // Fetch full profile from CRM
+        try {
+          const full = await apiCall(`/crm-customers?id=${profile.id}`);
+          if (full && full.length > 0) setCustomer(prev => ({ ...prev, ...full[0] }));
+        } catch (_) { /* use basic profile */ }
+
+        const orderData = await apiCall(`/crm-orders?customer_id=${profile.id}`);
+        setOrders((orderData||[]).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+      } catch (err) {
+        console.error(err);
+        localStorage.removeItem('az_token');
+      } finally { setLoading(false); }
+    })();
+  }, []);
+
+  const approveProforma = async (orderId) => {
+    try {
+      const res = await apiCall('/crm-proforma-approve', { method: 'POST', body: JSON.stringify({ order_id: orderId }) });
+      if (res && res.ok) {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, proforma_status: 'approved' } : o));
+        alert('پیش‌فاکتور با موفقیت تایید شد');
+      }
+    } catch (e) { alert('خطا در تایید: ' + (e.message || '')); }
+  };
+
+  const refreshOrders = async () => {
+    if (!customer) return;
+    try {
+      const data = await apiCall(`/crm-orders?customer_id=${customer.id}`);
+      setOrders(data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+    } catch (err) { console.error(err); }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('az_token');
+    setCustomer(null);
+    setOrders([]);
+  };
+
+  if (!customer && !loading) {
+    return (
+      <div style={{ position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center", background:D.bg, color:D.textDim, fontSize:D.fontSize.base, flexDirection:"column", gap:D.space.md }}>
+        <p>لطفاً ابتدا وارد شوید</p>
+        <button onClick={() => window.location.href = '/'}
+          style={{ padding:"10px 20px", borderRadius:D.radius.md, border:"none", background:D.primary, color:"#fff", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
+          ورود به پورتال
+        </button>
+      </div>
+    );
+  }
+
+  if (loading) return <div style={styles.app}><p style={styles.loadingText}>در حال بارگذاری...</p></div>;
+
+  return (
+    <div style={styles.app}>
+      {/* Top Header */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:`${D.space.md} ${D.space.md}`, background:D.surface, borderBottom:`1px solid ${D.border}` }}>
+        <span style={{ fontSize:D.fontSize.base, fontWeight:D.fontWeight.bold, color:D.text }}>پورتال عمده‌فروشی</span>
+        <button onClick={logout} style={{ background:"transparent", border:"none", color:D.textMuted, cursor:"pointer", fontFamily:FONT, fontSize:D.fontSize.sm, padding:`${D.space.xs} ${D.space.sm}`, borderRadius:D.radius.sm }}>
+          خروج
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {tab === 'dashboard' && <DashboardTab customer={customer} orders={orders} />}
+      {tab === 'orders' && <OrdersTab orders={orders} onApprove={approveProforma} customer={customer} onOrderCreated={refreshOrders} />}
+      {tab === 'invoices' && <InvoicesTab customer={customer} />}
+      {tab === 'documents' && <DocumentsTab />}
+      {tab === 'chat' && <ChatTab />}
+      {tab === 'profile' && <ProfileTab customer={customer} />}
+
+      {/* Bottom Navigation */}
+      <nav style={styles.tabBar}>
+        {TABS.map(t => (
+          <div key={t.id} onClick={() => setTab(t.id)}
+            style={{...styles.tabItem, color: tab===t.id ? D.primary : D.textDim}}>
+            <t.icon />
+            <span style={styles.tabLabel}>{t.label}</span>
+          </div>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
