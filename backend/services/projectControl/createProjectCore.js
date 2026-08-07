@@ -38,6 +38,88 @@ const { supabase } = require('../../handlers/_lib');
  *
  * @returns {object} { project, wbs, tasks } یا { error, message }
  */
+// ── Shared helper: insert tasks with parent resolution ───────────
+async function insertTasksForProject(supabase, { projectId, tasks, validWbsIds, createdBy, existingTasks = [] }) {
+  // Step 1: sanitize tasks and insert them
+  const sanitizedTasks = tasks.map((task) => {
+    const { parent_code, ...rest } = task;
+    return {
+      ...rest,
+      project_control_project_id: projectId,
+      created_by: createdBy,
+      reporter_id: task.reporter_id || createdBy,
+      wbs_item_id: task.wbs_item_id && validWbsIds.has(task.wbs_item_id) ? task.wbs_item_id : null,
+      parent_code, // pass along for parent resolution
+    };
+  });
+
+  const { data: createdTasksResult, error: tasksError } = await supabase
+    .from('project_control_tasks')
+    .insert(sanitizedTasks)
+    .select();
+
+  if (tasksError) {
+    // Fix 5 — log diagnostic info for FK
+    console.error('[FK_DEBUG] tasks insert failed', {
+      code: tasksError.code,
+      details: tasksError.details,
+      constraint: tasksError.details,
+      hint: tasksError.hint,
+      sample: sanitizedTasks?.[0],
+    });
+    return { error: tasksError.message, warning: `پروژه و WBS ایجاد شد اما وظایف با خطا مواجه شد: ${tasksError.message}` };
+  }
+
+  const parentWarning = null;
+  const codeToId = new Map([...(existingTasks || []), ...(createdTasksResult || [])]
+    .map((t) => [t.code, t.id]));
+
+  const parentUpdates = tasks
+    .filter((t) => t.parent_code && codeToId.has(t.parent_code) && codeToId.has(t.code))
+    .map((t) => ({
+      id: codeToId.get(t.code),
+      parent_task_id: codeToId.get(t.parent_code)
+    }));
+
+  if (parentUpdates.length > 0) {
+    const failedUpdates = [];
+
+    await Promise.all(
+      parentUpdates.map(async (u) => {
+        // Self-reference guard
+        if (u.id === u.parent_task_id) return;
+
+        const { error: pErr } = await supabase
+          .from('project_control_tasks')
+          .update({ parent_task_id: u.parent_task_id })
+          .eq('id', u.id);
+
+        if (pErr) {
+          failedUpdates.push(u);
+          // FIX 5 — log diagnostic info for FK
+          console.error('[FK_DEBUG] parent_task_id update failed', {
+            code: pErr.code,
+            details: pErr.details,
+            constraint: pErr.details,
+            hint: pErr.hint,
+            update: u,
+          });
+        }
+      })
+    );
+
+    if (failedUpdates.length > 0) {
+      parentWarning = `والدین ${failedUpdates.length} وظیفه منحل نشد`; // minimal warning
+    }
+  }
+
+  return {
+    data: createdTasksResult || [],
+    error: null,
+    warning: parentWarning
+  };
+}
+
 async function createProjectCore(opts) {
   const {
     code,
@@ -110,6 +192,9 @@ async function createProjectCore(opts) {
   if (projectError) {
     return { error: 'PROJECT_CREATE_FAILED', message: projectError.message };
   }
+  if (!project?.id) {
+    return { error: 'PROJECT_ID_MISSING', message: 'شناسه پروژه پس از درج بازگردانده نشد' };
+  }
 
   // ── ۲. ایجاد WBS root (آپشنال) ─────────────────────────────────────
   let wbs = [];
@@ -126,6 +211,14 @@ async function createProjectCore(opts) {
       .select();
 
     if (wbsError) {
+      // Fix 5 — log diagnostic info for FK
+      console.error('[FK_DEBUG] wbs insert failed', {
+        code: wbsError.code,
+        details: wbsError.details,
+        constraint: wbsError.details,
+        hint: wbsError.hint,
+        sample: wbsWithProject?.[0],
+      });
       // WBS failure — project is created but WBS is missing; return partial
       return {
         project,
@@ -139,33 +232,35 @@ async function createProjectCore(opts) {
   }
 
   // ── ۳. ایجاد Tasks (آپشنال) ─────────────────────────────────────────
-  let createdTasks = [];
-  if (tasks.length > 0) {
-    const tasksWithProject = tasks.map((task) => ({
-      ...task,
-      project_control_project_id: project.id,
-      created_by,
-      reporter_id: task.reporter_id || created_by,
-    }));
+   let createdTasks = [];
+   let parentWarning = null;
 
-    const { data: createdTasksResult, error: tasksError } = await supabase
-      .from('project_control_tasks')
-      .insert(tasksWithProject)
-      .select();
+   if (tasks.length > 0) {
+     // Extract valid WBS IDs from the WBS that were actually inserted
+     const validWbsIds = new Set((wbs || []).map((w) => w.id));
 
-    if (tasksError) {
-      return {
-        project,
-        wbs,
-        tasks: null,
-        warning: `پروژه و WBS ایجاد شد اما وظایف با خطا مواجه شد: ${tasksError.message}`,
-      };
-    }
+     const insertResult = await insertTasksForProject(supabase, {
+       projectId: project.id,
+       tasks,
+       validWbsIds,
+       createdBy: created_by,
+       existingTasks: [],
+     });
 
-    createdTasks = createdTasksResult || [];
-  }
+     if (insertResult.error) {
+       return {
+         project,
+         wbs,
+         tasks: null,
+         warning: insertResult.warning,
+       };
+     }
 
-  return { project, wbs, tasks: createdTasks };
+     createdTasks = insertResult.data || [];
+     parentWarning = insertResult.warning;
+   }
+
+   return { project, wbs, tasks: createdTasks, warning: parentWarning || undefined };
 }
 
 module.exports = { createProjectCore };
